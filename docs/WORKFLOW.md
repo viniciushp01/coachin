@@ -25,10 +25,11 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 
 ## 3. Estado atual (28/10/2026)
 
-- **Produto:** regras 1 a 130 (28ª rodada). Nenhum ponto bloqueando o MVP. Pendências menores na seção 8 do `contexto-produto.md`.
+- **Produto:** regras 1 a 131 (28ª rodada). Nenhum ponto bloqueando o MVP. Pendências menores na seção 8 do `contexto-produto.md`.
 - **Banco:** migrations 0001 a 0006 aplicadas no Supabase (`kfjjiajxgbsqpuskxbzb`) e iguais às do repositório. 239 verificações passando (PGlite). Administrador criado.
 - **Design:** Figma completo até a 24ª rodada. Faltam no FigJam original as seções 19 a 24.
-- **App:** **Fase 0 concluída** em 28/10/2026 (PR #1). Produção em https://coachin.vercel.app. Stack: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Tokens em `src/styles/tokens.css`; componentes base em `src/ui` (catálogo em `/dev/componentes`); camada Supabase em `src/lib` (`supabase.ts`, `rpc.ts`, `erros.ts`); roteamento por papel (`src/lib/destino.ts` e `sessao.ts`, rotas `/entrar`, `/admin`, `/professor`, `/aluno`, `/sem-professor`, `/primeiro-acesso`, `/bloqueado`); CI em `.github/workflows/ci.yml`. `/entrar` é mínima e as áreas são provisórias ("Olá"), até as fatias. `main` protegida (PR obrigatório e os dois jobs do CI verdes). Projeto `coachin` na Vercel com preview por PR.
+- **App:** **Fase 0 concluída** em 28/10/2026 (PR #1). Produção em https://coachin.vercel.app. Stack: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Tokens em `src/styles/tokens.css`; componentes base em `src/ui` (catálogo em `/dev/componentes`); camada Supabase em `src/lib` (`supabase.ts`, `rpc.ts`, `erros.ts`); roteamento por papel (`src/lib/destino.ts` e `sessao.ts`, rotas `/entrar`, `/admin`, `/professor`, `/aluno`, `/sem-professor`, `/primeiro-acesso`, `/bloqueado`); CI em `.github/workflows/ci.yml`. `main` protegida (PR obrigatório e os dois jobs do CI verdes). Projeto `coachin` na Vercel com preview por PR.
+- **Fatia 1 (Acesso) concluída** em 28/10/2026 (spec #8, PRs #23 a #32): login completo, criar conta e "Confirme seu e-mail", login com e-mail não confirmado, volta do link de confirmação, "Esqueci a senha" por link de 1 dia (vencido e já usado separados pela hora do pedido no link), sessão de 30 dias sem uso controlada no app (`src/lib/inatividade.ts`), "Sair" só deste aparelho e a folha "Sair do app?" pronta para o Perfil (fatia 6). Formulários com react-hook-form + zod (`src/lib/formularios.ts`). Rotas novas: `/criar-conta`, `/confirme-seu-email`, `/confirmar-email`, `/esqueci-a-senha`, `/confira-seu-email`, `/nova-senha`. As áreas dos papéis continuam provisórias ("Olá") até as fatias seguintes. Sem migration nova.
 
 ## 4. Fases
 
@@ -51,7 +52,7 @@ Cada fatia = telas + funções do banco que ela usa + testes. Ordem sugerida pel
 
 | # | Fatia | Depende de | Regras principais |
 |---|---|---|---|
-| 1 | Acesso: criar conta, confirmar e-mail, login, esqueci a senha, sessão, sair | Fase 0 | 39, 47 a 51, 78, 83, 88 a 90, 100, 121 |
+| 1 | ~~Acesso: criar conta, confirmar e-mail, login, esqueci a senha, sessão, sair~~ Concluída (#8) | Fase 0 | 39, 47 a 51, 78, 83, 88 a 90, 100, 121, 127 a 131 |
 | 2 | Convites e vínculo: administrador → professor; professor → aluno; primeiro acesso | 1 | 46 a 49, 79, 82, 91 a 98, 102 |
 | 3 | Professor: lista de alunos e cadastro | 2 | 54 a 59, 109 |
 | 4 | Professor: montar e editar treino, biblioteca | 3 | 73 a 77, 104 a 107, 111, 118, 122 |
@@ -90,7 +91,7 @@ Problema durante o caminho: `/diagnosing-bugs`. Fim de fatia: `/retro`. Contexto
 - **Um agente por ticket, um worktree por agente** (`git worktree` ou o recurso de worktree do Claude Code), branch `fatia-N/ticket`. Ninguém trabalha na `main` direto.
 - **Migrations:** reservar o número antes de começar (issue "migration 0007 reservada para #N"). Só um agente aplica por vez, e quem aplica roda os testes inteiros depois.
 - **Componentes base:** pertencem à Fase 0. Precisa de um novo? Ticket próprio, feito por um agente, mergeado antes de quem depende dele.
-- **Numeração de regras e rodadas:** quem decide produto reserva a faixa. Hoje a próxima regra é a **131** e a próxima rodada é a **29ª**. Dois chats de produto ao mesmo tempo precisam combinar faixas antes (foi o que quase colidiu nos lotes 3 e 4).
+- **Numeração de regras e rodadas:** quem decide produto reserva a faixa. Hoje a próxima regra é a **132** e a próxima rodada é a **29ª**. Dois chats de produto ao mesmo tempo precisam combinar faixas antes (foi o que quase colidiu nos lotes 3 e 4).
 - **Revisor de consistência** ao fim de cada onda paralela: confere cada entrega contra as regras e o design system, e só o que passa chega a você.
 
 ## 7. Quando uma regra de negócio muda ou aparece
@@ -122,7 +123,8 @@ Problema durante o caminho: `/diagnosing-bugs`. Fim de fatia: `/retro`. Contexto
 
 ## 10. Pendências conhecidas
 
-- Abrir os tickets da Fase 1, começando pela fatia 1 (Acesso), que completa a tela /entrar.
+- Abrir os tickets da fatia 2 (Convites e vínculo), que depende só da fatia 1.
+- Fatia 1: links de confirmação enviados antes do PR #31 voltam para `/entrar` e entram direto (só contas de teste); SMTP do Gmail a trocar por provedor transacional antes do lançamento (Fase 2).
 - Figma: o frame "Login · 2 Erro de credenciais" diz "E-mail ou senha incorretos"; o texto decidido é "E-mail ou senha não conferem." (corrigir no Figma).
 - Renomear o Project de "Gym App" para "Coach In" (só você consegue).
 - FigJam original: replicar seções 19 a 24.
