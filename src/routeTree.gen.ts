@@ -13,9 +13,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AlunoRouteImport } from './routes/aluno'
 import { Route as BloqueadoRouteImport } from './routes/bloqueado'
+import { Route as ConfiraSeuEmailRouteImport } from './routes/confira-seu-email'
 import { Route as ConfirmeSeuEmailRouteImport } from './routes/confirme-seu-email'
 import { Route as CriarContaRouteImport } from './routes/criar-conta'
 import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as EsqueciASenhaRouteImport } from './routes/esqueci-a-senha'
+import { Route as NovaSenhaRouteImport } from './routes/nova-senha'
 import { Route as PrimeiroAcessoRouteImport } from './routes/primeiro-acesso'
 import { Route as ProfessorRouteImport } from './routes/professor'
 import { Route as SemProfessorRouteImport } from './routes/sem-professor'
@@ -41,6 +44,11 @@ const BloqueadoRoute = BloqueadoRouteImport.update({
   path: '/bloqueado',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConfiraSeuEmailRoute = ConfiraSeuEmailRouteImport.update({
+  id: '/confira-seu-email',
+  path: '/confira-seu-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConfirmeSeuEmailRoute = ConfirmeSeuEmailRouteImport.update({
   id: '/confirme-seu-email',
   path: '/confirme-seu-email',
@@ -54,6 +62,16 @@ const CriarContaRoute = CriarContaRouteImport.update({
 const EntrarRoute = EntrarRouteImport.update({
   id: '/entrar',
   path: '/entrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EsqueciASenhaRoute = EsqueciASenhaRouteImport.update({
+  id: '/esqueci-a-senha',
+  path: '/esqueci-a-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NovaSenhaRoute = NovaSenhaRouteImport.update({
+  id: '/nova-senha',
+  path: '/nova-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrimeiroAcessoRoute = PrimeiroAcessoRouteImport.update({
@@ -82,9 +100,12 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/aluno': typeof AlunoRoute
   '/bloqueado': typeof BloqueadoRoute
+  '/confira-seu-email': typeof ConfiraSeuEmailRoute
   '/confirme-seu-email': typeof ConfirmeSeuEmailRoute
   '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
+  '/esqueci-a-senha': typeof EsqueciASenhaRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/professor': typeof ProfessorRoute
   '/sem-professor': typeof SemProfessorRoute
@@ -95,9 +116,12 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/aluno': typeof AlunoRoute
   '/bloqueado': typeof BloqueadoRoute
+  '/confira-seu-email': typeof ConfiraSeuEmailRoute
   '/confirme-seu-email': typeof ConfirmeSeuEmailRoute
   '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
+  '/esqueci-a-senha': typeof EsqueciASenhaRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/professor': typeof ProfessorRoute
   '/sem-professor': typeof SemProfessorRoute
@@ -109,9 +133,12 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/aluno': typeof AlunoRoute
   '/bloqueado': typeof BloqueadoRoute
+  '/confira-seu-email': typeof ConfiraSeuEmailRoute
   '/confirme-seu-email': typeof ConfirmeSeuEmailRoute
   '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
+  '/esqueci-a-senha': typeof EsqueciASenhaRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/professor': typeof ProfessorRoute
   '/sem-professor': typeof SemProfessorRoute
@@ -124,9 +151,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/aluno'
     | '/bloqueado'
+    | '/confira-seu-email'
     | '/confirme-seu-email'
     | '/criar-conta'
     | '/entrar'
+    | '/esqueci-a-senha'
+    | '/nova-senha'
     | '/primeiro-acesso'
     | '/professor'
     | '/sem-professor'
@@ -137,9 +167,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/aluno'
     | '/bloqueado'
+    | '/confira-seu-email'
     | '/confirme-seu-email'
     | '/criar-conta'
     | '/entrar'
+    | '/esqueci-a-senha'
+    | '/nova-senha'
     | '/primeiro-acesso'
     | '/professor'
     | '/sem-professor'
@@ -150,9 +183,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/aluno'
     | '/bloqueado'
+    | '/confira-seu-email'
     | '/confirme-seu-email'
     | '/criar-conta'
     | '/entrar'
+    | '/esqueci-a-senha'
+    | '/nova-senha'
     | '/primeiro-acesso'
     | '/professor'
     | '/sem-professor'
@@ -164,9 +200,12 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AlunoRoute: typeof AlunoRoute
   BloqueadoRoute: typeof BloqueadoRoute
+  ConfiraSeuEmailRoute: typeof ConfiraSeuEmailRoute
   ConfirmeSeuEmailRoute: typeof ConfirmeSeuEmailRoute
   CriarContaRoute: typeof CriarContaRoute
   EntrarRoute: typeof EntrarRoute
+  EsqueciASenhaRoute: typeof EsqueciASenhaRoute
+  NovaSenhaRoute: typeof NovaSenhaRoute
   PrimeiroAcessoRoute: typeof PrimeiroAcessoRoute
   ProfessorRoute: typeof ProfessorRoute
   SemProfessorRoute: typeof SemProfessorRoute
@@ -203,6 +242,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BloqueadoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/confira-seu-email': {
+      id: '/confira-seu-email'
+      path: '/confira-seu-email'
+      fullPath: '/confira-seu-email'
+      preLoaderRoute: typeof ConfiraSeuEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/confirme-seu-email': {
       id: '/confirme-seu-email'
       path: '/confirme-seu-email'
@@ -222,6 +268,20 @@ declare module '@tanstack/react-router' {
       path: '/entrar'
       fullPath: '/entrar'
       preLoaderRoute: typeof EntrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/esqueci-a-senha': {
+      id: '/esqueci-a-senha'
+      path: '/esqueci-a-senha'
+      fullPath: '/esqueci-a-senha'
+      preLoaderRoute: typeof EsqueciASenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nova-senha': {
+      id: '/nova-senha'
+      path: '/nova-senha'
+      fullPath: '/nova-senha'
+      preLoaderRoute: typeof NovaSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/primeiro-acesso': {
@@ -260,9 +320,12 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AlunoRoute: AlunoRoute,
   BloqueadoRoute: BloqueadoRoute,
+  ConfiraSeuEmailRoute: ConfiraSeuEmailRoute,
   ConfirmeSeuEmailRoute: ConfirmeSeuEmailRoute,
   CriarContaRoute: CriarContaRoute,
   EntrarRoute: EntrarRoute,
+  EsqueciASenhaRoute: EsqueciASenhaRoute,
+  NovaSenhaRoute: NovaSenhaRoute,
   PrimeiroAcessoRoute: PrimeiroAcessoRoute,
   ProfessorRoute: ProfessorRoute,
   SemProfessorRoute: SemProfessorRoute,

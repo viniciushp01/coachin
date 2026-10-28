@@ -80,10 +80,15 @@ export function CriarContaPage() {
             {...register("email")}
           />
           {emailEmUso && (
-            // Atalhos do e-mail em uso (regra 83). "Esqueci a senha" entra com a tela dela (#17).
+            // Atalhos do e-mail em uso (regra 83).
             <div className="flex gap-24">
               <TextButton onClick={() => navegar({ to: "/entrar", search: { email: emailEmUso } })}>
                 Entrar com este e-mail
+              </TextButton>
+              <TextButton
+                onClick={() => navegar({ to: "/esqueci-a-senha", search: { email: emailEmUso } })}
+              >
+                Esqueci a senha
               </TextButton>
             </div>
           )}
