@@ -18,7 +18,7 @@ Estrutura: **Parte 1 (fixa)** tokens, tipografia, regras e padrões de tela. **P
 - Nunca usar valores soltos: sempre variáveis (cores, espaço, raio) e estilos de texto do Figma.
 
 ## 2. Convenção de nomes
-- Variáveis em inglês, minúsculas, com barras. Mapeiam direto para CSS/Tailwind: `color/bg/surface` → `var(--color-bg-surface)`, `space/16` → `var(--space-16)`.
+- Variáveis em inglês, minúsculas, com barras. Mapeiam direto para CSS/Tailwind: `color/bg/surface` → `var(--color-bg-surface)`, `space/16` → `var(--spacing-16)`. **Em código** (`src/styles/tokens.css`, Tailwind v4): `color/bg/surface` → `bg-bg-surface`, `space/16` → `p-16`/`gap-16`, `radius/control` → `rounded-control`, estilo `text/body-strong` → classe `text-body-strong`, `gradient/brand-progress` → `bg-brand-progress`. A escala padrão do Tailwind não existe: só os tokens.
 - Duas camadas: **Primitives** (valores brutos, sem uso direto em telas) e **Tokens** (papéis semânticos; é o que telas e componentes usam). Em código, usar sempre Tokens.
 - Componentes em PascalCase inglês (`Button`, `NavBar`), variantes como propriedades (`variant=primary`, `active=home`, `state=today, selected=true`). Textos visíveis em pt-BR.
 - Ícones: `Icon/<nome_material>` com variante `style=outline|filled`.

@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+/* Fontes empacotadas no app (funcionam offline). Só o subconjunto latino: o app é pt-BR. */
+@import "@fontsource/jost/latin-700.css";
+@import "@fontsource/inter/latin-400.css";
+@import "@fontsource/inter/latin-500.css";
+@import "@fontsource/inter/latin-600.css";
+@import "@fontsource/inter/latin-700.css";
+
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-bg-canvas text-body text-text-primary antialiased;
+    min-height: 100dvh;
+  }
+}
