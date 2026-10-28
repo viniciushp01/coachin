@@ -1,0 +1,7 @@
+# Normaliza fim de linha para LF no repositório.
+* text=auto
+
+# Sempre LF também na pasta de trabalho (o bash não aceita CRLF; as
+# migrations ficam idênticas ao texto aplicado no banco).
+*.sh text eol=lf
+*.sql text eol=lf
