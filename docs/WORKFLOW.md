@@ -28,7 +28,7 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 - **Produto:** regras 1 a 122 (25ª rodada). Nenhum ponto bloqueando o MVP. Pendências menores na seção 8 do `contexto-produto.md`.
 - **Banco:** migrations 0001 a 0006 aplicadas no Supabase (`kfjjiajxgbsqpuskxbzb`) e iguais às do repositório. 239 verificações passando (PGlite). Administrador criado.
 - **Design:** Figma completo até a 24ª rodada. Faltam no FigJam original as seções 19 a 24.
-- **App:** **ainda não existe código de aplicação** (sem `package.json` na raiz). Stack decidida em 28/10/2026: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Próximo passo: Fase 0, item 2.
+- **App:** **ainda não existe código de aplicação** (sem `package.json` na raiz). Stack decidida em 28/10/2026: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Itens 2 (tokens) e 3 (componentes base, catálogo em `/dev/componentes`) feitos em 28/10/2026. Próximo passo: Fase 0, item 4.
 
 ## 4. Fases
 
