@@ -124,7 +124,11 @@ export async function exigirDestino(queryClient: QueryClient, area: Destino) {
   return { estado };
 }
 
-/** Sair: encerra a sessão; a troca de estado leva à tela de entrar. */
+/**
+ * Sair: encerra a sessão só neste aparelho (o padrão do Supabase desconectaria todos; isso é
+ * só da troca de senha, regra 121). Mesmo sem conexão a sessão local é removida. O SIGNED_OUT
+ * limpa o cache e as guardas de rota levam ao Login (`main.tsx`); a fila local fica.
+ */
 export async function sair() {
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: "local" });
 }
