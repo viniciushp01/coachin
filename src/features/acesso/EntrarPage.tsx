@@ -7,7 +7,7 @@ import { erroDeAuth } from "@/lib/erros";
 import { email, senhaDoLogin } from "@/lib/formularios";
 import { estadoSessaoQuery, registrarEntrada } from "@/lib/sessao";
 import { supabase } from "@/lib/supabase";
-import { BarraFixa, Button, FormField, Tela, useToast } from "@/ui";
+import { BarraFixa, Button, FormField, Tela, TextButton, useToast } from "@/ui";
 
 const esquema = z.object({ email, senha: senhaDoLogin });
 
@@ -96,6 +96,10 @@ export function EntrarPage({ emailInicial = "", sessaoExpirada = false }: Entrar
             {...register("senha")}
           />
         </div>
+        {/* "Esqueci a senha" (link) entra acima deste com a tela dela (#17). */}
+        <TextButton tom="muted" className="w-full" onClick={() => navegar({ to: "/criar-conta" })}>
+          Não tem conta? Criar conta
+        </TextButton>
       </form>
       <BarraFixa>
         <Button type="submit" form="entrar" disabled={isSubmitting}>

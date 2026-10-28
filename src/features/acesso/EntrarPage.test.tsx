@@ -135,4 +135,10 @@ describe("Entrar", () => {
     abrirTela({ emailInicial: "ana@exemplo.com" });
     expect(screen.getByLabelText("E-mail")).toHaveValue("ana@exemplo.com");
   });
+
+  it('"Não tem conta? Criar conta" leva a Criar acesso (regra 89)', async () => {
+    const { usuario } = abrirTela();
+    await usuario.click(screen.getByRole("button", { name: "Não tem conta? Criar conta" }));
+    expect(navegar).toHaveBeenCalledWith({ to: "/criar-conta" });
+  });
 });
