@@ -141,4 +141,14 @@ describe("Entrar", () => {
     await usuario.click(screen.getByRole("button", { name: "Não tem conta? Criar conta" }));
     expect(navegar).toHaveBeenCalledWith({ to: "/criar-conta" });
   });
+
+  it('"Esqueci a senha" leva ao pedido de link, com o e-mail já digitado (regra 50)', async () => {
+    const { usuario } = abrirTela();
+    await usuario.type(screen.getByLabelText("E-mail"), "ana@exemplo.com");
+    await usuario.click(screen.getByRole("button", { name: "Esqueci a senha" }));
+    expect(navegar).toHaveBeenCalledWith({
+      to: "/esqueci-a-senha",
+      search: { email: "ana@exemplo.com" },
+    });
+  });
 });

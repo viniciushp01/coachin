@@ -42,6 +42,7 @@ export function EntrarPage({ emailInicial = "", sessaoExpirada = false }: Entrar
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(esquema),
@@ -96,7 +97,19 @@ export function EntrarPage({ emailInicial = "", sessaoExpirada = false }: Entrar
             {...register("senha")}
           />
         </div>
-        {/* "Esqueci a senha" (link) entra acima deste com a tela dela (#17). */}
+        <TextButton
+          className="self-start"
+          onClick={() => {
+            // Leva o e-mail já digitado, para não digitar de novo (regra 50).
+            const emailDigitado = getValues("email").trim();
+            void navegar({
+              to: "/esqueci-a-senha",
+              search: emailDigitado ? { email: emailDigitado } : {},
+            });
+          }}
+        >
+          Esqueci a senha
+        </TextButton>
         <TextButton tom="muted" className="w-full" onClick={() => navegar({ to: "/criar-conta" })}>
           Não tem conta? Criar conta
         </TextButton>

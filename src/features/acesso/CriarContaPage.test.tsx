@@ -116,6 +116,12 @@ describe("Criar acesso (regras 47, 78 e 89)", () => {
 
       await usuario.click(screen.getByRole("button", { name: "Entrar com este e-mail" }));
       expect(navegar).toHaveBeenCalledWith({ to: "/entrar", search: { email: "ana@exemplo.com" } });
+
+      await usuario.click(screen.getByRole("button", { name: "Esqueci a senha" }));
+      expect(navegar).toHaveBeenCalledWith({
+        to: "/esqueci-a-senha",
+        search: { email: "ana@exemplo.com" },
+      });
     },
   );
 
