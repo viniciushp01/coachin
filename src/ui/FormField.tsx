@@ -11,19 +11,40 @@ type CampoBase = {
   rotulo: string;
   /** Mensagem de erro do campo (pt-BR). Com erro, a borda fica border-danger. */
   erro?: string;
+  /** Dica sob o campo (ex.: requisitos da senha, regra 78). Com erro, o erro toma o lugar dela. */
+  dica?: string;
 };
 
-function Moldura({ id, rotulo, erro, children }: CampoBase & { id: string; children: ReactNode }) {
+/** Id do texto sob o campo (erro ou dica), para o aria-describedby. */
+function idDaDescricao(id: string, { erro, dica }: Pick<CampoBase, "erro" | "dica">) {
+  if (erro) return `${id}-erro`;
+  if (dica) return `${id}-dica`;
+  return undefined;
+}
+
+function Moldura({
+  id,
+  rotulo,
+  erro,
+  dica,
+  children,
+}: CampoBase & { id: string; children: ReactNode }) {
   return (
     <div className="flex w-full flex-col gap-8">
       <label htmlFor={id} className="text-label text-text-secondary">
         {rotulo}
       </label>
       {children}
-      {erro && (
+      {erro ? (
         <p id={`${id}-erro`} className="text-caption text-status-danger">
           {erro}
         </p>
+      ) : (
+        dica && (
+          <p id={`${id}-dica`} className="text-caption text-text-secondary">
+            {dica}
+          </p>
+        )
       )}
     </div>
   );
@@ -39,6 +60,7 @@ type FormFieldProps = CampoBase &
 export function FormField({
   rotulo,
   erro,
+  dica,
   tipo = "text",
   id,
   className,
@@ -50,7 +72,7 @@ export function FormField({
   const senha = tipo === "password";
 
   return (
-    <Moldura id={idCampo} rotulo={rotulo} erro={erro}>
+    <Moldura id={idCampo} rotulo={rotulo} erro={erro} dica={dica}>
       <div
         className={clsx(
           caixa,
@@ -63,7 +85,7 @@ export function FormField({
           id={idCampo}
           type={senha ? (mostrarSenha ? "text" : "password") : tipo}
           aria-invalid={erro ? true : undefined}
-          aria-describedby={erro ? `${idCampo}-erro` : undefined}
+          aria-describedby={idDaDescricao(idCampo, { erro, dica })}
           className="h-full min-w-0 flex-1 bg-transparent outline-none placeholder:text-text-disabled"
           {...props}
         />
@@ -86,16 +108,16 @@ export function FormField({
 type TextAreaFieldProps = CampoBase & ComponentProps<"textarea">;
 
 /** Campo de várias linhas (FormField type=multiline): texto no topo, padding 16. */
-export function TextAreaField({ rotulo, erro, id, className, ...props }: TextAreaFieldProps) {
+export function TextAreaField({ rotulo, erro, dica, id, className, ...props }: TextAreaFieldProps) {
   const idGerado = useId();
   const idCampo = id ?? idGerado;
   return (
-    <Moldura id={idCampo} rotulo={rotulo} erro={erro}>
+    <Moldura id={idCampo} rotulo={rotulo} erro={erro} dica={dica}>
       <textarea
         id={idCampo}
         rows={3}
         aria-invalid={erro ? true : undefined}
-        aria-describedby={erro ? `${idCampo}-erro` : undefined}
+        aria-describedby={idDaDescricao(idCampo, { erro, dica })}
         className={clsx(
           caixa,
           "min-h-[96px] resize-none px-16 pt-16 outline-none",
@@ -118,6 +140,7 @@ type PhoneFieldProps = CampoBase &
 export function PhoneField({
   rotulo,
   erro,
+  dica,
   id,
   codigoPais = "+55",
   aoMudarCodigoPais,
@@ -127,7 +150,7 @@ export function PhoneField({
   const idGerado = useId();
   const idCampo = id ?? idGerado;
   return (
-    <Moldura id={idCampo} rotulo={rotulo} erro={erro}>
+    <Moldura id={idCampo} rotulo={rotulo} erro={erro} dica={dica}>
       <div
         className={clsx(
           caixa,
@@ -159,7 +182,7 @@ export function PhoneField({
           inputMode="tel"
           autoComplete="tel-national"
           aria-invalid={erro ? true : undefined}
-          aria-describedby={erro ? `${idCampo}-erro` : undefined}
+          aria-describedby={idDaDescricao(idCampo, { erro, dica })}
           className="h-full min-w-0 flex-1 bg-transparent outline-none placeholder:text-text-disabled"
           {...props}
         />
