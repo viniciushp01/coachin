@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ErroDeRota } from "./features/acesso/ErroDeRota";
 import { queryClient } from "./lib/queryClient";
+import { verificarInatividade } from "./lib/sessao";
 import { supabase } from "./lib/supabase";
 import { routeTree } from "./routeTree.gen";
 import "./styles/global.css";
@@ -31,6 +32,10 @@ supabase.auth.onAuthStateChange((evento) => {
     void router.invalidate();
   }, 0);
 });
+
+// Regra 121 (30 dias sem uso): ao voltar ao app, sessão vencida sai e cai no "Entre de novo";
+// ao voltar ou sair da tela com a sessão valendo, conta como uso.
+document.addEventListener("visibilitychange", () => void verificarInatividade());
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Elemento #root não encontrado.");

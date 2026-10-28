@@ -2,9 +2,50 @@ import { queryOptions, type QueryClient } from "@tanstack/react-query";
 import { redirect } from "@tanstack/react-router";
 import { destinoDaSessao, type Destino, type EstadoSessao } from "./destino";
 import { erroDaResposta } from "./erros";
+import { lerUltimoUso, registrarUso, sessaoVencida } from "./inatividade";
 import { supabase } from "./supabase";
 
 const ANONIMO: EstadoSessao = { tipo: "anonimo" };
+
+/**
+ * A última sessão deste aparelho venceu por inatividade (regra 121). Vive fora do cache do
+ * TanStack Query porque sair limpa o cache; some quando alguém entra de novo.
+ */
+let expirouPorInatividade = false;
+
+function anonimo(): EstadoSessao {
+  return expirouPorInatividade ? { tipo: "anonimo", sessaoExpirada: true } : ANONIMO;
+}
+
+/**
+ * Regra dos 30 dias sem uso: com sessão vencida, sai só neste aparelho (a fila local fica,
+ * regra 116); senão, marca o uso de agora. Devolve se a sessão continua valendo.
+ * Lê só o aparelho: não vai ao servidor.
+ */
+async function aplicarRegraDosTrintaDias(): Promise<boolean> {
+  if (!sessaoVencida(lerUltimoUso(), Date.now())) {
+    expirouPorInatividade = false;
+    registrarUso();
+    return true;
+  }
+  expirouPorInatividade = true;
+  await supabase.auth.signOut({ scope: "local" });
+  return false;
+}
+
+/** Acabou de entrar com e-mail e senha: conta como uso e tira o aviso de sessão expirada. */
+export function registrarEntrada() {
+  expirouPorInatividade = false;
+  registrarUso();
+}
+
+/** Ao voltar ao app (aba visível de novo): aplica a regra dos 30 dias, se houver sessão. */
+export async function verificarInatividade() {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (session) await aplicarRegraDosTrintaDias();
+}
 
 /** Erros do PostgREST que significam "sessão não vale mais". */
 function sessaoInvalida(erro: { code?: string; status?: number } | null) {
@@ -19,7 +60,7 @@ export async function carregarEstadoSessao(): Promise<EstadoSessao> {
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  if (!session) return ANONIMO;
+  if (!session || !(await aplicarRegraDosTrintaDias())) return anonimo();
   const id = session.user.id;
 
   const perfil = await supabase
