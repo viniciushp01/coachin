@@ -19,11 +19,18 @@ export const MENSAGENS = {
   no_teacher_link: "Você ainda não tem um professor.",
   timezone_invalid: "Não conseguimos ler o fuso do aparelho.",
 
+  // Autenticação (erros do Supabase Auth, não das funções do banco; ver erroDeAuth)
+  invalid_credentials: "E-mail ou senha não conferem.", // [produto] regra 51
+  user_already_exists: "E-mail em uso. Tente logar utilizando ele, ou solicite alteração de senha.", // [produto] regra 83
+  weak_password: "A senha precisa ter pelo menos 8 caracteres, com letras e números.", // [produto] regra 78
+  too_many_requests: "Muitas tentativas. Espere um pouco e tente de novo.",
+  too_many_emails: "Muitos envios. Espere um pouco.", // [produto] regra 130
+
   // Convites
   invite_invalid: "Este link não vale mais.",
   invite_expired: "Este convite expirou.",
   invite_used: "Este convite já foi usado.",
-  invite_replaced: "Este link foi substituído por um mais novo.",
+  invite_replaced: "Este link não vale mais.", // [produto] regra 82
   invite_declined: "Este convite foi recusado.",
   invite_not_found: "Não encontramos este convite.",
   invite_not_pending: "Este convite não está mais pendente.",
@@ -38,6 +45,9 @@ export const MENSAGENS = {
   teacher_not_found: "Não encontramos este professor.",
 
   // Dados pessoais
+  // Atenção: `name_required` é lançado por funções diferentes (perfil do próprio aluno, cadastro de
+  // aluno, convite de professor, criar exercício). "Digite seu nome." vale só para o perfil; as
+  // outras telas sobrescrevem o texto no campo (ex.: "Digite o nome do aluno.").
   name_required: "Digite seu nome.", // [produto]
   email_invalid: "Digite um e-mail válido, como nome@exemplo.com.", // [produto]
   phone_invalid: "Digite um telefone com DDD, como (31) 91234-5678.", // [produto]
@@ -127,4 +137,35 @@ export function erroDaResposta(erro: unknown): ErroApp {
     return new ErroApp("sem_conexao", { cause: erro });
   }
   return new ErroApp("erro_desconhecido", { cause: erro });
+}
+
+/**
+ * Converte o erro do Supabase Auth (login, criar conta, redefinir senha) em `ErroApp`.
+ * O Auth informa o motivo em `code` (ex.: `invalid_credentials`); `status` 429 é limite de envios.
+ */
+export function erroDeAuth(erro: unknown): ErroApp {
+  if (erro instanceof ErroApp) return erro;
+  const dados =
+    typeof erro === "object" && erro !== null
+      ? (erro as { code?: unknown; status?: unknown; message?: unknown })
+      : {};
+  const codigo = typeof dados.code === "string" ? dados.code : "";
+  const mensagem = typeof dados.message === "string" ? dados.message : "";
+  const causa = { cause: erro };
+  if (codigo === "invalid_credentials") return new ErroApp("invalid_credentials", causa);
+  if (codigo === "email_not_confirmed") return new ErroApp("email_not_confirmed", causa);
+  if (codigo === "user_already_exists" || codigo === "email_exists")
+    return new ErroApp("user_already_exists", causa);
+  if (codigo === "weak_password") return new ErroApp("weak_password", causa);
+  if (codigo === "over_email_send_rate_limit") return new ErroApp("too_many_emails", causa);
+  if (dados.status === 429 || /^over_.*_rate_limit$/.test(codigo))
+    return new ErroApp("too_many_requests", causa);
+  if (
+    erro instanceof TypeError ||
+    dados.status === 0 ||
+    /failed to fetch|network|load failed/i.test(mensagem)
+  ) {
+    return new ErroApp("sem_conexao", causa);
+  }
+  return new ErroApp("erro_desconhecido", causa);
 }
