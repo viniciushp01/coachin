@@ -28,7 +28,7 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 - **Produto:** regras 1 a 122 (25ª rodada). Nenhum ponto bloqueando o MVP. Pendências menores na seção 8 do `contexto-produto.md`.
 - **Banco:** migrations 0001 a 0006 aplicadas no Supabase (`kfjjiajxgbsqpuskxbzb`) e iguais às do repositório. 239 verificações passando (PGlite). Administrador criado.
 - **Design:** Figma completo até a 24ª rodada. Faltam no FigJam original as seções 19 a 24.
-- **App:** **ainda não existe código de aplicação** (sem `package.json` na raiz). Stack decidida em 28/10/2026: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Itens 2 (tokens), 3 (componentes base, catálogo em `/dev/componentes`) 4 (camada Supabase: `src/lib/supabase.ts`, `rpc.ts`, `erros.ts`, TanStack Query, Vitest) e 5 (roteamento por papel: `src/lib/destino.ts` e `sessao.ts`, rotas `/entrar`, `/admin`, `/professor`, `/aluno`, `/sem-professor`, `/primeiro-acesso`, `/bloqueado`) feitos em 28/10/2026. `/entrar` é mínima e as áreas são provisórias ("Olá"), até as fatias. Próximo passo: Fase 0, item 6.
+- **App:** Fase 0 em revisão no PR #1 (branch `fase-0/fundacao`), 28/10/2026. Stack: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Tokens em `src/styles/tokens.css`; componentes base em `src/ui` (catálogo em `/dev/componentes`); camada Supabase em `src/lib` (`supabase.ts`, `rpc.ts`, `erros.ts`); roteamento por papel (`src/lib/destino.ts` e `sessao.ts`, rotas `/entrar`, `/admin`, `/professor`, `/aluno`, `/sem-professor`, `/primeiro-acesso`, `/bloqueado`); CI em `.github/workflows/ci.yml`. `/entrar` é mínima e as áreas são provisórias ("Olá"), até as fatias. `main` protegida (PR obrigatório e os dois jobs do CI verdes). **Falta:** projeto `coachin` na Vercel (preview por PR).
 
 ## 4. Fases
 
@@ -36,12 +36,12 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 
 Entra tudo o que as fatias vão compartilhar. Só depois disso se paraleliza.
 
-1. ~~**Decidir a stack**~~ Feito em 28/10/2026: `docs/adr/0001-stack.md`.
-2. **Tokens do `design.md`** como variáveis (cores, tipografia, múltiplos de 4).
-3. **Componentes base** conforme a Parte 2 do `design.md`: botão, chip, campo de formulário (com senha e telefone), estado vazio, folha, toast, menu inferior, linha de lista.
-4. **Camada Supabase:** cliente tipado com `supabase/database.types.ts`, wrapper de RPC e tradução dos códigos curtos de erro (`invite_expired` etc.) para pt-BR.
-5. **Roteamento por papel** (administrador, professor, aluno, sem professor, bloqueado), com o papel sempre vindo do servidor.
-6. **Pipeline:** lint, tipos, testes do banco (`node supabase/tests/pglite/run.mjs`) e preview de deploy em cada PR.
+1. ~~**Decidir a stack**~~ Feito: `docs/adr/0001-stack.md`.
+2. ~~**Tokens do `design.md`**~~ Feito: `src/styles/tokens.css`.
+3. ~~**Componentes base**~~ Feito: `src/ui`, catálogo em `/dev/componentes`.
+4. ~~**Camada Supabase**~~ Feito: `src/lib/supabase.ts`, `rpc.ts`, `erros.ts`.
+5. ~~**Roteamento por papel**~~ Feito: `src/lib/destino.ts` e `sessao.ts`, guardas em `src/routes`.
+6. **Pipeline:** CI feito (`.github/workflows/ci.yml`: formato, lint, tipos, Vitest, build e testes do banco). `main` protegida. Falta o preview da Vercel em cada PR.
 
 Pronto quando: um "olá" autenticado roda no preview, os componentes base têm exemplos e o CI está verde.
 
@@ -121,7 +121,8 @@ Problema durante o caminho: `/diagnosing-bugs`. Fim de fatia: `/retro`. Contexto
 
 ## 10. Pendências conhecidas
 
-- Fase 0, itens 2 a 6 (a stack está em `docs/adr/0001-stack.md`), e depois abrir os primeiros tickets.
+- Fase 0: criar o projeto `coachin` na Vercel (variáveis `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` e, só no Preview, `VITE_MOSTRAR_DEV=true`), conferir o "olá" autenticado no preview e fazer o merge do PR #1. Depois, abrir os primeiros tickets.
+- Figma: o frame "Login · 2 Erro de credenciais" diz "E-mail ou senha incorretos"; o texto decidido é "E-mail ou senha não conferem." (corrigir no Figma).
 - Renomear o Project de "Gym App" para "Coach In" (só você consegue).
 - FigJam original: replicar seções 19 a 24.
 - Figma: página "↳ Fluxo · Conta e privacidade" com frames antigos sobrepostos; toques numerados e raia própria para os frames novos da 24ª rodada.
