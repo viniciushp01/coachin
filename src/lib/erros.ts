@@ -51,6 +51,11 @@ export const MENSAGENS = {
   exercise_not_found: "Não encontramos este exercício.",
   exercises_are_permanent: "Exercícios não podem ser excluídos.",
   name_too_long: "O nome está longo demais.",
+  muscle_group_invalid: "Escolha um grupo muscular da lista.",
+  load_mode_invalid: "Escolha se o exercício usa carga.",
+  measure_invalid: "Escolha se o exercício é medido em repetições ou em tempo.",
+  // Só aparece se a migration do catálogo falhar ao aplicar; nunca chega ao app.
+  catalog_count_mismatch: "Algo deu errado. Tente de novo.",
 
   // Montar treino
   workout_name_required: "Digite o nome do treino.", // [produto]
