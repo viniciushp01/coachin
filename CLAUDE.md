@@ -8,6 +8,14 @@ Antes de qualquer trabalho de produto, design ou código, leia `docs/contexto/co
 - Se algo conflitar ou estiver nos "Pontos em aberto", pergunte antes de implementar.
 - Respostas e textos do app em português (pt-BR).
 
+## Como trabalhamos
+
+Leia `docs/WORKFLOW.md` antes de planejar trabalho novo: papéis, fases, ciclo de cada fatia, trabalho em paralelo e sincronização dos documentos. Resumo: o repositório é a fonte da verdade, só o Claude Code aplica migrations, e ninguém inventa regra de negócio.
+
+## Stack
+
+Decidida em `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel, Tailwind v4 com os tokens do `design.md`, TanStack Router e Query, vite-plugin-pwa, idb). Leia antes de escrever código do app.
+
 ## Documentos de apoio (`docs/contexto/`)
 
 - `design.md`: design system (tokens, tipografia, componentes e regras de montagem). Leia antes de criar qualquer tela ou código de interface.
@@ -16,7 +24,7 @@ Antes de qualquer trabalho de produto, design ou código, leia `docs/contexto/co
 - `prompts-lotes-3-e-4.md`: prompts usados nos lotes 3 e 4 do design (referência histórica).
 - `rodada-19`, `rodada-22`, `rodada-23` e `rodada-24` (a 25ª rodada é só a regra 122, sem mapa do Figma): mapa do Figma e pendências de cada rodada de casos de borda (as regras em si estão no `contexto-produto.md`).
 
-As cópias em `docs/contexto/` vieram do Project "Coach In" no claude.ai. Se o Project for atualizado, as cópias precisam ser atualizadas também.
+O **repositório é a fonte da verdade**: edite em `docs/contexto/` e espelhe no Project "Coach In" do claude.ai ao fim de cada rodada (no Project os caminhos são `claude/...`). Detalhes em `docs/WORKFLOW.md`, seção 8.
 
 ## Agent skills
 
