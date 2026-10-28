@@ -80,6 +80,22 @@ describe("Entrar", () => {
     expect(navegar).not.toHaveBeenCalled();
   });
 
+  it('e-mail ainda não confirmado: leva a "Confirme seu e-mail", sem toast (regra 127)', async () => {
+    signInWithPassword.mockResolvedValue({
+      data: {},
+      error: { code: "email_not_confirmed", status: 400, message: "Email not confirmed" },
+    });
+    const { usuario } = abrirTela();
+
+    await preencherEEntrar(usuario, "ana@exemplo.com", "abc12345");
+
+    expect(navegar).toHaveBeenCalledWith({
+      to: "/confirme-seu-email",
+      search: { email: "ana@exemplo.com", doLogin: true },
+    });
+    expect(screen.queryByText("E-mail ou senha não conferem.")).not.toBeInTheDocument();
+  });
+
   it("pode tentar de novo depois de errar, sem bloqueio (regra 51)", async () => {
     signInWithPassword.mockResolvedValue({
       data: {},

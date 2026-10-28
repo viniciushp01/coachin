@@ -107,7 +107,7 @@ describe("Confira seu e-mail (regras 88 e 100)", () => {
     expect(resetPasswordForEmail).toHaveBeenCalledWith("ana@exemplo.com", {
       redirectTo: expect.stringMatching(/\/nova-senha\?pedido=\d+$/),
     });
-    expect(screen.getByRole("button", { name: "Reenviar em 60 s" })).toBeDisabled();
+    expect(await screen.findByRole("button", { name: "Reenviar em 60 s" })).toBeDisabled();
   });
 
   it('"Voltar ao login" leva ao Login com o e-mail', async () => {

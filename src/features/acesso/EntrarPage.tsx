@@ -56,8 +56,15 @@ export function EntrarPage({ emailInicial = "", sessaoExpirada = false }: Entrar
         password: dados.senha,
       });
       if (error) throw error;
-    } catch (erro) {
-      mostrarToast("error", erroDeAuth(erro).message);
+    } catch (causa) {
+      const erro = erroDeAuth(causa);
+      // Senha certa, e-mail ainda não confirmado: a tela de confirmação, não o toast (regra 127).
+      // O Supabase só diz isso a quem acertou a senha, então não revela quem tem conta.
+      if (erro.codigo === "email_not_confirmed") {
+        await navegar({ to: "/confirme-seu-email", search: { email: dados.email, doLogin: true } });
+        return;
+      }
+      mostrarToast("error", erro.message);
       return;
     }
     // Conta como uso (regra 121) e descarta o estado "anônimo" guardado antes de a raiz
