@@ -19,6 +19,7 @@ import {
   useToast,
   type AbaAluno,
 } from "@/ui";
+import { FolhaSair } from "@/features/acesso/FolhaSair";
 
 // Catálogo dos componentes base (Fase 0, item 3) para conferir com a página Componentes do Figma.
 
@@ -70,6 +71,7 @@ function Tokens() {
 function Demonstracoes() {
   const mostrarToast = useToast();
   const [folha, setFolha] = useState(false);
+  const [folhaSair, setFolhaSair] = useState(false);
   const [aba, setAba] = useState<AbaAluno>("inicio");
   const [codigo, setCodigo] = useState("+55");
 
@@ -207,6 +209,13 @@ function Demonstracoes() {
         >
           Você vai precisar entrar de novo com e-mail e senha.
         </Sheet>
+      </Secao>
+
+      <Secao titulo="FolhaSair (Perfil, regra 121)">
+        <Button variante="secondary" onClick={() => setFolhaSair(true)}>
+          Abrir "Sair do app?"
+        </Button>
+        <FolhaSair aberta={folhaSair} aoFechar={() => setFolhaSair(false)} />
       </Secao>
 
       <Secao titulo="EmptyState">
