@@ -2,7 +2,7 @@
 .claude/settings.local.json
 .claude/skills/
 
-# Segredos
+# Segredos (o .env.example só tem valores públicos)
 .env*
 
 # Dependências (harness PGlite dos testes)
@@ -15,3 +15,4 @@ Thumbs.db
 
 # Build do app
 dist/
+!.env.example
