@@ -16,7 +16,6 @@ import {
   TextAreaField,
   TextButton,
   Toast,
-  ToastProvider,
   useToast,
   type AbaAluno,
 } from "@/ui";
@@ -212,10 +211,5 @@ function Demonstracoes() {
   );
 }
 
-export function ComponentesPage() {
-  return (
-    <ToastProvider>
-      <Demonstracoes />
-    </ToastProvider>
-  );
-}
+// O ToastProvider vem da rota raiz.
+export const ComponentesPage = Demonstracoes;

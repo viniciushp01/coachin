@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { destinoDaSessao } from "@/lib/destino";
+import { estadoSessaoQuery } from "@/lib/sessao";
 
-// Provisório até o roteamento por papel (Fase 0, item 5).
+// A raiz não tem tela: leva cada pessoa para a sua área, conforme o servidor.
 export const Route = createFileRoute("/")({
-  component: () => (
-    <main className="mx-auto flex min-h-dvh max-w-screen flex-col justify-center gap-8 px-screen-margin">
-      <h1 className="text-display">Coach In</h1>
-      <p className="text-body text-text-secondary">Em construção.</p>
-    </main>
-  ),
+  beforeLoad: async ({ context }) => {
+    const estado = await context.queryClient.ensureQueryData(estadoSessaoQuery);
+    throw redirect({ to: destinoDaSessao(estado), replace: true });
+  },
 });

@@ -16,3 +16,4 @@ Thumbs.db
 # Build do app
 dist/
 !.env.example
+.tanstack/

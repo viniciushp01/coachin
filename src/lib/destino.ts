@@ -1,0 +1,45 @@
+import type { Database } from "@db/database.types";
+
+export type Papel = Database["public"]["Enums"]["app_role"];
+
+/** O que o servidor diz sobre quem está usando o app. Nunca vem de user_metadata. */
+export type EstadoSessao =
+  | { tipo: "anonimo" }
+  | {
+      tipo: "logado";
+      papel: Papel;
+      bloqueado: boolean;
+      nome: string;
+      /** Só para aluno: tem vínculo ativo com um professor. */
+      temProfessor: boolean;
+      /** Só para aluno: confirmou o aviso de dados (passo 1 do primeiro acesso). */
+      avisoAceito: boolean;
+      /** Só para aluno: concluiu o perfil (passo 2 do primeiro acesso). */
+      perfilConcluido: boolean;
+    };
+
+export type Destino =
+  | "/entrar"
+  | "/bloqueado"
+  | "/admin"
+  | "/professor"
+  | "/sem-professor"
+  | "/primeiro-acesso"
+  | "/aluno";
+
+/**
+ * Para onde cada pessoa vai ao abrir o app.
+ * - Bloqueado vem antes do papel (regras 95 e 119).
+ * - Aluno sem vínculo ativo vê "Você ainda não tem um professor"; professor ainda não
+ *   autorizado é uma conta de aluno sem vínculo e cai na mesma tela (regra 90).
+ * - Com vínculo e perfil incompleto, retoma o primeiro acesso (regras 49, 86 e 91).
+ */
+export function destinoDaSessao(estado: EstadoSessao): Destino {
+  if (estado.tipo === "anonimo") return "/entrar";
+  if (estado.bloqueado) return "/bloqueado";
+  if (estado.papel === "admin") return "/admin";
+  if (estado.papel === "professor") return "/professor";
+  if (!estado.temProfessor) return "/sem-professor";
+  if (!estado.perfilConcluido) return "/primeiro-acesso";
+  return "/aluno";
+}

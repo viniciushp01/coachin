@@ -1,5 +1,13 @@
-import { Outlet, createRootRoute } from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
+import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
+import { ToastProvider } from "@/ui";
 
-export const Route = createRootRoute({
-  component: () => <Outlet />,
+export type ContextoRotas = { queryClient: QueryClient };
+
+export const Route = createRootRouteWithContext<ContextoRotas>()({
+  component: () => (
+    <ToastProvider>
+      <Outlet />
+    </ToastProvider>
+  ),
 });

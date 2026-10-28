@@ -10,11 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AlunoRouteImport } from './routes/aluno'
+import { Route as BloqueadoRouteImport } from './routes/bloqueado'
+import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as PrimeiroAcessoRouteImport } from './routes/primeiro-acesso'
+import { Route as ProfessorRouteImport } from './routes/professor'
+import { Route as SemProfessorRouteImport } from './routes/sem-professor'
 import { Route as DevComponentesRouteImport } from './routes/dev.componentes'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlunoRoute = AlunoRouteImport.update({
+  id: '/aluno',
+  path: '/aluno',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BloqueadoRoute = BloqueadoRouteImport.update({
+  id: '/bloqueado',
+  path: '/bloqueado',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntrarRoute = EntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrimeiroAcessoRoute = PrimeiroAcessoRouteImport.update({
+  id: '/primeiro-acesso',
+  path: '/primeiro-acesso',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfessorRoute = ProfessorRouteImport.update({
+  id: '/professor',
+  path: '/professor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SemProfessorRoute = SemProfessorRouteImport.update({
+  id: '/sem-professor',
+  path: '/sem-professor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevComponentesRoute = DevComponentesRouteImport.update({
@@ -25,27 +67,83 @@ const DevComponentesRoute = DevComponentesRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/aluno': typeof AlunoRoute
+  '/bloqueado': typeof BloqueadoRoute
+  '/entrar': typeof EntrarRoute
+  '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/professor': typeof ProfessorRoute
+  '/sem-professor': typeof SemProfessorRoute
   '/dev/componentes': typeof DevComponentesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/aluno': typeof AlunoRoute
+  '/bloqueado': typeof BloqueadoRoute
+  '/entrar': typeof EntrarRoute
+  '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/professor': typeof ProfessorRoute
+  '/sem-professor': typeof SemProfessorRoute
   '/dev/componentes': typeof DevComponentesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/aluno': typeof AlunoRoute
+  '/bloqueado': typeof BloqueadoRoute
+  '/entrar': typeof EntrarRoute
+  '/primeiro-acesso': typeof PrimeiroAcessoRoute
+  '/professor': typeof ProfessorRoute
+  '/sem-professor': typeof SemProfessorRoute
   '/dev/componentes': typeof DevComponentesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dev/componentes'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/aluno'
+    | '/bloqueado'
+    | '/entrar'
+    | '/primeiro-acesso'
+    | '/professor'
+    | '/sem-professor'
+    | '/dev/componentes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dev/componentes'
-  id: '__root__' | '/' | '/dev/componentes'
+  to:
+    | '/'
+    | '/admin'
+    | '/aluno'
+    | '/bloqueado'
+    | '/entrar'
+    | '/primeiro-acesso'
+    | '/professor'
+    | '/sem-professor'
+    | '/dev/componentes'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/aluno'
+    | '/bloqueado'
+    | '/entrar'
+    | '/primeiro-acesso'
+    | '/professor'
+    | '/sem-professor'
+    | '/dev/componentes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  AlunoRoute: typeof AlunoRoute
+  BloqueadoRoute: typeof BloqueadoRoute
+  EntrarRoute: typeof EntrarRoute
+  PrimeiroAcessoRoute: typeof PrimeiroAcessoRoute
+  ProfessorRoute: typeof ProfessorRoute
+  SemProfessorRoute: typeof SemProfessorRoute
   DevComponentesRoute: typeof DevComponentesRoute
 }
 
@@ -56,6 +154,55 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aluno': {
+      id: '/aluno'
+      path: '/aluno'
+      fullPath: '/aluno'
+      preLoaderRoute: typeof AlunoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bloqueado': {
+      id: '/bloqueado'
+      path: '/bloqueado'
+      fullPath: '/bloqueado'
+      preLoaderRoute: typeof BloqueadoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entrar': {
+      id: '/entrar'
+      path: '/entrar'
+      fullPath: '/entrar'
+      preLoaderRoute: typeof EntrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/primeiro-acesso': {
+      id: '/primeiro-acesso'
+      path: '/primeiro-acesso'
+      fullPath: '/primeiro-acesso'
+      preLoaderRoute: typeof PrimeiroAcessoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/professor': {
+      id: '/professor'
+      path: '/professor'
+      fullPath: '/professor'
+      preLoaderRoute: typeof ProfessorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sem-professor': {
+      id: '/sem-professor'
+      path: '/sem-professor'
+      fullPath: '/sem-professor'
+      preLoaderRoute: typeof SemProfessorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev/componentes': {
@@ -70,6 +217,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
+  AlunoRoute: AlunoRoute,
+  BloqueadoRoute: BloqueadoRoute,
+  EntrarRoute: EntrarRoute,
+  PrimeiroAcessoRoute: PrimeiroAcessoRoute,
+  ProfessorRoute: ProfessorRoute,
+  SemProfessorRoute: SemProfessorRoute,
   DevComponentesRoute: DevComponentesRoute,
 }
 export const routeTree = rootRouteImport
