@@ -7,7 +7,7 @@ import { ErroApp, erroDeAuth } from "@/lib/erros";
 import { DICA_SENHA_NOVA, email, senhaNova } from "@/lib/formularios";
 import { supabase } from "@/lib/supabase";
 import { BackButton, BarraFixa, Button, FormField, Tela, TextButton, useToast } from "@/ui";
-import { urlDoApp } from "./urlDoApp";
+import { urlDeVoltaDaConfirmacao } from "./linkDeConfirmacao";
 
 const esquema = z.object({ email, senha: senhaNova });
 
@@ -33,7 +33,7 @@ export function CriarContaPage() {
       const { data, error } = await supabase.auth.signUp({
         email: dados.email,
         password: dados.senha,
-        options: { emailRedirectTo: urlDoApp("/entrar") },
+        options: { emailRedirectTo: urlDeVoltaDaConfirmacao() },
       });
       if (error) throw error;
       // Com a confirmação de e-mail ligada, o Supabase não acusa e-mail já confirmado com erro:

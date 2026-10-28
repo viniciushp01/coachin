@@ -2,7 +2,7 @@ import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/lib/supabase";
 import { BarraFixa, Button, EmptyState, Tela } from "@/ui";
 import { ReenviarLink } from "./ReenviarLink";
-import { urlDoApp } from "./urlDoApp";
+import { urlDeVoltaDaConfirmacao } from "./linkDeConfirmacao";
 
 const rotaConfirme = getRouteApi("/confirme-seu-email");
 
@@ -36,7 +36,7 @@ export function ConfirmeEmailPage({ email, doLogin = false }: ConfirmeEmailPageP
           supabase.auth.resend({
             type: "signup",
             email,
-            options: { emailRedirectTo: urlDoApp("/entrar") },
+            options: { emailRedirectTo: urlDeVoltaDaConfirmacao() },
           })
         }
       />

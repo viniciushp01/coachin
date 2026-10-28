@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { erroDeAuth } from "@/lib/erros";
@@ -18,10 +19,16 @@ const rotaEntrar = getRouteApi("/entrar");
  * guarda da rota carregou, se a sessão venceu por inatividade.
  */
 export function TelaEntrar() {
-  const { email: emailDaBusca } = rotaEntrar.useSearch();
+  const { email: emailDaBusca, confirmado } = rotaEntrar.useSearch();
   const { estado } = rotaEntrar.useRouteContext();
   const sessaoExpirada = estado.tipo === "anonimo" && estado.sessaoExpirada === true;
-  return <EntrarPage emailInicial={emailDaBusca} sessaoExpirada={sessaoExpirada} />;
+  return (
+    <EntrarPage
+      emailInicial={emailDaBusca}
+      sessaoExpirada={sessaoExpirada}
+      emailConfirmado={confirmado}
+    />
+  );
 }
 
 type EntrarPageProps = {
@@ -29,16 +36,26 @@ type EntrarPageProps = {
   emailInicial?: string;
   /** Sessão encerrada por 30 dias sem uso: título "Entre de novo" (regra 121). */
   sessaoExpirada?: boolean;
+  /** Voltou do link de confirmação válido: toast "E-mail confirmado." (regra 128). */
+  emailConfirmado?: boolean;
 };
 
 /**
  * Entrar (regras 39, 47 e 51). A mesma tela serve aos três papéis; o destino vem do servidor.
  * Erro de credenciais em toast neutro, campos preenchidos, sem bloqueio por tentativas.
  */
-export function EntrarPage({ emailInicial = "", sessaoExpirada = false }: EntrarPageProps) {
+export function EntrarPage({
+  emailInicial = "",
+  sessaoExpirada = false,
+  emailConfirmado = false,
+}: EntrarPageProps) {
   const navegar = useNavigate();
   const queryClient = useQueryClient();
   const mostrarToast = useToast();
+
+  useEffect(() => {
+    if (emailConfirmado) mostrarToast("success", "E-mail confirmado.");
+  }, [emailConfirmado, mostrarToast]);
   const {
     register,
     handleSubmit,
