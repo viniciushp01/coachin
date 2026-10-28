@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ErroApp, MENSAGENS, erroDaResposta } from "./erros";
+import { ErroApp, MENSAGENS, erroDaResposta, erroDeAuth } from "./erros";
 
 const migrations = import.meta.glob<string>("/supabase/migrations/*.sql", {
   query: "?raw",
@@ -62,5 +62,51 @@ describe("erroDaResposta", () => {
   it("não embrulha de novo um ErroApp", () => {
     const erro = new ErroApp("forbidden");
     expect(erroDaResposta(erro)).toBe(erro);
+  });
+});
+
+describe("erroDeAuth", () => {
+  it("traduz login com e-mail ou senha errados", () => {
+    const erro = erroDeAuth({
+      code: "invalid_credentials",
+      status: 400,
+      message: "Invalid login credentials",
+    });
+    expect(erro.codigo).toBe("invalid_credentials");
+    expect(erro.message).toBe("E-mail ou senha não conferem.");
+  });
+
+  it("não confunde e-mail não confirmado com senha errada", () => {
+    const erro = erroDeAuth({
+      code: "email_not_confirmed",
+      status: 400,
+      message: "Email not confirmed",
+    });
+    expect(erro.codigo).toBe("email_not_confirmed");
+  });
+
+  it("traduz e-mail já cadastrado e senha fraca", () => {
+    expect(erroDeAuth({ code: "user_already_exists", status: 422 }).codigo).toBe(
+      "user_already_exists",
+    );
+    expect(erroDeAuth({ code: "email_exists", status: 422 }).codigo).toBe("user_already_exists");
+    expect(erroDeAuth({ code: "weak_password", status: 422 }).codigo).toBe("weak_password");
+  });
+
+  it("traduz limite de envios", () => {
+    expect(erroDeAuth({ code: "over_email_send_rate_limit", status: 429 }).codigo).toBe(
+      "too_many_emails",
+    );
+    expect(erroDeAuth({ code: "over_request_rate_limit", status: 429 }).codigo).toBe(
+      "too_many_requests",
+    );
+    expect(erroDeAuth({ status: 429 }).codigo).toBe("too_many_requests");
+  });
+
+  it("reconhece falta de conexão e cai no genérico para o resto", () => {
+    expect(erroDeAuth({ status: 0, message: "Failed to fetch" }).codigo).toBe("sem_conexao");
+    expect(erroDeAuth({ code: "unexpected_failure", status: 500 }).codigo).toBe(
+      "erro_desconhecido",
+    );
   });
 });

@@ -34,7 +34,7 @@ Arquivos (em `supabase/`):
 | `exercises` | Biblioteca (pré-definidos e criados por professor) | Nunca excluídos (um gatilho impede até para o dono); nome normalizado sem acento/caixa |
 | `exercise_hidden` | "Ocultar da busca", por professor | |
 | `workouts` | Treino: nome, início, semanas, fim calculado, frequência em texto | Um treino por data de início por aluno |
-| `workout_days` | Fichas, com letra fixa | Remoção lógica; letra nunca reaproveitada |
+| `workout_days` | Fichas, com letra fixa | Remoção lógica; letra nunca reaproveitada. **Planejado (regra 126, depois da fatia 4):** `cardio_equipment` (`treadmill`/`bike`/`stairs`/`elliptical`/`free`) e `cardio_minutes` (1 a 180), `cardio_minutes` pode ser nulo (tempo em branco), mas só existe com equipamento preenchido; só indicação, sem marcação |
 | `workout_exercises` | Exercício dentro da ficha (séries, reps, descanso, observação) | |
 | `completions` | Treino feito (ficha + data) | Único por ficha e dia; guarda hora da ação e do recebimento |
 | `student_exercise_loads` / `load_history` | Carga atual e histórico de edições | Por conta e exercício; o histórico guarda o nome do exercício |
@@ -89,7 +89,7 @@ Estes pontos **não estavam definidos** nos documentos ou eram ambíguos. Cada u
 
 - **Ativar professor sem conta** (regra 93, e-mail sem cadastro): precisa de uma Edge Function que valida o token e cria o usuário já confirmado. Sem isso, só funciona para quem já tem conta.
 - **E-mail:** configurar SMTP próprio (o padrão do Supabase tem limite baixo) e os textos em pt-BR (confirmar e-mail, redefinir senha, convites).
-- **Autenticação (painel do Supabase):** exigir confirmação de e-mail; senha mínima de 8 com letras e números; sessão de 30 dias sem uso (esse recurso pode exigir plano pago, a confirmar).
+- **Autenticação (painel do Supabase), configurada em 28/10/2026:** confirmação de e-mail ligada; senha mínima de 8 com letras e dígitos; validade dos links de e-mail de 1 dia (`Email OTP expiration` = 86400, regras 88 e 89); SMTP próprio (Gmail com senha de app, trocar por provedor transacional e domínio próprio antes do lançamento); textos dos e-mails em pt-BR (`docs/email-templates-pt-br.md`, 5 modelos; o "Invite user" não é usado). **Sessão de 30 dias sem uso:** o campo `Inactivity timeout` só existe no plano Pro; decidido controlar no app, sem plano Pro por enquanto (a implementar na fatia 1, regra 121). Pendente: testar o e-mail de confirmação com uma conta de teste.
 - **Regras de tela em TypeScript** (módulo puro e testado): "Ficha de hoje", "Semana 3 de 8", descanso após 2 dias, resumo do mês. Têm de rodar também offline.
 - **Fila offline (PWA):** guardar ações no aparelho com um `client_action_id` e a hora da ação; enviar ao abrir o app. As funções já aceitam reenvio.
 - **Fuso:** o app deve atualizar `profiles.timezone` a cada abertura com conexão.

@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
+import { erroDeAuth } from "@/lib/erros";
 import { supabase } from "@/lib/supabase";
 import { BarraFixa, Button, FormField, Tela, useToast } from "@/ui";
 
@@ -23,10 +24,7 @@ export function EntrarPage() {
     });
     setEnviando(false);
     if (error) {
-      mostrarToast(
-        "error",
-        error.status === 400 ? "E-mail ou senha não conferem." : "Sem conexão. Tente de novo.",
-      );
+      mostrarToast("error", erroDeAuth(error).message);
       return;
     }
     await navegar({ to: "/", replace: true });
