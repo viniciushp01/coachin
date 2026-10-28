@@ -28,7 +28,7 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 - **Produto:** regras 1 a 122 (25ª rodada). Nenhum ponto bloqueando o MVP. Pendências menores na seção 8 do `contexto-produto.md`.
 - **Banco:** migrations 0001 a 0006 aplicadas no Supabase (`kfjjiajxgbsqpuskxbzb`) e iguais às do repositório. 239 verificações passando (PGlite). Administrador criado.
 - **Design:** Figma completo até a 24ª rodada. Faltam no FigJam original as seções 19 a 24.
-- **App:** Fase 0 em revisão no PR #1 (branch `fase-0/fundacao`), 28/10/2026. Stack: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Tokens em `src/styles/tokens.css`; componentes base em `src/ui` (catálogo em `/dev/componentes`); camada Supabase em `src/lib` (`supabase.ts`, `rpc.ts`, `erros.ts`); roteamento por papel (`src/lib/destino.ts` e `sessao.ts`, rotas `/entrar`, `/admin`, `/professor`, `/aluno`, `/sem-professor`, `/primeiro-acesso`, `/bloqueado`); CI em `.github/workflows/ci.yml`. `/entrar` é mínima e as áreas são provisórias ("Olá"), até as fatias. `main` protegida (PR obrigatório e os dois jobs do CI verdes). Projeto `coachin` na Vercel com preview por PR.
+- **App:** **Fase 0 concluída** em 28/10/2026 (PR #1). Produção em https://coachin.vercel.app. Stack: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Tokens em `src/styles/tokens.css`; componentes base em `src/ui` (catálogo em `/dev/componentes`); camada Supabase em `src/lib` (`supabase.ts`, `rpc.ts`, `erros.ts`); roteamento por papel (`src/lib/destino.ts` e `sessao.ts`, rotas `/entrar`, `/admin`, `/professor`, `/aluno`, `/sem-professor`, `/primeiro-acesso`, `/bloqueado`); CI em `.github/workflows/ci.yml`. `/entrar` é mínima e as áreas são provisórias ("Olá"), até as fatias. `main` protegida (PR obrigatório e os dois jobs do CI verdes). Projeto `coachin` na Vercel com preview por PR.
 
 ## 4. Fases
 
@@ -41,7 +41,7 @@ Entra tudo o que as fatias vão compartilhar. Só depois disso se paraleliza.
 3. ~~**Componentes base**~~ Feito: `src/ui`, catálogo em `/dev/componentes`.
 4. ~~**Camada Supabase**~~ Feito: `src/lib/supabase.ts`, `rpc.ts`, `erros.ts`.
 5. ~~**Roteamento por papel**~~ Feito: `src/lib/destino.ts` e `sessao.ts`, guardas em `src/routes`.
-6. **Pipeline:** CI feito (`.github/workflows/ci.yml`: formato, lint, tipos, Vitest, build e testes do banco). `main` protegida e preview da Vercel em cada PR (projeto `coachin`).
+6. ~~**Pipeline**~~ Feito: CI (`.github/workflows/ci.yml`: formato, lint, tipos, Vitest, build e testes do banco). `main` protegida e preview da Vercel em cada PR (projeto `coachin`).
 
 Pronto quando: um "olá" autenticado roda no preview, os componentes base têm exemplos e o CI está verde.
 
@@ -121,7 +121,7 @@ Problema durante o caminho: `/diagnosing-bugs`. Fim de fatia: `/retro`. Contexto
 
 ## 10. Pendências conhecidas
 
-- Fase 0: conferir o "olá" autenticado no preview e fazer o merge do PR #1. Depois, abrir os primeiros tickets.
+- Abrir os tickets da Fase 1, começando pela fatia 1 (Acesso), que completa a tela /entrar.
 - Figma: o frame "Login · 2 Erro de credenciais" diz "E-mail ou senha incorretos"; o texto decidido é "E-mail ou senha não conferem." (corrigir no Figma).
 - Renomear o Project de "Gym App" para "Coach In" (só você consegue).
 - FigJam original: replicar seções 19 a 24.
