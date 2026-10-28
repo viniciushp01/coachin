@@ -25,7 +25,7 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 
 ## 3. Estado atual (28/10/2026)
 
-- **Produto:** regras 1 a 130 (28ª rodada). Nenhum ponto bloqueando o MVP. Pendências menores na seção 8 do `contexto-produto.md`.
+- **Produto:** regras 1 a 131 (28ª rodada). Nenhum ponto bloqueando o MVP. Pendências menores na seção 8 do `contexto-produto.md`.
 - **Banco:** migrations 0001 a 0006 aplicadas no Supabase (`kfjjiajxgbsqpuskxbzb`) e iguais às do repositório. 239 verificações passando (PGlite). Administrador criado.
 - **Design:** Figma completo até a 24ª rodada. Faltam no FigJam original as seções 19 a 24.
 - **App:** **Fase 0 concluída** em 28/10/2026 (PR #1). Produção em https://coachin.vercel.app. Stack: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Tokens em `src/styles/tokens.css`; componentes base em `src/ui` (catálogo em `/dev/componentes`); camada Supabase em `src/lib` (`supabase.ts`, `rpc.ts`, `erros.ts`); roteamento por papel (`src/lib/destino.ts` e `sessao.ts`, rotas `/entrar`, `/admin`, `/professor`, `/aluno`, `/sem-professor`, `/primeiro-acesso`, `/bloqueado`); CI em `.github/workflows/ci.yml`. `/entrar` é mínima e as áreas são provisórias ("Olá"), até as fatias. `main` protegida (PR obrigatório e os dois jobs do CI verdes). Projeto `coachin` na Vercel com preview por PR.
@@ -90,7 +90,7 @@ Problema durante o caminho: `/diagnosing-bugs`. Fim de fatia: `/retro`. Contexto
 - **Um agente por ticket, um worktree por agente** (`git worktree` ou o recurso de worktree do Claude Code), branch `fatia-N/ticket`. Ninguém trabalha na `main` direto.
 - **Migrations:** reservar o número antes de começar (issue "migration 0007 reservada para #N"). Só um agente aplica por vez, e quem aplica roda os testes inteiros depois.
 - **Componentes base:** pertencem à Fase 0. Precisa de um novo? Ticket próprio, feito por um agente, mergeado antes de quem depende dele.
-- **Numeração de regras e rodadas:** quem decide produto reserva a faixa. Hoje a próxima regra é a **131** e a próxima rodada é a **29ª**. Dois chats de produto ao mesmo tempo precisam combinar faixas antes (foi o que quase colidiu nos lotes 3 e 4).
+- **Numeração de regras e rodadas:** quem decide produto reserva a faixa. Hoje a próxima regra é a **132** e a próxima rodada é a **29ª**. Dois chats de produto ao mesmo tempo precisam combinar faixas antes (foi o que quase colidiu nos lotes 3 e 4).
 - **Revisor de consistência** ao fim de cada onda paralela: confere cada entrega contra as regras e o design system, e só o que passa chega a você.
 
 ## 7. Quando uma regra de negócio muda ou aparece

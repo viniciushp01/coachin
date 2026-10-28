@@ -22,7 +22,7 @@ Decidida em `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel, 
 - `figma-paginas.md`: mapa de páginas do arquivo Figma "Coach In" (manda sobre os nomes citados nos outros arquivos).
 - `handoff-design-system.md`: convenções visuais e manhas do plugin do Figma.
 - `prompts-lotes-3-e-4.md`: prompts usados nos lotes 3 e 4 do design (referência histórica).
-- `rodada-19`, `rodada-22`, `rodada-23` e `rodada-24` (as rodadas 25 e 26 são só regras, 122 e 123 a 125, sem mapa do Figma; a 28ª (regras 127 a 130) tem a seção 12 de "Aluno · Entrada"; a 27ª, regra 126, tem as telas na página "Aluno · Ficha e painel do dia" e "Professor · Treino"): mapa do Figma e pendências de cada rodada de casos de borda (as regras em si estão no `contexto-produto.md`).
+- `rodada-19`, `rodada-22`, `rodada-23` e `rodada-24` (as rodadas 25 e 26 são só regras, 122 e 123 a 125, sem mapa do Figma; a 28ª (regras 127 a 131) tem a seção 12 de "Aluno · Entrada"; a 27ª, regra 126, tem as telas na página "Aluno · Ficha e painel do dia" e "Professor · Treino"): mapa do Figma e pendências de cada rodada de casos de borda (as regras em si estão no `contexto-produto.md`).
 
 O **repositório é a fonte da verdade**: edite em `docs/contexto/` e espelhe no Project "Coach In" do claude.ai ao fim de cada rodada (no Project os caminhos são `claude/...`). Detalhes em `docs/WORKFLOW.md`, seção 8.
 
