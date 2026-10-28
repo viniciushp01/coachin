@@ -24,6 +24,7 @@ export const MENSAGENS = {
   user_already_exists: "E-mail em uso. Tente logar utilizando ele, ou solicite alteração de senha.", // [produto] regra 83
   weak_password: "A senha precisa ter pelo menos 8 caracteres, com letras e números.", // [produto] regra 78
   too_many_requests: "Muitas tentativas. Espere um pouco e tente de novo.",
+  same_password: "É a sua senha atual. Escolha uma senha diferente.", // [produto] regra 131
   too_many_emails: "Muitos envios. Espere um pouco.", // [produto] regra 130
 
   // Convites
@@ -156,6 +157,7 @@ export function erroDeAuth(erro: unknown): ErroApp {
   if (codigo === "email_not_confirmed") return new ErroApp("email_not_confirmed", causa);
   if (codigo === "user_already_exists" || codigo === "email_exists")
     return new ErroApp("user_already_exists", causa);
+  if (codigo === "same_password") return new ErroApp("same_password", causa);
   if (codigo === "weak_password") return new ErroApp("weak_password", causa);
   if (codigo === "over_email_send_rate_limit") return new ErroApp("too_many_emails", causa);
   if (dados.status === 429 || /^over_.*_rate_limit$/.test(codigo))

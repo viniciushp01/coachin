@@ -93,6 +93,10 @@ describe("erroDeAuth", () => {
     expect(erroDeAuth({ code: "weak_password", status: 422 }).codigo).toBe("weak_password");
   });
 
+  it("traduz senha igual à atual", () => {
+    expect(erroDeAuth({ code: "same_password", status: 422 }).codigo).toBe("same_password");
+  });
+
   it("traduz limite de envios", () => {
     expect(erroDeAuth({ code: "over_email_send_rate_limit", status: 429 }).codigo).toBe(
       "too_many_emails",
