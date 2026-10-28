@@ -176,6 +176,23 @@ describe("Criar nova senha (regras 47, 50, 78 e 121)", () => {
     expect(navegar).toHaveBeenCalledWith({ to: "/entrar" });
   });
 
+  it('senha igual à atual: erro no campo e não vai para "Senha alterada" (regra 131)', async () => {
+    updateUser.mockResolvedValue({ data: {}, error: { code: "same_password", status: 422 } });
+    const usuario = abrir(<NovaSenhaPage situacao="valido" />);
+
+    await usuario.type(screen.getByLabelText("Nova senha"), "atual1234");
+    await usuario.click(screen.getByRole("button", { name: "Salvar senha" }));
+
+    expect(
+      await screen.findByText("É a sua senha atual. Escolha uma senha diferente."),
+    ).toBeVisible();
+    expect(screen.getByLabelText("Nova senha")).toHaveAccessibleDescription(
+      "É a sua senha atual. Escolha uma senha diferente.",
+    );
+    expect(screen.queryByRole("heading", { name: "Senha alterada" })).not.toBeInTheDocument();
+    expect(signOut).not.toHaveBeenCalled();
+  });
+
   it("senha recusada pelo servidor vira erro no campo", async () => {
     updateUser.mockResolvedValue({ data: {}, error: { code: "weak_password", status: 422 } });
     const usuario = abrir(<NovaSenhaPage situacao="valido" />);

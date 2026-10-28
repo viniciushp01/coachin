@@ -82,7 +82,8 @@ function CriarNovaSenha({ aoSalvar }: { aoSalvar: () => void }) {
       if (error) throw error;
     } catch (causa) {
       const erro = erroDeAuth(causa);
-      if (erro.codigo === "weak_password") {
+      // Senha fraca (regra 78) ou igual à atual (regra 131): erro no campo, sem "Senha alterada".
+      if (erro.codigo === "weak_password" || erro.codigo === "same_password") {
         setError("senha", { message: erro.message }, { shouldFocus: true });
       } else {
         mostrarToast("error", erro.message);
