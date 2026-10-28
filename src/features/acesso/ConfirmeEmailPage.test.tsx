@@ -47,6 +47,20 @@ describe("Confirme seu e-mail (regras 89, 100 e 130)", () => {
     ).toBeVisible();
   });
 
+  it("vindo do login, avisa que o e-mail ainda não foi confirmado (regra 127)", () => {
+    render(
+      <ToastProvider>
+        <ConfirmeEmailPage email="ana@exemplo.com" doLogin />
+      </ToastProvider>,
+    );
+    expect(
+      screen.getByText(
+        "Seu e-mail ainda não foi confirmado. Enviamos um link para ana@exemplo.com. Toque nele para ativar sua conta. O link vale por 1 dia.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Não recebeu? Reenviar link" })).toBeEnabled();
+  });
+
   it('"Reenviar link" manda outro e fica desabilitado por 60 s, com contagem', async () => {
     resend.mockResolvedValue({ data: {}, error: null });
     const usuario = abrirTela();
