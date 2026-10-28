@@ -1,0 +1,8 @@
+dist
+node_modules
+docs
+supabase
+*.md
+package-lock.json
+src/routeTree.gen.ts
+.claude

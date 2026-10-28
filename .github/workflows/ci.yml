@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: App (formato, lint, tipos, testes, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - name: Build
+        run: npm run build
+        env:
+          # Valores públicos (os mesmos do .env.example); o build só precisa que existam.
+          VITE_SUPABASE_URL: https://kfjjiajxgbsqpuskxbzb.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_sv01pJhC2MYUnyf8LqyxeA_V7TUoq2C
+
+  banco:
+    name: Banco (239 verificações no PGlite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: supabase/tests/pglite/package-lock.json
+      - run: npm ci --prefix supabase/tests/pglite
+      - run: npm run test:db

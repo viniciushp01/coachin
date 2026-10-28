@@ -8,6 +8,14 @@ Antes de qualquer trabalho de produto, design ou código, leia `docs/contexto/co
 - Se algo conflitar ou estiver nos "Pontos em aberto", pergunte antes de implementar.
 - Respostas e textos do app em português (pt-BR).
 
+## Como trabalhamos
+
+Leia `docs/WORKFLOW.md` antes de planejar trabalho novo: papéis, fases, ciclo de cada fatia, trabalho em paralelo e sincronização dos documentos. Resumo: o repositório é a fonte da verdade, só o Claude Code aplica migrations, e ninguém inventa regra de negócio.
+
+## Stack
+
+Decidida em `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel, Tailwind v4 com os tokens do `design.md`, TanStack Router e Query, vite-plugin-pwa, idb). Leia antes de escrever código do app.
+
 ## Documentos de apoio (`docs/contexto/`)
 
 - `design.md`: design system (tokens, tipografia, componentes e regras de montagem). Leia antes de criar qualquer tela ou código de interface.
@@ -16,7 +24,7 @@ Antes de qualquer trabalho de produto, design ou código, leia `docs/contexto/co
 - `prompts-lotes-3-e-4.md`: prompts usados nos lotes 3 e 4 do design (referência histórica).
 - `rodada-19`, `rodada-22`, `rodada-23` e `rodada-24` (a 25ª rodada é só a regra 122, sem mapa do Figma): mapa do Figma e pendências de cada rodada de casos de borda (as regras em si estão no `contexto-produto.md`).
 
-As cópias em `docs/contexto/` vieram do Project "Coach In" no claude.ai. Se o Project for atualizado, as cópias precisam ser atualizadas também.
+O **repositório é a fonte da verdade**: edite em `docs/contexto/` e espelhe no Project "Coach In" do claude.ai ao fim de cada rodada (no Project os caminhos são `claude/...`). Detalhes em `docs/WORKFLOW.md`, seção 8.
 
 ## Agent skills
 
@@ -39,5 +47,6 @@ Single-context. See `docs/agents/domain.md`.
 - Migrations em `supabase/migrations/` (ordem numérica, 0001 a 0006). 0001 a 0005 **aplicadas em 27/10/2026** e 0006 (regra 122, treino antes do aceite) **em 28/10/2026**, via MCP (gatilho de `auth.users`, excluir conta e bloquear professor testados no projeto real; Security Advisor rodado). Administrador criado. Tipos TypeScript em `supabase/database.types.ts`; gere de novo a cada mudança no banco.
 - Testes locais do banco: `bash supabase/tests/run.sh` (precisa de Postgres 16 e de Linux/WSL/macOS; sobe um banco descartável; deve terminar com "TODOS OS TESTES PASSARAM"). `00_stub_supabase.sql` simula a autenticação e **nunca** deve ser aplicado no Supabase real.
 - No Windows (sem Postgres/WSL/Docker): `npm --prefix supabase/tests/pglite install` e depois `node supabase/tests/pglite/run.mjs` (Postgres 17 em WebAssembly via PGlite, mesmos arquivos e mesma saída).
-- Regras do desenho: o app só **lê** tabelas; **toda escrita** passa por funções (RPC) que validam papel e regra de negócio. Não crie `insert/update/delete` direto de tabela no app, nem papel em `user_metadata`. Erros das funções são códigos curtos (ex.: `invite_expired`) que o app traduz para pt-BR.
+- Regras do desenho: o app só **lê** tabelas; **toda escrita** passa por funções (RPC) que validam papel e regra de negócio. Não crie `insert/update/delete` direto de tabela no app, nem papel em `user_metadata`. Erros das funções são códigos curtos (ex.: `invite_expired`) que o app traduz para pt-BR em `src/lib/erros.ts` (um teste falha se uma migration lançar código sem tradução). No app, escrita só por `rpc()` de `src/lib/rpc.ts`; leitura pelo cliente de `src/lib/supabase.ts`.
+- Ambiente local: copie `.env.example` para `.env.local` (só valores públicos: URL e chave publicável). Testes do app: `npm test`; do banco: `npm run test:db`.
 - Mudou o banco? Crie uma **nova** migration (nunca edite uma já aplicada), rode os testes e atualize `docs/schema-coach-in.md`. Só um lado (este chat ou o Claude Code) aplica migrations, para não gerar conflito: o Claude Code.

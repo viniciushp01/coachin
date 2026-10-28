@@ -1,0 +1,246 @@
+/*
+ * Design system do Coach In em código.
+ * Fonte: docs/contexto/design.md e as variáveis do Figma (coleções Primitives e Tokens).
+ * Conferido com o Figma em 28/10/2026.
+ *
+ * Primitives ficam só em :root (sem utilitário do Tailwind): telas e componentes usam Tokens.
+ * Tokens ficam no @theme: cada um vira variável CSS e utilitário.
+ *   color/bg/surface  → --color-bg-surface  → bg-bg-surface
+ *   space/16          → --spacing-16        → p-16, gap-16 (o número é o valor em px)
+ *   radius/control    → --radius-control    → rounded-control
+ * A escala padrão do Tailwind é apagada (--*: initial): só existe o que está aqui.
+ */
+
+:root {
+  --primitive-neutral-900: #121212;
+  --primitive-neutral-800: #1e1e1e;
+  --primitive-neutral-700: #2a2a2a;
+  --primitive-neutral-600: #3a3a3a;
+  --primitive-neutral-500: #4a4a4a;
+  --primitive-neutral-300: #a3a3a3;
+  --primitive-neutral-100: #e6e6e6;
+  --primitive-neutral-0: #000000;
+  --primitive-orange-600: #e8691a;
+  --primitive-orange-500: #ff8a3d;
+  --primitive-orange-300: #ffb27a;
+  --primitive-green-400: #4ddba6;
+  --primitive-yellow-400: #ffc857;
+  --primitive-blue-300: #8ab4f8;
+  --primitive-red-300: #f28b82;
+  --primitive-red-900: #4a3331;
+}
+
+/* static: emite todas as variáveis, mesmo as que nenhum utilitário usa (componentes leem var() direto) */
+@theme static {
+  --*: initial;
+
+  /* Cores · fundo */
+  --color-bg-canvas: var(--primitive-neutral-900);
+  --color-bg-surface: var(--primitive-neutral-800);
+  --color-bg-surface-raised: var(--primitive-neutral-700);
+  --color-bg-scrim: color-mix(in srgb, var(--primitive-neutral-0) 60%, transparent);
+  --color-bg-brand: var(--primitive-orange-500);
+  --color-bg-brand-subtle: color-mix(in srgb, var(--primitive-orange-500) 16%, transparent);
+  --color-bg-success-subtle: color-mix(in srgb, var(--primitive-green-400) 16%, transparent);
+  --color-bg-info-subtle: color-mix(in srgb, var(--primitive-blue-300) 16%, transparent);
+  --color-bg-neutral-subtle: color-mix(in srgb, var(--primitive-neutral-300) 16%, transparent);
+  --color-bg-warning-subtle: color-mix(in srgb, var(--primitive-yellow-400) 16%, transparent);
+
+  /* Cores · borda */
+  --color-border-subtle: var(--primitive-neutral-700);
+  --color-border-default: var(--primitive-neutral-600);
+  --color-border-strong: var(--primitive-neutral-500);
+  --color-border-brand: var(--primitive-orange-500);
+  --color-border-danger: var(--primitive-red-900);
+
+  /* Cores · texto */
+  --color-text-primary: var(--primitive-neutral-100);
+  --color-text-secondary: var(--primitive-neutral-300);
+  --color-text-disabled: color-mix(in srgb, var(--primitive-neutral-300) 55%, transparent);
+  --color-text-on-brand: var(--primitive-neutral-900);
+  --color-text-brand: var(--primitive-orange-500);
+  --color-text-brand-soft: var(--primitive-orange-300);
+
+  /* Cores · status (vermelho só para erro ou ação destrutiva) */
+  --color-status-success: var(--primitive-green-400);
+  --color-status-warning: var(--primitive-yellow-400);
+  --color-status-info: var(--primitive-blue-300);
+  --color-status-danger: var(--primitive-red-300);
+
+  /* Espaço: múltiplos de 4, mais 0 e 2 */
+  --spacing-0: 0px;
+  --spacing-2: 2px;
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-28: 28px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-screen-margin: 20px;
+  --spacing-card-padding: 20px;
+
+  /* Raios */
+  --radius-control: 16px;
+  --radius-card: 24px;
+  --radius-tile: 20px;
+  --radius-inset: 12px;
+  --radius-sheet: 28px;
+  --radius-pill: 999px;
+
+  /* Sombras (só em elementos elevados) */
+  --shadow-raised: 0 8px 24px 0 color-mix(in srgb, var(--primitive-neutral-0) 50%, transparent);
+  --shadow-sheet: 0 -8px 24px 0 color-mix(in srgb, var(--primitive-neutral-0) 50%, transparent);
+
+  /* Fontes */
+  --font-display: "Jost", sans-serif;
+  --font-body: "Inter", sans-serif;
+
+  /* Largura de tela de referência (celular): max-w-screen */
+  --container-screen: 390px;
+}
+
+/* Estilos de texto: text/<nome> no Figma → classe text-<nome> */
+@utility text-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 48px;
+}
+@utility text-title-lg {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 40px;
+}
+@utility text-title-screen {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 32px;
+}
+@utility text-title-md {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 32px;
+}
+@utility text-title-sm {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 24px;
+}
+@utility text-title-card {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 24px;
+}
+@utility text-number-display {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 56px;
+  line-height: 64px;
+}
+@utility text-number-xl {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 40px;
+}
+@utility text-number-lg {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 32px;
+}
+@utility text-number-md {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 24px;
+}
+@utility text-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+}
+@utility text-body-medium {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 24px;
+}
+@utility text-body-strong {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 24px;
+}
+@utility text-body-bold {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 24px;
+}
+@utility text-caption {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 16px;
+}
+@utility text-label {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+}
+@utility text-label-strong {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 16px;
+}
+@utility text-label-bold {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 16px;
+}
+@utility text-overline {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+@utility text-link {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 24px;
+  text-decoration-line: underline;
+  color: var(--color-status-info);
+}
+/* Única exceção aos múltiplos de 4: só o rótulo da NavBar */
+@utility text-nav-label {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 10px;
+  line-height: 16px;
+}
+
+/* Gradiente: só na barra de progresso, um por tela */
+@utility bg-brand-progress {
+  background-image: linear-gradient(
+    90deg,
+    var(--primitive-orange-500),
+    var(--primitive-orange-300)
+  );
+}
