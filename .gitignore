@@ -1,0 +1,14 @@
+# Configuração local do Claude Code (permissões da máquina) e skills instaladas
+.claude/settings.local.json
+.claude/skills/
+
+# Segredos
+.env*
+
+# Dependências (harness PGlite dos testes)
+node_modules/
+
+# Sistema / logs
+.DS_Store
+Thumbs.db
+*.log

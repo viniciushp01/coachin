@@ -1,0 +1,43 @@
+# Coach In
+
+Aplicativo de treinos de academia gerenciado por um professor (MVP: apenas musculação).
+
+Antes de qualquer trabalho de produto, design ou código, leia `docs/contexto/contexto-produto.md`: ele consolida o modelo de dados, as regras de negócio (numeradas), as telas, os fluxos e a priorização MVP x Depois, atualizado até a 25ª rodada de decisões (27/10/2026). A fonte original é o board do Figma (https://www.figma.com/board/JNuuAUgUlhLvia1HZ5X3xO/Aplicativo-de-treinos---MVP).
+
+- Siga as regras do `docs/contexto/contexto-produto.md`; não invente regras novas sem confirmar.
+- Se algo conflitar ou estiver nos "Pontos em aberto", pergunte antes de implementar.
+- Respostas e textos do app em português (pt-BR).
+
+## Documentos de apoio (`docs/contexto/`)
+
+- `design.md`: design system (tokens, tipografia, componentes e regras de montagem). Leia antes de criar qualquer tela ou código de interface.
+- `figma-paginas.md`: mapa de páginas do arquivo Figma "Coach In" (manda sobre os nomes citados nos outros arquivos).
+- `handoff-design-system.md`: convenções visuais e manhas do plugin do Figma.
+- `prompts-lotes-3-e-4.md`: prompts usados nos lotes 3 e 4 do design (referência histórica).
+- `rodada-19`, `rodada-22`, `rodada-23` e `rodada-24` (a 25ª rodada é só a regra 122, sem mapa do Figma): mapa do Figma e pendências de cada rodada de casos de borda (as regras em si estão no `contexto-produto.md`).
+
+As cópias em `docs/contexto/` vieram do Project "Coach In" no claude.ai. Se o Project for atualizado, as cópias precisam ser atualizadas também.
+
+## Agent skills
+
+### Issue tracker
+
+Issues em GitHub Issues (`viniciushp01/coachin`), via `gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Labels padrão (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context. See `docs/agents/domain.md`.
+
+## Banco de dados (Supabase)
+
+- Projeto Supabase: `coach-in-app` (ref `kfjjiajxgbsqpuskxbzb`, região sa-east-1), já configurado em `.mcp.json`. Estava **vazio** quando as migrations foram escritas.
+- Leia `docs/schema-coach-in.md` antes de mexer no banco ou em qualquer chamada ao Supabase. Ele explica o desenho, quem enxerga o quê, a lista de funções e as 12 decisões a confirmar (seção 5).
+- Migrations em `supabase/migrations/` (ordem numérica, 0001 a 0006). 0001 a 0005 **aplicadas em 27/10/2026** e 0006 (regra 122, treino antes do aceite) **em 28/10/2026**, via MCP (gatilho de `auth.users`, excluir conta e bloquear professor testados no projeto real; Security Advisor rodado). Administrador criado. Tipos TypeScript em `supabase/database.types.ts`; gere de novo a cada mudança no banco.
+- Testes locais do banco: `bash supabase/tests/run.sh` (precisa de Postgres 16 e de Linux/WSL/macOS; sobe um banco descartável; deve terminar com "TODOS OS TESTES PASSARAM"). `00_stub_supabase.sql` simula a autenticação e **nunca** deve ser aplicado no Supabase real.
+- No Windows (sem Postgres/WSL/Docker): `npm --prefix supabase/tests/pglite install` e depois `node supabase/tests/pglite/run.mjs` (Postgres 17 em WebAssembly via PGlite, mesmos arquivos e mesma saída).
+- Regras do desenho: o app só **lê** tabelas; **toda escrita** passa por funções (RPC) que validam papel e regra de negócio. Não crie `insert/update/delete` direto de tabela no app, nem papel em `user_metadata`. Erros das funções são códigos curtos (ex.: `invite_expired`) que o app traduz para pt-BR.
+- Mudou o banco? Crie uma **nova** migration (nunca edite uma já aplicada), rode os testes e atualize `docs/schema-coach-in.md`. Só um lado (este chat ou o Claude Code) aplica migrations, para não gerar conflito: o Claude Code.

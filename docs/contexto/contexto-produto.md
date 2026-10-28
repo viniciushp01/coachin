@@ -1,0 +1,443 @@
+# Coach In — Contexto do produto (MVP)
+
+> Fonte: board FigJam "Aplicativo de treinos - MVP" (https://www.figma.com/board/JNuuAUgUlhLvia1HZ5X3xO/Aplicativo-de-treinos---MVP).
+> Atualizado em 27/10/2026. Base: **9ª rodada de decisões** do board (23/10/2026) + **10ª rodada** (vídeo fora do MVP), **11ª rodada** (login, solicitação, perfil e navegação), **12ª rodada** (treino concluído e continuidade), **13ª rodada** (abas Frequência, Progressão, Histórico e Perfil), **14ª rodada** (entrada do aluno), **15ª rodada** (lado do professor: plataforma, alunos e convite), **16ª rodada** (professor acompanha o aluno), **17ª rodada** (professor monta e edita o treino) e **18ª rodada** (senha, vínculo de conta existente e exclusão de dados/LGPD), todas de 26/10/2026, mais a **19ª rodada** (casos de borda E1 a E7), a **20ª rodada** (papéis de acesso, conta aberta e bloqueio de professor), a **21ª rodada** (já logado, troca de professor, convite recusado e pendências), a **22ª rodada** (casos de borda E8 a E14 e telefone do aluno), a **23ª rodada** (casos de borda E15 a E21: sem internet, rotação, textos longos e fuso), a **24ª rodada** (casos de borda E22 a E29: aviso de treino novo, exclusão da própria conta, aluno bloqueado, sessão e "Sair") e a **25ª rodada** (treino criado antes do aceite do convite), de 27/10/2026. Itens novos dessas rodadas estão marcados com "(26/10)" ou "(27/10)".
+> Em caso de conflito entre este arquivo e o board, o board manda. Atualize este arquivo quando o board mudar.
+> Observação: as rodadas 10 a 24 foram **acrescentadas** ao board; as seções antigas (ex.: "Menu Frequência" na lista de MVP e os fluxos) foram ajustadas só no texto e podem usar o vocabulário anterior. Vale a leitura deste arquivo.
+> **Nomes das páginas do Figma:** ver `docs/contexto/figma-paginas.md` (os nomes citados abaixo são os antigos). As regras 82 a 121 estão neste arquivo; `docs/contexto/rodada-19-casos-de-borda.md`, `docs/contexto/rodada-22-casos-de-borda.md`, `docs/contexto/rodada-23-casos-de-borda.md` e `docs/contexto/rodada-24-casos-de-borda.md` guardam só o mapa do Figma e as pendências dessas rodadas.
+
+## 1. Visão geral
+
+Aplicativo de treinos de academia **gerenciado por um professor**. Três papéis, **um por e-mail** (regra 87, 27/10):
+
+- **Administrador**: o dono do produto, com e-mail próprio. **Convida e bloqueia professores.** Não vê dados de alunos.
+- **Professor**: cadastra alunos, convida, monta treinos e acompanha.
+- **Aluno**: vê a ficha, registra carga, marca treino feito e acompanha a própria frequência. **Tem um professor por vez** (regra 98). **Exclui a própria conta** quando quiser (regra 120).
+
+**Escopo do MVP:**
+- Apenas musculação (cardio e funcional ficam para depois).
+- **Professores entram por convite do administrador** (27/10). O dono usa um e-mail de professor separado do e-mail de administrador. O modelo de dados nasce preparado para vários professores (ver regra 36).
+- **Sem conteúdo de vídeo** (nem arquivo, nem GIF, nem link de demonstração) (26/10).
+- **O professor usa o mesmo app, no formato de celular (390)** (26/10, regra 54). Não há versão web/desktop no MVP. O administrador usa o mesmo app (27/10).
+- **O app é web, instalável (PWA)** (27/10, regra 116). Sem internet: fila local de envio e treino ativo guardado para leitura; offline completo fica para depois.
+- **Sem notificação push no MVP.** O aluno é avisado de treino novo por um pop-up ao abrir o app (regra 117).
+
+## 2. Modelo de dados (Treino > Ficha > Exercício)
+
+| Entidade | Campos / regras |
+|---|---|
+| **Treino** | nome (definido pelo professor, **obrigatório**, aparece na home do aluno) · início agendado · nº de semanas (**mínimo 1**, regra 105) · frequência sugerida (**texto livre**, só informação, sem limite, regras 65 e 105). **Início e fim são fixos** e são **datas de calendário, sem hora** (regra 115): fim = início + semanas. Último dia = início + 7 × semanas − 1 dia. Ex.: início 03/11 por 8 semanas termina em 28/12. **Não há meta de sessões nem previsão de término.** **Cada aluno tem no máximo um treino agendado por vez** (regras 64 e 106). **Um treino só é salvo com pelo menos uma ficha, e cada ficha com pelo menos um exercício** (regra 104). |
+| **Ficha** (A, B, C…) | Um treino tem várias fichas, cada uma com um nome (ex.: "Peito e tríceps") e uma **letra fixa** (regra 111). Rotação em sequência A-B-C-A-B… **Sem limite de fichas**; o professor reordena arrastando (regra 66). **A letra nunca muda nem é reaproveitada**: removida a B, ficam A e C. |
+| **Exercício** | Vem da biblioteca. Séries · reps · descanso (informação) · observação (opcional). **A observação existe só dentro de cada exercício** (ex.: posição do banco, dos pés). **Não há observação do treino como um todo no MVP.** **Não há vídeo, GIF nem link de demonstração no MVP** (26/10; fica para depois). **Sem limite de exercícios por ficha**; reordenar arrastando (regra 66). |
+| **Conta e papel** (27/10) | E-mail e senha. **Cada e-mail tem um único papel: administrador, professor ou aluno** (regra 87). Qualquer pessoa pode criar conta (regra 89) e começa como aluno sem professor. O papel é conferido no servidor em toda chamada. Professor pode estar **bloqueado** (regra 94). Aluno pode ter a conta bloqueada no futuro (regra 119). **A sessão dura 30 dias sem uso** (regra 121). |
+| **Perfil do aluno** | Preenchido pelo **próprio aluno** ao **vincular o primeiro professor** (regra 91, 27/10), e ele pode **editar quando quiser** (26/10): nome · data de nascimento (idade calculada) · **telefone (WhatsApp, obrigatório, regra 108)** · altura · peso · campo aberto de restrições ou dores. **Cada edição guarda a data** (26/10), mas **no MVP a tela mostra só o valor atual**. **No futuro, peso e outros dados do perfil vão gerar histórico** (26/10), e podem surgir novos dados (ver "Depois do MVP"). **O professor vê o perfil, só leitura, com "atualizado em"** (26/10). Validação de campos na regra 85 (limites confirmados na regra 99; telefone na regra 108). **Trocar de professor não refaz o perfil** (regra 98). |
+| **Aluno (cadastro)** | Criado pelo professor com **nome**, **e-mail (opcional)** e **telefone (opcional, regra 109)**. Mais nada no cadastro (regra 57). |
+| **Treino feito** | Ficha realizada em uma data, marcada pelo aluno (no dia ou depois). É o **único registro de treino**. Guardar também a data em que a marcação foi feita (o professor poderá ver depois; sem custo de interface no MVP). **Pertence ao treino ativo na data marcada**, inclusive depois da data de fim enquanto ele seguir ativo (26/10); **entre o fim de um treino e o início do próximo, pertence ao treino atual** (regra 110). **A data é a do fuso do aluno** (regra 115). **Não registra exercícios nem cargas**: só ficha e data. **O professor não marca nem desfaz** (regra 61). |
+| **Carga** | Por aluno e exercício: última carga + histórico de edições (cada edição guarda a data). **Única por exercício**, compartilhada entre fichas e treinos. **A carga só passa a existir quando o aluno a registra** (o professor não define carga inicial). |
+| **Fila de envio (no aparelho)** (27/10) | Ações do aluno feitas sem conexão (marcar, desfazer, editar carga), guardadas no aparelho com a hora em que ocorreram e enviadas quando a conexão volta (regra 116). Não é uma entidade do servidor. |
+| **Solicitação de novo treino** | Criada pelo aluno, atendida pelo professor. Apenas uma aberta por vez. **Fica aberta até o novo treino ficar ativo**; o aluno pode **cancelá-la, mas só enquanto o professor ainda não agiu** (26/10; regra 103, 27/10). |
+| **Convite de aluno** | Link ou e-mail enviado pelo professor. **Uso único, preso ao cadastro daquele aluno, válido por 7 dias** (26/10). **O e-mail no cadastro do aluno é opcional** (regra 46) (26/10). **Reenviar gera um novo link e o anterior deixa de valer** (regra 58); quem abre o link antigo vê "Este link não vale mais" (regra 82). Desde 27/10 o convite **vincula a conta do aluno ao professor** (regras 79 e 89); a conta pode ter sido criada antes. **Se a pessoa toca em "Agora não", o convite expira na hora e vira "Convite recusado"** (regra 102). |
+| **Convite de professor** (27/10) | Criado pelo administrador para **um e-mail**. Link de uso único, **válido por 1 dia**, reenviar invalida o anterior (regras 92 e 93). "Agora não" também o transforma em "Convite recusado" (regra 102). |
+| **Exclusão da conta** (27/10, regra 120) | Feita **pelo próprio aluno** (aba Perfil, bloco Conta, "Excluir minha conta"), sem passar pelo professor. Apaga perfil, marcações, cargas e treinos do aluno. Substitui o antigo "pedido de exclusão" (regras 80 e 81). |
+
+**Estados do treino:** agendado (só o professor vê) · ativo (inclui o **concluído**, que é o ativo cuja data de fim já passou) · encerrado (substituído por outro) · "sem treino" (aluno vinculado sem treino ativo, tela vazia explicativa). **Aluno sem professor** vê outra tela: "Você ainda não tem um professor" (regra 90).
+
+**Estados do aluno na lista do professor (26/10, regra 55; ampliada em 27/10, regra 102):** ativo · sem treino · quase no fim · convite pendente (com as variações "convite expirado" e **"convite recusado"**).
+
+**Estados do professor na lista do administrador (27/10, regras 92, 94 e 102):** ativo · convite pendente · convite expirado · convite recusado · bloqueado.
+
+**Dono dos dados:** todo dado nasce com dono (um professor): aluno, treino, convite e exercício criado. O professor só vê os próprios alunos.
+
+## 3. Regras de negócio decididas
+
+### Treino ativo e agendamento
+1. **Um treino ativo por vez.** A home mostra só as fichas dele, sem seletor de treino.
+2. O professor agenda a data de início do novo treino. Nela, ele fica ativo e o anterior vai para o Histórico. Nunca há dois ativos. **Ao abrir o app depois disso, o aluno vê o pop-up "Seu treino novo chegou"** (regra 117).
+3. **Início não pode ser em data passada** (mínimo: hoje, **na data do fuso do aluno**, regra 115). Se for hoje, o treino já fica ativo.
+4. Se o professor altera ou cancela um treino agendado antes do início, o atual segue ativo.
+5. **Treino concluído = a data de fim chegou.** Ele **segue ativo** até o professor ativar outro, com o aviso "Treino concluído, solicite um novo". **O aluno não é obrigado a solicitar um novo treino: ele pode continuar treinando com o treino concluído** (26/10; ver regra 43).
+6. O professor pode **editar o treino ativo** sem criar outro: trocar exercícios, séries e reps, adicionar ou remover fichas. **O aluno vê sempre a versão atual** (regra 112).
+7. Ficha removida do treino ativo some da home e da rotação, mas as marcações antigas continuam no calendário com o nome dela. **As letras das outras fichas não mudam** (regra 111).
+8. Treinos passados ficam na aba **Histórico** da navegação inferior, nunca na home.
+
+### Contagem e progresso
+9. O app **só conta treinos feitos** (ex.: "12"), sem meta de sessões. Faltar não muda nada.
+10. A home mostra **"Semana 3 de 8"**. A semana do treino conta **a partir do dia de início** (dias 1 a 7 = semana 1), **não** pela semana segunda–domingo do calendário. Conta no fuso do aluno (regra 115).
+11. Treinar além da frequência sugerida: aviso + permitir. Conta como treino normal.
+12. Descanso sugerido **após 2 dias consecutivos de treino**. É só orientação, não bloqueia nada. A home mostra "Descanso recomendado hoje", com opção de treinar mesmo assim.
+13. **Sem pausa no MVP**: quem para de ir simplesmente não marca. O aluno ainda pode solicitar um treino novo.
+
+### Rotação e "Ficha de hoje"
+14. As fichas giram sempre em ordem lógica (A-B-C-A-B…), mesmo após dias sem treinar. Faltar não pula nem reinicia a ficha. Não depende do dia da semana.
+15. **"Ficha de hoje" é só um indicativo**: a que vem depois da última feita. **Não bloqueia** nenhuma outra ficha; o aluno pode abrir e fazer qualquer uma. **Se a ficha seguinte foi removida, vale a próxima que existe na ordem** (regra 111).
+16. "Última ficha feita" = a do dia mais recente. No mesmo dia, a última marcada.
+17. Em um treino novo, a "Ficha de hoje" é a primeira (A).
+18. Desfazer uma marcação recalcula a "Ficha de hoje" e a contagem de treinos pela regra do dia mais recente.
+
+### Marcar como feito
+19. **"Iniciar treino" não existe no MVP.** A ficha tem apenas "Marcar como feito". O aluno pode treinar só lendo.
+20. É uma ação **pós-treino**: o aluno marca qual ficha fez em cada dia, inclusive dias passados.
+21. Pode marcar **mais de uma ficha no mesmo dia** e **desfazer** uma marcação.
+22. Botão na ficha (hoje) e no calendário/painel do dia (qualquer dia passado).
+23. **Marcar/alterar vale para dias do treino ativo, inclusive os dias depois da data de fim enquanto ele seguir ativo** (26/10). Dias de treinos encerrados (já substituídos por outro) são só consulta.
+24. Dias e semanas futuros ficam neutros, sem interação.
+
+### Descanso (sem cronômetro no MVP)
+25. O tempo de descanso de cada exercício aparece **como informação na ficha** (definido pelo professor). **Não há cronômetro no MVP**, pois não existe "Iniciar treino". O cronômetro (com início manual) fica para depois.
+
+### Carga
+26. O aluno registra a carga. Ele vê sempre a última carga informada; ao editar, a nova passa a ser exibida e o histórico é guardado.
+27. **Editar carga não inicia sessão** e pode ser feito a qualquer momento (até em casa, depois do treino).
+28. "Última carga" = a última **edição** feita, não a data do treino (nem a do envio, quando houve fila, regra 116).
+29. Após meses sem fazer um exercício, o aluno vê a última carga e altera se precisar.
+
+### Biblioteca de exercícios
+30. Lista pré-definida (de todos) + exercícios criados pelo professor.
+31. **Exercícios nunca são excluídos** (pré-definidos ou criados), pois podem ser usados no futuro.
+32. Ao criar, a busca vem antes e avisa sobre exercício parecido. O professor pode **ocultar um duplicado da busca**, sem excluir, e pode **mostrá-lo de novo** pela lista de ocultos. O histórico de carga fica ligado ao exercício, não ao nome. **Mesclar fica para depois.** (Telas na regra 74.)
+
+### Professor / acompanhamento
+33. **Inatividade fora do MVP**: sem alerta nem encerramento automático. O professor vê o "último treino feito" de cada aluno.
+34. Status do aluno na lista: **ativo · sem treino · quase no fim (faltam 7 dias ou menos para a data de fim)**. (26/10: a regra 55 acrescenta "convite pendente"; 27/10: a regra 102 acrescenta "convite recusado".)
+35. Tela "sem treino": sem aviso ao professor no MVP, só a tela explicativa para o aluno.
+36. **Multi-professor preparado**: exercícios criados são **privados de cada professor** (a lista pré-definida é de todos). "Ocultar da busca" vale só para quem ocultou. Desde 27/10, professores entram por convite do administrador (regra 92).
+
+### Solicitação e conectividade
+37. Solicitar novo treino: sempre disponível, **sem requisito mínimo** (o mínimo de dias é prática do professor, não regra do app). Só uma solicitação aberta por vez.
+38. **Sem internet:** o app não perde o que foi digitado e avisa. (27/10: detalhado na **regra 116**: fila local de envio e treino ativo guardado para leitura. Offline completo fica para depois.)
+
+### Acesso, solicitação e perfil (26/10)
+39. **Login por e-mail e senha.** (27/10: qualquer pessoa pode criar conta, regra 89; o convite de aluno **vincula a conta ao professor**. O convite é de uso único, preso ao cadastro daquele aluno, válido por 7 dias, e o professor pode reenviar.) "Esqueci a senha" existe desde o MVP. Login com Google fica para depois. (27/10: sessão de 30 dias sem uso, regra 121.)
+40. **A solicitação de novo treino fica aberta até o novo treino ficar ativo** (inclusive quando o professor cria o treino sem solicitação prévia, o que também fecha a aberta). Enquanto isso, o botão mostra "Solicitação enviada" (desabilitado). **O aluno pode cancelar a própria solicitação, mas só enquanto o professor não agiu** (regra 103).
+41. **O professor vê o perfil do aluno, só leitura**, com a data da última atualização, na tela de acompanhamento. Quando o aluno vincula o professor, vê um aviso claro: o professor vê esses dados (inclusive o telefone, regra 108) para montar o treino e falar com ele. (27/10: **altura e peso podem ser compartilhados em qualquer idade**, e o aviso diz isso; **restrições ou dores seguem como dado de saúde**, tratado com cuidado pela LGPD. Regra 84.)
+42. **Cada edição dos dados do perfil guarda a data**, igual à carga. A tela mostra só o valor atual no MVP; o histórico de peso e de outros dados vem depois, sem perder o que foi editado até lá.
+
+### Treino concluído e continuidade (26/10)
+43. **Depois da data de fim, o treino segue ativo e o aluno pode continuar treinando.** Na home, o botão "Solicitar novo treino" ganha abaixo dele o link **"Continuar treinando com este treino"**. **Com solicitação aberta, a home mostra só "Solicitação enviada" (e "Cancelar solicitação" enquanto o professor não agiu), sem esse link** (regra 117); o aluno segue treinando normalmente. Seguindo com o mesmo treino:
+    - a rotação A-B-C continua na ordem lógica (a ficha feita no dia anterior define a "Ficha de hoje", como sempre);
+    - a contagem de treinos feitos e o calendário continuam normais, com as fichas atuais;
+    - as marcações depois da data de fim **pertencem ao treino ativo (o concluído)**, e **não a um treino ainda não solicitado ou agendado**;
+    - só os dias de treinos já substituídos por outro viram "só consulta" (regra 23).
+
+### Abas Frequência e Progressão (26/10)
+44. **Um exercício aparece na Progressão quando o aluno registra a primeira carga nele.** Marcar uma ficha como feita não cria linhas na Progressão, porque o treino feito guarda só ficha e data. Sem nenhuma carga registrada, a aba mostra a tela vazia ("Seus exercícios aparecem aqui quando você registrar a primeira carga").
+45. **O resumo do mês na Frequência só conta treinos feitos** (ex.: "13 treinos em outubro"), sem "X de Y" e sem meta, coerente com a regra 9.
+
+### Entrada do aluno (26/10, 14ª rodada)
+46. **O e-mail do acesso é escolhido pelo aluno.** Quem recebe o link por WhatsApp pode criar o acesso com o e-mail que quiser. O convite por link não exige e-mail no cadastro feito pelo professor (**e-mail opcional no cadastro do aluno**). Se o professor informou um e-mail, ele vem preenchido, mas **continua editável**. O "Esqueci a senha" usa o e-mail que o aluno escolheu. O que prende o acesso àquele aluno é o link do convite (uso único, 7 dias), não o e-mail. (27/10: a conta pode ser criada antes, sem convite, regra 89.)
+47. **Senha: um único campo, com mostrar/ocultar**, sem campo "confirmar senha". Os requisitos mínimos foram definidos na regra 78. Isso vale também na redefinição.
+48. **Convite expirado e convite já usado têm telas próprias.** Expirado (passou de 7 dias): só texto, "Este convite expirou", orientando a pedir um novo convite ao professor (com o nome dele), **sem botão de ação**. Já usado (uso único): "Este convite já foi usado", com o botão "Ir para o login". Convite válido mostra o nome do professor, "Convite válido por 7 dias", o botão "Criar meu acesso" e o link "Já tenho acesso? Entrar". (27/10: link substituído por um reenvio tem tela própria, regra 82.)
+49. **Primeiro acesso em 2 passos, sem menu inferior.** (27/10: acontece **ao vincular o primeiro professor**, regra 91.) Passo 1 de 2 ("Antes de começar"): aviso de que o professor vê nome, nascimento, **telefone**, altura, peso e restrições ou dores para montar o treino e falar com o aluno (regra 84: altura e peso podem ser compartilhados em qualquer idade; restrições ou dores são dado de saúde, LGPD), com a caixa **"Li e entendi que o professor acessa esses dados para montar o meu treino"**. O botão "Continuar" fica desabilitado até marcar a caixa. Passo 2 de 2 ("Seu perfil"): nome (vem do cadastro, editável), data de nascimento, **telefone (WhatsApp, regra 108)**, altura e peso obrigatórios, restrições ou dores **opcional**, com os erros de campo da regra 85. "Concluir" leva à Home (treino ativo) ou à tela "sem treino". O passo 2 tem botão de voltar para o passo 1. **Quem fecha o app retoma do ponto em que parou** (regra 86); o que foi digitado no passo 2 só é guardado em "Concluir" (regra 99).
+50. **"Esqueci a senha" por link enviado ao e-mail.** Fluxo: pedir e-mail ("Enviar link") → "Confira seu e-mail" → o aluno abre o link recebido → "Criar nova senha" ("Salvar senha") → "Senha alterada" ("Ir para o login"). (27/10: **o link vale por 1 dia**; vencido, abre "Este link expirou" com "Pedir novo link", regra 88; "Reenviar link" na regra 100.)
+51. **Erro de login em toast, com mensagem única e neutra**: "E-mail ou senha não conferem.", sem dizer qual dos dois errou. Os campos continuam preenchidos. Sem bloqueio por tentativas no MVP. O vermelho do ícone do toast é só de erro.
+52. **Cancelar a solicitação de novo treino (home e tela "sem treino").** Com solicitação aberta, o botão mostra "Solicitação enviada" (cinza, desabilitado) e abaixo dele o link **"Cancelar solicitação"** (**some quando o professor já agiu**, regra 103). O link abre uma folha de confirmação: "Cancelar solicitação?" com "Manter solicitação" (botão principal) e "Cancelar solicitação" (contorno, sem vermelho, já que não apaga dado). Ao cancelar, aparece o toast "Solicitação cancelada." e o botão "Solicitar novo treino" volta.
+53. **Exclusão de dados (LGPD)**: decidido na 18ª rodada (regras 80 e 81) e **substituído em 27/10 pela regra 120** (o aluno exclui a própria conta).
+
+### Lado do professor: alunos e convite (26/10, 15ª rodada)
+54. **Plataforma: o professor usa o mesmo app, no formato de celular (390).** Mesma identidade visual do aluno. Sem versão web/desktop no MVP. As telas do professor **não têm menu inferior**: a **Lista de alunos é a tela raiz**, e as demais são telas de detalhe com botão de voltar.
+55. **Status do aluno na lista: ativo · sem treino · quase no fim · convite pendente.** "Convite pendente" cobre o aluno que ainda não criou o acesso; o convite vencido aparece como variação do mesmo status, com o rótulo "Convite expirado". (27/10: acrescenta a variação **"Convite recusado"**, regra 102.) Atualiza a regra 34.
+56. **Treino concluído com o aluno seguindo: o aluno continua "Ativo" na lista**, com a indicação na linha de detalhe (ex.: "Treino concluído em 25/10 · treinou ontem"). Não há status próprio (coerente com a regra 43).
+57. **Cadastro do aluno só com nome, e-mail (opcional) e telefone (opcional, regra 109).** Depois de "Gerar convite", o professor envia por e-mail (se informou) ou copia o link (WhatsApp ou outro app). Sem e-mail no cadastro, o aluno escolhe o e-mail ao criar o acesso (regra 46).
+58. **Reenviar convite gera um novo link e o anterior deixa de valer** (vale 7 dias). Casos: convite expirado ("Gerar novo convite"), e-mail errado (link "Corrigir e-mail": edita o e-mail e reenvia), **convite recusado ("Enviar novo convite", regra 102)** e **aluno que já tem conta: o professor envia o link para vincular a conta existente a ele**; o aluno abre o link e entra (telas na regra 79).
+59. **Lista de alunos com busca por nome.** Padrão adotado no design (confirmado em 26/10): ordem alfabética e rolagem simples, sem paginação. Estados: com alunos, busca com resultado, busca sem resultado e vazia (primeiro acesso do professor). Nomes longos truncam em 1 linha (regra 114).
+60. **Remover, arquivar ou excluir aluno fica fora do MVP**, exceto a exclusão da própria conta feita pelo aluno (regra 120). **Bloquear aluno também fica fora** (regras 101 e 119).
+61. **O calendário do professor é só leitura**: ele vê as marcações do aluno (com o mesmo painel do dia), mas não marca nem desfaz fichas.
+62. **A solicitação de novo treino aparece em dois lugares**: um selo "Pediu treino" na linha do aluno na lista e o botão "Criar treino" na tela do aluno. Fecha quando o novo treino fica ativo (regra 40) e some se o aluno cancelar antes de o professor agir (regra 103).
+63. **Progressão de carga na visão do professor: só a lista com histórico**, como a do aluno. Gráficos ficam para depois.
+64. **No máximo um treino agendado por aluno** (com agendado, o professor não cria outro, regra 106).
+65. **Frequência sugerida é texto livre** (ex.: "5x por semana"), só informação.
+66. **Sem limite de fichas nem de exercícios por ficha.** O professor reordena fichas e exercícios arrastando (gesto padrão do sistema; as telas mostram a alça de arrastar).
+67. **Ao remover uma ficha do treino ativo, o professor vê um aviso** de que as marcações antigas continuam no calendário do aluno (regra 7).
+
+### Lado do professor: acompanhar o aluno (26/10, 16ª rodada)
+68. **Tela do aluno (professor)**: nome, status (chips), cartão do treino ativo (nome, semana, treinos feitos, datas) e quatro atalhos: **Calendário, Progressão de carga, Perfil e Histórico de treinos**. Com treino ativo, o rodapé fixo tem **"Editar treino" e "Agendar novo treino"** (regra 77); **com treino agendado, só "Editar treino"** (regra 106). Com solicitação aberta (e sem treino agendado) ou sem treino ativo, o botão principal é "Criar treino". (27/10: com **convite pendente, expirado ou recusado** o aluno também tem tela e o professor pode criar treino, regra 122.)
+69. **O professor pode abrir a ficha feita em modo leitura.** No painel do dia (só leitura), "Abrir ficha" mostra os exercícios da ficha (séries, reps, descanso, observação e carga do aluno), sem editar nem marcar. Complementa a regra 61.
+70. **Solicitação aberta na tela do aluno**: aviso "Pediu um novo treino em dd/mm" (a solicitação fecha quando o novo treino ficar ativo) e botão "Criar treino". O selo "Pediu treino" na lista continua (regra 62).
+71. **Perfil do aluno (professor)**: nome, nascimento (com a idade), **telefone (WhatsApp, com o link "Abrir WhatsApp", regra 108)**, altura, peso e restrições ou dores, com "atualizado em" e o aviso "Só leitura" (o aluno edita no app dele).
+72. **Aluno com treino concluído e seguindo**: o calendário do professor mostra o aviso "Treino concluído em dd/mm" e as marcações depois do fim aparecem normalmente (regra 43). Na lista, o aluno segue "Ativo" (regra 56).
+
+### Lado do professor: montar e editar treino (26/10, 17ª rodada)
+73. **Criar treino em passos.** (1) **Dados**: nome, início, número de semanas (com − e +, ou digitando), aviso com o **fim calculado** (início + 7 × semanas − 1 dia) e frequência sugerida em texto livre (opcional). O início abre um **seletor de data** com as datas passadas desabilitadas (regra 3). (2) **Fichas**: lista reordenável (arrastar), "Adicionar ficha". (3) **Editar ficha**: nome da ficha e exercícios reordenáveis, "Adicionar exercício" e **"Salvar ficha"** (regra 107). (4) **Editar exercício** (folha): séries, repetições, descanso (informativo) e observação (opcional). Ao final, "Salvar treino". Validações nas regras 104 e 105; descarte na regra 107.
+74. **Biblioteca de exercícios ("Adicionar exercício")**: a busca vem primeiro; cada resultado tem "⋯" com a opção de **ocultar da busca**, com folha de confirmação (**"“[exercício]” deixa de aparecer na sua busca. Ele não é excluído: as fichas que já o usam e o histórico de carga continuam."**, regra 113). Se não achar, "Criar “texto” como novo exercício"; ao digitar um nome parecido com um existente, aparece o aviso **"Já existe um exercício parecido"**, com "Usar o existente" (principal) e "Criar mesmo assim". **Exercícios ocultos**: a linha "Exercícios ocultos (N)" no fim da busca abre a lista dos ocultados, cada um com "desfazer" para mostrar de novo na busca.
+75. **Resultado de salvar o treino**: com início **hoje**, "Treino salvo": fica ativo e o anterior vai para o Histórico do aluno. Com início **futuro**, "Treino agendado": só o professor vê até a data de início. Na tela do aluno, o treino agendado aparece em um aviso ("Próximo treino agendado … começa em dd/mm. Só você vê até lá.") com **"Alterar treino agendado"** (reutiliza a tela de Dados com os valores atuais, **desenhada na regra 118**; **mudar o início para hoje ativa o treino na hora**, regra 106) e **"Cancelar agendamento"**, que abre confirmação ("Cancelar o treino agendado?", "O treino atual continua ativo", botões "Manter agendamento" e "Cancelar agendamento"). Regras 4 e 64.
+76. **Editar o treino ativo ("Editar treino")**: lista de fichas com "Adicionar ficha" e "Salvar alterações", sem criar outro treino (regra 6). **Nada é bloqueado ao editar o treino ativo** (regra 104). Cada ficha abre a mesma tela de editar ficha, com o link **"Remover esta ficha"**, que abre a confirmação com o aviso "As marcações antigas continuam" (regras 7 e 67), "Manter ficha" (principal) e "Remover ficha" (contorno).
+77. **"Agendar novo treino" na tela do aluno com treino ativo.** O botão (contorno, no rodapé, ao lado de "Editar treino") abre o mesmo fluxo de Criar treino (regra 73), normalmente com início futuro; o treino fica agendado (regra 75) e só pode haver um (regras 64 e 106): **com treino agendado o botão não aparece**.
+
+### Senha, vínculo de conta e exclusão de dados (26/10, 18ª rodada)
+78. **Requisitos de senha (padrão de mercado)**: no mínimo **8 caracteres, com letras e números**. Sem exigir símbolo nem maiúscula, e sem campo "confirmar senha" (mostrar/ocultar já ajuda a conferir). Em "Criar acesso" e "Criar nova senha", uma dica fica sob o campo: "Mínimo de 8 caracteres, com letras e números." Se não cumprir, o campo mostra o erro "A senha precisa ter pelo menos 8 caracteres, com letras e números." Atualiza a regra 47.
+79. **Convite para aluno que já tem conta (vincular ao professor).** O aluno abre o link e vê **"Você já tem uma conta"**, com o cartão do professor e "Entrar com minha conta" → Login (e-mail e senha) → **"Vincular ao professor?"**, com o aviso "O professor vê seus dados" (nome, nascimento, telefone, altura, peso e restrições ou dores, para montar o treino e falar com o aluno; texto atualizado pelas regras 84 e 108), "Vincular ao professor" (principal) e "Agora não" (**convite recusado**, regra 102) → **"Conta vinculada"**, com "Ir para o início". Reenviar um convite invalida o anterior (regra 58). (27/10: como a conta é aberta, este é **o caminho de todo aluno novo**; o primeiro acesso, regra 91, vem depois do vínculo. **Quem já está logado pula "Você já tem uma conta" e o Login**, regra 97. **Quem já tem professor vê "Trocar de professor?"**, regra 98.)
+80. **[Substituída pela regra 120 em 27/10.]** Antes: o aluno pedia a exclusão dos dados ao professor, pela linha "Solicitar exclusão dos meus dados" do Perfil, e a linha ficava desabilitada com "Pedido de exclusão enviado". Esse fluxo não existe mais.
+81. **[Substituída pela regra 120 em 27/10.]** Antes: o professor via o chip "Pediu exclusão", o aviso e o botão "Excluir dados do aluno". Esses itens foram retirados da lista e da tela do aluno. **Prazo de atendimento e retenção legal de dados seguem sem definição: conferir com o jurídico antes do lançamento** (agora para a exclusão feita pelo aluno).
+
+### Casos de borda e papéis de acesso (27/10, 19ª e 20ª rodadas)
+82. **Link de convite substituído (E1).** Quem abre um link antigo (substituído por um reenvio, regra 58) vê **"Este link não vale mais"**, sem botão: orienta a conferir o canal em que fala com o professor (WhatsApp, e-mail…) e usar o link mais recente. Convite expirado e já usado seguem a regra 48.
+83. **E-mail já em uso ao criar conta (E2).** Erro de campo: **"E-mail em uso. Tente logar utilizando ele, ou solicite alteração de senha."**, com os atalhos "Entrar com este e-mail" e "Esqueci a senha". Não cria conta duplicada. A mensagem revela que o e-mail tem conta (a regra 51, do login, é neutra de propósito); decisão do produto, registrada.
+84. **Peso e altura em qualquer idade (E3).** Altura e peso **podem ser compartilhados por menores de 18 anos**; sem bloqueio por idade nem consentimento do responsável no MVP. Os avisos de dados (primeiro acesso e vínculo, regra 79) dizem isso e que é importante saber que o professor os vê. **Restrições ou dores continuam como dado de saúde, com cuidado especial (LGPD).** **O telefone também é dado pessoal sob a LGPD** (regra 108). Validar com o jurídico junto com prazo e retenção (regra 120).
+85. **Validação do perfil (E4).** Erros de campo no passo 2 do primeiro acesso e em "Editar dados": nome vazio ("Digite seu nome."); nascimento no futuro ("Essa data ainda não chegou. Confira o nascimento."); altura fora de 1,00 a 2,50 m ("Digite uma altura entre 1,00 m e 2,50 m."); peso fora de 20 a 300 kg ("Digite um peso entre 20 kg e 300 kg."); **telefone inválido ("Digite um telefone com DDD, como (31) 91234-5678.", regra 108)**. **Limites confirmados** (regra 99).
+86. **Retomar o primeiro acesso (E5).** Retoma **do ponto em que parou**: com o passo 1 confirmado, volta no passo 2 (a confirmação fica salva com a data). **Confirmado** (regra 99): o que foi digitado no passo 2 só é guardado ao tocar em "Concluir".
+87. **Papéis de acesso (E6).** Existem três papéis: **administrador, professor e aluno. Cada e-mail tem uma única função.**
+    - **Administrador**: e-mail próprio do dono do produto, criado fora do app, nunca professor nem aluno. Ao logar, vai direto para a tela de administrador. Só gerencia professores e **não vê dados de alunos**.
+    - **Professor**: só vira professor por convite do administrador. Ao logar, vai direto para a Lista de alunos.
+    - **Aluno**: qualquer pessoa pode criar conta (regra 89) e entra como aluno; só vê treino depois de vinculada a um professor.
+    - O papel é **conferido no servidor em toda chamada**, nunca decidido pelo app.
+    - Recomendado para depois do MVP: verificação em duas etapas para professor e administrador.
+88. **Link de "Esqueci a senha" vale 1 dia (E7).** Atualiza a regra 50. "Confira seu e-mail" informa a validade; link vencido abre **"Este link expirou"** com **"Pedir novo link"**. Sem bloqueio por tentativas. "Reenviar link" e link já usado: regra 100.
+89. **Conta aberta.** Qualquer pessoa pode criar conta, sem convite: Login ganha **"Não tem conta? Criar conta"**; "Criar acesso" tem e-mail e senha vazios. O e-mail precisa ser **confirmado** por link (válido por 1 dia) antes de entrar ("Confirme seu e-mail"); isso evita que alguém crie conta com o e-mail de outra pessoa e use o convite dela. Atualiza as regras 39 e 46: o convite de aluno deixa de ser a porta de entrada e passa a **vincular a conta ao professor** (regra 79).
+90. **Estado "sem professor".** Conta de aluno sem vínculo vê a tela **"Você ainda não tem um professor"** (pede um convite ao professor; "Sair"). **Professor ainda não autorizado vê a mesma tela**, com a frase "Se você é professor, fale com quem administra o Coach In". Quem quer ser professor fala com o administrador.
+91. **Perfil de saúde só depois do vínculo.** O primeiro acesso (aviso de dados + perfil, regra 49) acontece ao **vincular o primeiro professor**, não ao criar a conta. Sem professor, nenhum dado de saúde (nem o telefone) é pedido.
+92. **Convite de professor (administrador).** Na tela de administrador: **Lista de professores** (ativo, convite pendente, convite expirado, convite recusado, bloqueado, com busca), **Convidar professor** (nome e e-mail obrigatórios; o convite vale só para aquele e-mail), **Convite gerado** (enviar por e-mail ou copiar link), **Convite pendente** (reenviar invalida o anterior), **Convite expirado** (gerar novo) e **Convite recusado** (enviar novo). Link de uso único, **válido por 1 dia**.
+93. **Conversão de conta existente em professor.** Se o e-mail convidado já tem conta (de aluno), o link mostra "Você já tem uma conta", pede o login (**quem já está logado na conta certa pula essa etapa**, regra 97) e abre **"Ativar acesso de professor?"**, com o aviso: o acesso de aluno é encerrado; os dados de treino **ficam guardados, sem acesso**; a pessoa **deixa de aparecer na lista do professor atual**. "Agora não" recusa o convite (regra 102). O servidor só converte se o e-mail logado for o do convite. Se o e-mail não tem conta, o link abre "Ative seu acesso" (criar senha) e a conta nasce como professor. Excluir dados continua só pela exclusão da própria conta feita pelo aluno (regra 120).
+94. **Bloquear professor (reversível); não existe remover.** Na tela do professor, o administrador tem **"Bloquear acesso"**, com folha de confirmação ("Bloquear este professor?": ele é desconectado na hora e não consegue entrar; alunos e treinos ficam guardados; dá para desbloquear quando quiser). O professor bloqueado aparece na lista com o chip **BLOQUEADO**, e a tela dele passa a ter **"Desbloquear acesso"**. O bloqueio **não apaga nada**; desbloquear restaura o acesso como estava.
+95. **Logout automático e tela de bloqueio.** Ao ser bloqueado, o professor é **deslogado automaticamente** (sessão encerrada em todos os aparelhos) e vê a tela **"Seu acesso está bloqueado"** ("Sua conta de professor foi bloqueada e você saiu do app. Fale com quem administra o Coach In para saber mais.", botão "Sair"). Se tentar entrar de novo, com e-mail e senha corretos, cai na mesma tela. O servidor recusa qualquer chamada de conta bloqueada, mesmo com sessão antiga.
+96. **Alunos de um professor bloqueado (confirmado em 27/10).** Seguem vinculados e com o treino ativo visível, mas **sem novo treino nem edição** enquanto durar o bloqueio. Bloquear aluno: regras 101 e 119.
+
+### Já logado, troca de professor e convite recusado (27/10, 21ª rodada)
+97. **Abrir um convite já logado.** O app reconhece a conta pelo convite, mas confere também a sessão:
+    - **Deslogado**: "Você já tem uma conta" → Login → "Vincular ao professor?" (regras 79 e 93).
+    - **Logado na conta certa**: pula "Você já tem uma conta" e o Login e vai direto para "Vincular ao professor?" (ou "Ativar acesso de professor?").
+    - **Logado em outra conta** (só convite de professor, que é preso a um e-mail): tela "Este convite é para outra conta", com "Sair e entrar com outra conta" e "Agora não".
+    - A tela "Vincular ao professor?" mostra **"Você está entrando como [e-mail]"** e o link **"Usar outra conta"**, para evitar vincular a conta errada num aparelho compartilhado.
+98. **Um professor por vez; trocar de professor.** O aluno **não pode ter dois professores ativos**. Quem já tem professor e abre o convite de outro vê **"Trocar de professor?"**, com o aviso **"Seus dados de treino serão substituídos"**: os dados de treino do professor antigo são substituídos pelos do novo. O botão principal é **"Continuar com meu professor"**; **"Trocar de professor"** fica em contorno (sem vermelho). Ao trocar, o aluno vê "Professor trocado" e o **professor antigo deixa de ver o aluno**. O perfil de saúde do aluno não é refeito. (Cobre o caso E13.)
+99. **Validação do perfil, confirmada.** Altura entre 1,00 e 2,50 m e peso entre 20 e 300 kg; o que foi digitado no passo 2 do primeiro acesso só é guardado ao tocar em "Concluir". Os mesmos erros de campo valem em **"Editar dados"** (desenhado).
+100. **"Reenviar link".** A tela "Confira seu e-mail" (senha) e a "Confirme seu e-mail" (conta nova) têm **"Não recebeu? Reenviar link"**; o novo link invalida o anterior. Link de senha **já usado ou substituído** abre **"Este link não vale mais"**, com o botão "Pedir novo link". Link vencido continua em "Este link expirou" (regra 88).
+101. **Bloquear aluno** segue **fora do MVP** (a tela de conta bloqueada existe, regra 119).
+102. **"Agora não" = convite recusado (convite de aluno e de professor).** Quando a pessoa toca em "Agora não" ao vincular ("Vincular ao professor?"), ao ativar ("Ativar acesso de professor?") ou em "Continuar com meu professor" (troca de professor), **o convite expira na hora** (o link deixa de valer) e ela aparece na lista de quem convidou com o status **"Convite recusado"** e o detalhe "Recusou o convite em dd/mm". Na tela da pessoa, quem convidou vê "Recusou o convite em dd/mm" e o botão **"Enviar novo convite"** (gera outro link). A pessoa volta para onde estava. (Cobre o caso E14.)
+
+### Casos de borda da montagem e telefone (27/10, 22ª rodada)
+103. **Cancelar o pedido de novo treino (E8).** O aluno só cancela enquanto o professor ainda não agiu. Depois que o professor monta e **agenda** (ou ativa) o treino, o link "Cancelar solicitação" some e fica só "Solicitação enviada". Se o aluno cancela antes: somem o chip "Pediu treino", o aviso "Pediu um novo treino" e o botão "Criar treino"; a tela do aluno (professor) mostra o aviso neutro **"Pedido de novo treino cancelado"** ("[nome] cancelou o pedido em dd/mm") e o rodapé volta a "Editar treino" e "Agendar novo treino". Se o professor já estiver montando, vê no topo da etapa o aviso **"[nome] cancelou o pedido"** ("Você pode terminar e salvar este treino mesmo assim") com o link **"Falar com o aluno no WhatsApp"**, que abre o WhatsApp direto no número do aluno. Criar treino sem solicitação segue permitido (regra 40).
+104. **Salvar exige ficha e exercício (E9).** Não salva treino sem ficha nem ficha sem exercício. Os botões ficam sempre habilitados; o erro aparece ao tocar em "Salvar treino" ou "Salvar ficha" (aviso de erro; a linha da ficha mostra "Sem exercícios"). **Editar o treino ativo não bloqueia nada** (remover ficha, adicionar ou tirar exercício).
+105. **Limites do treino (E10).** Nome obrigatório (erro de campo "Digite o nome do treino."). Semanas: **mínimo 1**, com − e + ou digitando, sem máximo. Frequência sugerida: texto livre, sem limite de caracteres.
+106. **Treino agendado bloqueia outro (E11).** Com treino agendado, **somem "Criar treino" e "Agendar novo treino"** (inclusive com solicitação aberta: o agendado atende o pedido quando começar). Só "Alterar treino agendado" ou "Cancelar agendamento". Mudando o início para **hoje**, o treino é ativado na hora (o atual vai ao Histórico).
+107. **Salvar ficha e descartar alterações (E12).** Em Editar ficha o botão principal é **"Salvar ficha"**: volta para Fichas sem gravar o treino; o treino só é gravado em "Salvar treino" ("Treino salvo" ou "Treino agendado"). Voltar **com alteração** abre a folha **"Descartar alterações?"** ("Continuar editando" principal, "Descartar alterações" em contorno, sem vermelho); **sem alteração, volta direto**. A mesma folha vale em Dados, Fichas (sai do fluxo e descarta o rascunho) e Editar treino ativo.
+108. **Telefone (WhatsApp) do aluno.** **Obrigatório para o aluno**, pedido no **primeiro acesso, passo 2** (junto do perfil, depois do vínculo; não faz parte da criação de conta) e editável em "Editar dados". Formato: código do país **+55 por padrão, com opção de escolher outro**, e DDD brasileiro + número, ex.: "(31) 98765-4321". Erro de campo: "Digite um telefone com DDD, como (31) 91234-5678." O professor vê o telefone no perfil só leitura ("Telefone (WhatsApp)") com o link **"Abrir WhatsApp"**. **É dado pessoal sob a LGPD**: os avisos de dados (primeiro acesso e vínculo) citam o telefone e dizem que o professor o usa para montar o treino e falar com o aluno.
+109. **Telefone no cadastro do aluno pelo professor.** Campo **opcional** "Telefone (opcional)" em "Cadastrar aluno". **Se informado, vem preenchido no passo 2 do aluno, editável** (confirmado em 27/10). O aluno continua obrigado a ter telefone no primeiro acesso.
+
+### Casos de borda: rotação, textos, fuso e sem internet (27/10, 23ª rodada)
+110. **Dia entre dois treinos (E16).** Marcar um dia depois do fim de um treino e antes do início do próximo **pertence ao treino atual** enquanto o próximo não começou. É a regra 43 aplicada: o treino concluído segue ativo até o início do agendado. Sem tela nova.
+111. **Remover ficha: rotação e letras fixas (E17).** A "Ficha de hoje" é sempre a **próxima ficha que existe, na ordem, depois da última feita**. Ex.: feita A, B removida → a próxima é a C. Se a removida for a última feita, vale a posição dela: segue a próxima que existe (se era a última da lista, volta para a primeira). **A letra da ficha é fixa e nunca muda**: removida a B, ficam A e C, sem renumerar. **A letra de uma ficha removida não é reaproveitada** (uma ficha nova ganha a próxima letra nunca usada), para as marcações antigas do calendário não mudarem de significado. Complementa as regras 7, 14 e 15. (O "nunca reaproveitar" é decorrência da letra fixa; confirmar se preferir outro comportamento.)
+112. **Editar o treino com o aluno na ficha (E18).** A ficha do aluno sempre mostra a **versão atual** do treino ativo, atualizada quando ele reabre ou recarrega a tela (com conexão; sem conexão, vale a regra 116). **Sem aviso** de "treino atualizado" no MVP. Marcações e cargas antigas não mudam (regras 7 e 28). **Exceção: o pop-up de treino novo ativo (regra 117), que não vale para edição do treino ativo.** Sem tela nova.
+113. **Ocultar exercício que já está em ficha (E19).** Ocultar da busca não mexe nas fichas existentes. A folha de confirmação diz isso (texto na regra 74). **Desenhado** (Professor · Treino, Biblioteca · 3).
+114. **Textos longos e listas grandes (E20).** Nome de treino, de ficha, de exercício e de aluno **truncam em 1 linha com "…"**. Exceções: o **nome do exercício dentro do card da ficha** e a **prévia da "Ficha de hoje"** vão até **2 linhas**, porque o aluno precisa ler o nome inteiro ali; a **observação** do exercício continua quebrando linha (texto livre, pode ter aviso de segurança). Os campos de edição mostram o texto completo. Listas grandes (fichas, exercícios, alunos) **rolam**, com o botão principal fixo no rodapé. Sem limite de caracteres nos campos no MVP (opcional: definir limite). **Desenhado** (Professor · Treino, seção 6; componentes com truncamento no `design.md`).
+115. **Virada de dia e fuso (E21).** "Hoje", "Semana X de Y", o dia da marcação, o "descanso após 2 dias" **e o mínimo "hoje" do início do treino (regra 3)** seguem o **fuso horário do aluno**. Datas de treino (início e fim) são **datas de calendário**, sem hora. Nota de código: guardar o fuso do aluno (o do aparelho, atualizado a cada abertura com conexão); marcações já feitas guardam a data e não mudam se o fuso mudar depois. Sem tela nova.
+116. **Sem internet (E15), app web (PWA).** Detalha a regra 38. Offline completo continua fora do MVP; o MVP tem **fila local de envio + treino ativo guardado para leitura**:
+    - **Escrita (fila local).** Marcar ficha, desfazer marcação e editar carga, quando não há conexão, são guardados no aparelho (fila) e **enviados sozinhos quando a conexão volta**. Cada item guarda a **data e hora em que o aluno fez a ação** (a "última carga" segue a regra 28 pela data da edição, não pela do envio). Marcar a mesma ficha no mesmo dia duas vezes não duplica; desfazer entra na fila na mesma ordem. Se a ficha foi removida enquanto isso, a marcação vale (regra 7). **Conflito:** vale a edição mais recente de carga por data da edição.
+    - **Leitura.** O treino ativo (fichas, exercícios, últimas cargas) fica guardado no aparelho e é atualizado a cada abertura com conexão. Sem conexão, o app abre com essa cópia.
+    - **Avisos (desenhados).** Home: aviso "Sem conexão" ("Mostrando o treino salvo neste aparelho. N registros aguardam envio."). Ficha marcada sem conexão: toast "Guardado. Envio quando voltar." e chip **AGUARDANDO ENVIO** no lugar de "Feita hoje". Editar carga: o texto de apoio vira "Sem conexão: a carga fica neste aparelho e é enviada depois."; "Salvar carga" continua habilitado. Ao voltar: toast "Registros enviados." Primeira abertura sem conexão e sem treino guardado: tela "Sem conexão" ("Abra o app com internet ao menos uma vez para guardar seu treino neste aparelho.") com "Tentar de novo". Sem vermelho: ficar offline não é erro.
+    - **Telas que exigem conexão (desenhadas, 27/10).** Frequência (meses anteriores), Progressão e Histórico mostram `EmptyState` "Sem conexão" com "Tentar de novo" e o menu inferior; "Solicitar novo treino" e "Excluir minha conta" abrem uma folha "Sem conexão" ("Para pedir um novo treino, conecte-se à internet…" e "Para excluir sua conta, conecte-se à internet. Nada foi alterado.") com "Tentar de novo" e "Fechar"; "Editar dados" mostra o aviso "Sem conexão" e mantém o que foi digitado, com "Salvar alterações" habilitado. A Progressão sem conexão ainda deixa editar a carga na ficha (vai para a fila).
+    - **Detecção.** Pelo resultado real da tentativa de envio (falha ou tempo esgotado), não só pelo indicador de online do navegador, que erra com frequência.
+    - **Exigem conexão (confirmado em 27/10):** solicitar e cancelar novo treino, editar perfil e excluir a conta. Sem ela, o app avisa "Sem conexão" e mantém o que foi digitado na tela.
+    - **Notas de código (PWA).** Guardar fila e cópia do treino em IndexedDB. O envio em segundo plano com o app fechado não é confiável no iOS: no MVP, **a fila é enviada quando o app é aberto ou volta a ficar visível**. Pedir armazenamento persistente e orientar a instalar o app na tela inicial reduz o risco de o navegador limpar os dados. Cada item da fila precisa de um identificador único para o servidor aceitar o reenvio sem duplicar.
+
+### Casos de borda: treino novo, exclusão da conta, bloqueio e sessão (27/10, 24ª rodada)
+117. **Treino concluído com solicitação aberta e aviso de treino novo (E22 e E24).**
+    - Com treino concluído e solicitação enviada, a home mostra só **"Solicitação enviada"** (com "Cancelar solicitação" enquanto o professor não agiu, regra 103), **sem o link "Continuar treinando com este treino"**. O aluno segue treinando, porque o treino segue ativo (regra 43).
+    - **Pop-up dentro do app ao abrir (ou voltar a abrir) quando um treino novo ficou ativo**, seja porque o professor criou com início hoje, seja porque o agendado começou (E24). Título **"Seu treino novo chegou"**, texto com o nome do professor e do treino, botões **"Ver meu treino"** (principal) e **"Fechar"**. Aparece uma vez por treino. Se vários treinos mudaram enquanto o app estava fechado, vale só o mais recente.
+    - **Sem notificação push** (notificações seguem fora do MVP, ver "Depois do MVP"). **Editar o treino ativo continua sem aviso** (regra 112).
+118. **Alterar treino agendado (E23).** A tela de Dados reaberta com os valores atuais (nome, início, semanas, aviso do fim, frequência), botão "Salvar alterações" e voltar com a regra 107. **Mudando o início para hoje**, o aviso diz que o treino fica ativo na hora e o atual vai para o Histórico (regra 106). **Desenhado** (Professor · Treino, seção 7).
+119. **Conta de aluno bloqueada (E26).** Tela **"Sua conta está bloqueada"** ("Sua conta foi bloqueada e você saiu do app. Fale com o administrador do Coach In ou com o seu professor para saber mais."), botão "Sair". **Só a tela está desenhada: bloquear aluno segue fora do MVP** (regra 101); o professor não bloqueia aluno e, como o administrador não vê dados de alunos (regra 87), a ação de bloqueio exigiria rever a regra 87. Se o aluno apagar a própria conta, ele precisa se cadastrar de novo (regra 120).
+120. **Exclusão da própria conta pelo aluno (E27 e E28).** **Substitui as regras 80 e 81.**
+    - No Perfil, bloco Conta, a linha vira **"Excluir minha conta"**. Ela abre a folha **"Excluir sua conta?"**: "Seu perfil, marcações, cargas e treinos serão apagados e você sai do app. Não dá para desfazer. Para voltar, será preciso criar uma conta nova." com **"Manter minha conta"** (principal) e **"Excluir conta"** (contorno, sem vermelho).
+    - Ao confirmar, o app apaga os dados do aluno, encerra a sessão e volta ao Login com o toast **"Conta excluída."**. Exige conexão (regra 116).
+    - Não há mais pedido ao professor: somem o chip "Pediu exclusão", o aviso e o botão "Excluir dados do aluno". O aluno some da lista do professor. Os exercícios criados pelo professor seguem a regra 31.
+    - **Premissa (confirmar):** o mesmo e-mail pode criar uma conta nova; os dados antigos não voltam (E28).
+    - **Prazo e retenção legal (E25) ficam para depois, com o jurídico.**
+121. **Sessão e "Sair" (E29, padrão de mercado).** A sessão fica ativa por **30 dias sem uso**. Vencida, o app leva ao Login com o título **"Entre de novo"** e o texto "Sua sessão expirou por inatividade. Use o e-mail e a senha do seu acesso." **Trocar a senha desconecta os outros aparelhos** (sem tela). **"Sair"** (Perfil, bloco Conta) abre a folha **"Sair do app?"** ("Você vai precisar entrar de novo com e-mail e senha. Registros que ainda aguardam envio ficam guardados neste aparelho."), com **"Continuar no app"** (principal) e **"Sair"** (contorno). A fila local (regra 116) não é apagada ao sair. Troca de e-mail da conta não existe no MVP.
+
+### Treino antes do aceite do convite (27/10, 25ª rodada)
+122. **O professor pode criar treino para o aluno com convite pendente.** Quem cadastrou o aluno e gerou o convite já pode montar e salvar o treino (ativo ou agendado, regras 73 a 75), **sem esperar o aceite**. Vale para os três estados do convite: **pendente, expirado e recusado**; o treino fica guardado e continua lá quando o convite for reenviado ou gerado de novo (regra 58). **Aluno arquivado (troca de professor ou virou professor) segue sem acesso.**
+    - **Lista e tela do aluno:** o chip continua sendo o do convite ("convite pendente", "convite expirado" ou "convite recusado", regras 55 e 102). Na tela do aluno, o professor vê e edita o treino normalmente; calendário, progressão e histórico ficam vazios até o vínculo.
+    - **Quando o aluno aceita:** se já houver treino ativo, ele aparece na home e o pop-up "Seu treino novo chegou" abre no primeiro acesso (regra 117); se o treino estiver agendado, só o professor o vê até a data de início (regra 75). Aluno que já tem professor e troca (regra 98) recebe o treino do professor novo.
+    - **Datas:** o início conta pela data de calendário, **não pela data do vínculo**: se o treino começa hoje e o aluno aceita 5 dias depois, ele entra já na primeira semana. Para evitar isso, o professor pode agendar o início para uma data futura. Enquanto não há conta, "hoje" e a data mínima do início (regra 3) usam o fuso de São Paulo; depois do vínculo vale o fuso do aluno (regra 115).
+    - **Sem marcações:** o aluno só marca depois de vincular (regra 79); nada muda para o aluno além de já ter um treino esperando.
+    - **Aviso na criação (sugestão de design, a confirmar):** ao criar treino com início hoje para convite pendente, mostrar uma linha informativa "[nome] ainda não aceitou o convite. O treino começa a contar na data de início."
+
+## 4. Telas e comportamento (lado do aluno)
+
+- **Entrada do aluno (26/10; 27/10 ampliada; Figma: arquivo Coach In, páginas "Aluno · Entrada" e "↳ Fluxo · Aluno · Entrada")**. Nenhuma dessas telas mostra a navegação inferior. Os textos são pt-BR e o vermelho aparece só para erro:
+  - **Convite recebido** (abre pelo link): válido (boas-vindas, cartão com o nome do professor e "Convite válido por 7 dias", "Criar meu acesso", "Já tenho acesso? Entrar"), expirado e já usado (regra 48), **link substituído** ("Este link não vale mais", regra 82). **Quando o aluno já tem conta** (regra 79): "Você já tem uma conta" → login → "Vincular ao professor?" → "Conta vinculada". **Já logado** (regra 97): "Vincular ao professor?" direto, com "Você está entrando como [e-mail]" e "Usar outra conta"; convite de professor com outro e-mail logado: "Este convite é para outra conta". **Aluno que já tem professor** (regra 98): "Trocar de professor?" (aviso de dados substituídos) → "Professor trocado". "Agora não" recusa o convite (regra 102).
+  - **Login** (27/10): "Entrar" com e-mail, senha, "Esqueci a senha" e **"Não tem conta? Criar conta"**. Estados: padrão, erro de credenciais (toast, regra 51), **sessão expirada ("Entre de novo", regra 121)** e **conta excluída (toast "Conta excluída.", regra 120)**.
+  - **Criar acesso**: e-mail e senha com mostrar/ocultar (o ícone fica na ponta direita do campo) e a dica de requisitos (regras 47 e 78). Estados: padrão, preenchido, erro de campo (ex.: "Digite um e-mail válido, como nome@exemplo.com."), erro de senha e **e-mail em uso** (regra 83, com atalhos "Entrar com este e-mail" e "Esqueci a senha"). Em conta aberta, o subtítulo explica que o treino aparece depois que um professor convidar.
+  - **Confirme seu e-mail** (27/10, regra 89): "Enviamos um link… O link vale por 1 dia." com "Não recebeu? Reenviar link" (regra 100) e "Voltar ao login".
+  - **Sem professor** (27/10, regra 90): "Você ainda não tem um professor", com "Sair". Mesma tela para professor ainda não autorizado.
+  - **Conta bloqueada** (27/10, regra 119): "Sua conta está bloqueada", com "Sair".
+  - **Primeiro acesso** (depois de vincular o primeiro professor): passo 1 (aviso de dados, com o telefone, + caixa de confirmação, duas versões) e passo 2 (perfil, com o campo **Telefone (WhatsApp)**), com indicador "PASSO 1 DE 2" / "PASSO 2 DE 2" (regra 49). **Perfil com erros de campo**, inclusive telefone (regra 85).
+  - **Esqueci a senha**: 4 telas (regra 50), com "Reenviar link" em "Confira seu e-mail" (regra 100), mais **"Este link expirou"** com "Pedir novo link" (regra 88) e **"Este link não vale mais"** para link já usado (regra 100). A tela "Nova senha" tem a dica de requisitos (regra 78).
+  - **Entrada no app**: depois do primeiro acesso ou do login, o aluno cai na Home (treino ativo) ou na tela "sem treino".
+- **Navegação inferior (26/10)**: menu flutuante (referência visual: Future Pro) com 5 abas: **Início · Frequência · Progressão · Histórico · Perfil**. Substitui o menu de topo. Aparece também na tela "sem treino". **A Ficha, as telas de entrada (convite, criar acesso, confirmar e-mail, sem professor, conta bloqueada, primeiro acesso, login e esqueci a senha) e as telas de detalhe ou edição (detalhe do exercício na Progressão, Editar dados no Perfil) não mostram a navegação inferior.**
+- **Início (home)**: calendário da semana no topo (**seg a dom**), nome do treino, **"Semana 3 de 8"**, início e fim, **treinos feitos (ex.: 12)** e lista de **todas** as fichas do treino ativo, com "Ficha de hoje" marcada. Sem treino ativo → tela "sem treino". Proposta de design no Figma: arquivo Coach In, página "Aluno · Home" (menu inferior).
+  - Ordem proposta: cartão do treino ativo (nome, semana, treinos feitos, barra de progresso, datas) → calendário da semana → cartão "Ficha de hoje" em destaque (único botão laranja da tela) → demais fichas → "Solicitar novo treino" (botão discreto).
+  - Estados: padrão · "Descanso recomendado hoje" (sem botão laranja; ação "Treinar mesmo assim") · "Treino concluído, solicite um novo" (botão "Solicitar novo treino" + link "Continuar treinando com este treino"; fichas seguem visíveis) · **seguindo com o mesmo treino** (26/10: home igual à padrão, com "Ficha de hoje", e o cartão do treino mostra "Treino concluído" no lugar de "Semana X de Y", barra cheia e a contagem de treinos feitos seguindo; o calendário mostra as semanas depois do fim com as marcações normais; "Solicitar novo treino" continua disponível no rodapé) · "sem treino" · **com solicitação enviada** (26/10: botão "Solicitação enviada" desabilitado + link "Cancelar solicitação", regra 52; **sem o link quando o professor já agiu**, regra 103; **com treino concluído, também sem "Continuar treinando"**, regra 117) · **treino novo** (27/10: pop-up "Seu treino novo chegou" sobre a home ao abrir o app, regra 117) · **sem conexão** (27/10: aviso "Sem conexão" no topo, regra 116; "Conexão voltou" com o toast "Registros enviados."; e a tela "Sem conexão" quando não há treino guardado). Nomes longos truncam (regra 114).
+- **Calendário da semana**: hoje com leve destaque; dias feitos mostram a ficha; dia sem registro em tom suave com texto neutro "Sem registro" (**sem vermelho, sem "faltou"**); futuros neutros. Tocar abre o **painel do dia**. A navegação entre semanas (anteriores e futuras) é a mesma, inclusive depois da data de fim do treino ativo (regra 43).
+- **Painel do dia** (mesmo componente na semana e no mês). Proposta de design no Figma: páginas "Aluno · Ficha e painel do dia" e "↳ Fluxo · Aluno · Painel do dia".
+  - dia com ficha feita → abrir a ficha ou "Alterar" (trocar a ficha ou desfazer);
+  - dia passado sem registro (treino ativo) → "Sem registro" + "Marcar ficha feita" com a lista de fichas;
+  - dia futuro → sem interação (não abre painel);
+  - dia de treino encerrado → só consulta (abrir a ficha, sem "Alterar").
+- **Ficha**: **um card por exercício**, com séries, reps, **tempo de descanso (informativo)**, observação e carga (a última, editável). **Sem vídeo nem link de demonstração no MVP.** Botão fixo "Marcar como feito"; depois de marcada, mostra "Treino marcado. Bom trabalho!" e o botão vira "Desfazer marcação". Editar a carga abre uma folha com a última carga e **não marca o treino como feito**. **Sem conexão** (regra 116): marcada mostra "Guardado. Envio quando voltar." e o chip "AGUARDANDO ENVIO"; a folha de carga avisa que a carga fica no aparelho. Proposta de design no Figma: página "Aluno · Ficha e painel do dia" (seções 1 e 3).
+- **Abas da navegação inferior** (proposta de design no Figma: página "Aluno · Abas"):
+  - **Frequência**: calendário mês a mês (todos os meses), com o mesmo painel do dia e um resumo do mês só com a contagem de treinos (regra 45).
+  - **Progressão**: lista dos exercícios com carga registrada (regra 44), cada um com a última carga e a data. Tocar abre o **detalhe do exercício**: carga atual e histórico de cargas em lista (sem gráfico no MVP). Tela vazia quando não há carga registrada.
+  - **Histórico**: **lista simples** (nome, período, fichas) dos treinos passados, sem detalhe ao tocar. Tela vazia quando não há treino anterior.
+  - **Perfil (26/10)**, com 4 blocos:
+    - **Meus dados**: nome, nascimento, **telefone (WhatsApp)**, altura, peso, restrições ou dores, com a data da última atualização e o botão **"Editar dados"**, que abre uma tela de edição (sem navegação inferior) com "Salvar alterações" e os erros de campo da regra 85 (**desenhados em "Editar dados com erros"**). Depois de salvar, volta ao Perfil com o aviso "Dados atualizados.". No futuro, é aqui que aparece o histórico de peso e de outros dados.
+    - **Meu professor**: só o nome, sem chat.
+    - **Conta**: e-mail, **"Sair"** (com a folha "Sair do app?", regra 121) e **"Excluir minha conta"** (regra 120), que abre a folha de confirmação e, ao confirmar, volta ao Login com "Conta excluída.".
+    - **Sobre**: versão do app, termos e privacidade.
+    - Sem tema nem idioma (o app é escuro e em pt-BR por padrão).
+- **Solicitar novo treino**: botão sempre disponível (home e tela "sem treino"); uma solicitação aberta por vez. Com solicitação aberta, mostra "Solicitação enviada" (desabilitado) e o link "Cancelar solicitação", com folha de confirmação e toast "Solicitação cancelada." (regras 40, 52 e 103). Exige conexão (regra 116). Design no Figma: página "Aluno · Entrada", seção "Solicitar novo treino" (inclui o estado sem o link de cancelar, quando o professor já agendou).
+- **Casos de borda da 24ª rodada** (Figma: "Aluno · Entrada", seção 11): Treino novo · 1 Pop-up · Sessão · 1 Sessão expirada · Sessão · 2 Sair (folha) · Conta · 1 Conta excluída (login) · Conta · 2 Aluno bloqueado · Conta · 3 Excluir minha conta (folha).
+
+## 5. Telas e comportamento (lado do professor e do administrador)
+
+Formato celular (390), sem menu inferior (regra 54). Um único botão laranja por tela; o vermelho só para erro. Proposta de design no Figma (arquivo Coach In): **4A** páginas "Professor · Alunos" e "↳ Fluxo · Professor · Alunos"; **4B** páginas "Professor · Acompanhar" e "↳ Fluxo · Professor · Acompanhar"; **4C** páginas "Professor · Treino" e "↳ Fluxo · Professor · Treino"; **entrada do professor** (27/10) nas páginas "Professor · Entrada" e "↳ Fluxo · Professor · Entrada"; **administrador** (27/10) nas páginas "Admin · Professores" e "↳ Fluxo · Admin · Professores"; a página "↳ Fluxo · Conta e privacidade" mostra o vínculo de conta existente e a exclusão da própria conta. A visão ponta a ponta está nas páginas "Todas as telas" e "Fluxo completo".
+
+### 4A · Alunos e convite
+- **Lista de alunos**: título "Alunos", resumo ("6 alunos · 1 pediu novo treino"), campo de busca e uma linha por aluno: nome (truncado em 1 linha, regra 114), chip de status (**ativo · sem treino · quase no fim · convite pendente**, com as variações "convite expirado" e **"convite recusado"**), chip "Pediu treino" quando há solicitação aberta (regra 62) e uma linha de detalhe (último treino, fim do treino, ou datas do convite). Botão "Cadastrar aluno" fixo no rodapé. Estados: com alunos, busca com resultado, busca sem resultado ("Nenhum aluno encontrado"), vazia ("Você ainda não tem alunos"), **com convite recusado** e **com nome longo**. Regras 55, 56, 59, 102, 114.
+- **Cadastrar aluno**: nome, e-mail (opcional) e **telefone (opcional, regra 109)**, com aviso "Sem e-mail? Sem problema" explicando o envio por WhatsApp. Botão "Gerar convite". Estado de erro de campo. Regra 57.
+- **Convite gerado**: "Convite gerado" com o aviso de uso único e 7 dias. **Com e-mail**: "Enviar por e-mail" (principal) e "Copiar link". **Sem e-mail**: "Copiar link" (principal) e "Voltar à lista". Depois do envio, toast "Convite enviado por e-mail.".
+- **Aluno com convite**: **pendente** (e-mail, "Convite válido até 03/11", "Reenviar convite", "Copiar link" e o link "Corrigir e-mail"; toast "Convite reenviado."), **expirado** ("Este convite expirou em 24/10", "Gerar novo convite"), **recusado** ("Recusou o convite em dd/mm", "Enviar novo convite", regra 102), **corrigir e-mail** (campo editável, "Corrigir e reenviar") e **já tem conta** ("Ela já tem acesso", "Reenviar convite" para vincular a conta existente, regras 58 e 79). Reenviar invalida o link anterior.
+- **Exclusão de conta** (regra 120): o professor não tem tela para isso. Quando o aluno exclui a conta, ele some da lista.
+
+### 4B · Acompanhar o aluno
+- **Tela do aluno** (regras 68 a 70, 103 e 106): resumo do treino ativo e atalhos. Estados: **resumo** (treino ativo, rodapé com "Editar treino" e "Agendar novo treino"), **com solicitação** (aviso com a data do pedido e "Criar treino"; no exemplo o treino está concluído, com "Treino concluído" e barra cheia), **pedido cancelado** (aviso "Pedido de novo treino cancelado", sem "Criar treino", rodapé com "Editar treino" e "Agendar novo treino") e **sem treino** (aviso "Sem treino ativo" e "Criar treino").
+- **Calendário (só leitura)**: calendário do mês com as marcações, painel do dia sem botões de marcar ou desfazer, e "Abrir ficha" (regra 69). Variação para treino concluído, com aviso e marcações depois do fim (regra 72).
+- **Ficha (só leitura)**: título e chip "Feita em dd/mm", e os exercícios como na ficha do aluno, sem editar carga nem marcar.
+- **Progressão**: lista de exercícios com carga registrada e detalhe do exercício com carga atual e histórico (regra 63).
+- **Perfil (só leitura)**: dados do aluno com "atualizado em", **telefone (WhatsApp) e o link "Abrir WhatsApp"** (regras 71 e 108).
+- **Histórico do aluno**: lista simples dos treinos anteriores.
+- **Solicitação**: selo na lista, aviso e botão "Criar treino" na tela do aluno (regras 62 e 70).
+
+### 4C · Montagem e edição de treino
+- **Criar treino** (regra 73): Dados (início hoje e início futuro, com aviso do fim calculado; erro de nome vazio; 1 semana com o − desabilitado) · Seletor de data (datas passadas desabilitadas, no fuso do aluno, regra 115) · Fichas (com **nomes longos truncados**, regra 114) · Editar ficha ("Salvar ficha") · Editar exercício (folha) · Treino salvo (ativo hoje) · Treino agendado. **Erros de validação** (regra 104): Fichas sem ficha, Ficha sem exercício e Editar ficha sem exercício. **Descartar alterações?** (regra 107): folha em Editar ficha, em Fichas e em Editar treino ativo. **Pedido cancelado na montagem** (regra 103): aviso no topo de Fichas com "Falar com o aluno no WhatsApp". Telas em "Professor · Treino", seções 5 (22ª rodada) e 6 (23ª rodada).
+- **Biblioteca de exercícios** (regra 74): busca, aviso de exercício parecido, ocultar da busca (confirmação, com o aviso de que as fichas continuam, regra 113) e exercícios ocultos (com "desfazer").
+- **Treino agendado na tela do aluno** (regra 75): aviso, "Alterar treino agendado" e "Cancelar agendamento" com confirmação. **Alterar treino agendado** (regra 118): Dados com os valores atuais e "Salvar alterações", com variação de início hoje (seção 7). **Com solicitação aberta e treino agendado**, a tela mostra o chip e o aviso do pedido, sem "Criar treino" (regra 106).
+- **Editar o treino ativo** (regra 76): lista de fichas, editar ficha, remover ficha com aviso (as outras fichas mantêm a letra, regra 111). **Agendar novo treino** (regra 77) com o mesmo fluxo de Criar treino.
+- **Receber e atender a solicitação**: o botão "Criar treino" leva à montagem. A solicitação se fecha quando o novo treino fica ativo (regra 40) e deixa de aparecer se o aluno a cancelar antes de o professor agir (regras 52 e 103).
+
+### Entrada do professor (27/10, regras 87, 93, 95, 97 e 102)
+- **Ativar acesso**: "Ative seu acesso", e-mail autorizado já preenchido, senha com a dica da regra 78, botão "Ativar acesso". Depois, **"Acesso ativado"** com "Ir para a lista de alunos".
+- **Conta existente**: "Você já tem uma conta" → login (pulado se já estiver logado na conta certa) → **"Ativar acesso de professor?"** (acesso de aluno encerrado, dados guardados sem acesso, sai da lista do professor atual) com "Ativar acesso de professor" e "Agora não" (convite recusado). Com outro e-mail logado: "Este convite é para outra conta".
+- **Link de ativação inválido**: "Este link não vale mais", pedir novo link a quem administra o Coach In.
+- **Acesso bloqueado**: "Seu acesso está bloqueado", com "Sair" (regra 95).
+- O login é a mesma tela do aluno; o destino vem do papel da conta.
+
+### Administrador (27/10, regras 92 a 94 e 102)
+- **Lista de professores**: título "Professores", busca, linhas com chip (ativo, convite pendente, convite expirado, convite recusado, bloqueado) e botão "Convidar professor".
+- **Convidar professor**: nome e e-mail obrigatórios, aviso "O acesso de aluno será encerrado" (para e-mail que já tem conta) e "Gerar convite".
+- **Convite gerado** (1 dia), **convite pendente** (reenviar, copiar link, corrigir e-mail), **convite expirado** (gerar novo) e **convite recusado** ("Enviar novo convite").
+- **Professor ativo**: "Professor desde dd/mm" e "N alunos vinculados. Você não vê os dados deles.", botão "Bloquear acesso" (contorno) com folha de confirmação. **Professor bloqueado**: "Acesso bloqueado em dd/mm", botão "Desbloquear acesso".
+
+## 6. Fluxos (resumo)
+
+**Administrador:** Login → Lista de professores → Convidar professor (nome, e-mail) → Gerar convite → Enviar por e-mail ou copiar link (1 dia). Pendente: reenviar (invalida o anterior). Expirado ou recusado: enviar novo. Professor ativo: Bloquear acesso → confirmar → o professor é deslogado e vê "Seu acesso está bloqueado"; "Desbloquear acesso" devolve o acesso.
+
+**Professor (entrada):** recebe o link de ativação → e-mail sem conta: Ativar acesso (senha) → Acesso ativado → Lista de alunos; e-mail com conta: "Você já tem uma conta" → login (ou direto, se já estiver logado na conta certa) → "Ativar acesso de professor?" → Lista de alunos; "Agora não" recusa o convite. Link vencido, usado ou substituído: "Este link não vale mais". Nos logins seguintes, a mesma tela do aluno leva à Lista de alunos.
+
+**Professor:** Lista de alunos (busca por nome) → Cadastrar aluno (nome; e-mail e telefone opcionais) → Gerar convite → Enviar por e-mail ou copiar o link → o aluno aparece como "Convite pendente". Convite pendente: Reenviar convite (gera novo link, o anterior deixa de valer) / Copiar link / Corrigir e-mail. Convite expirado ou recusado: Gerar novo convite. Aluno que já tem conta: reenviar o convite para vincular a conta. → Tela do aluno (**já disponível com convite pendente, e o professor pode criar o treino antes do aceite, regra 122**; resumo, calendário só leitura com painel do dia e ficha, progressão, perfil com telefone e "Abrir WhatsApp", histórico) → **Criar treino** (Dados: nome obrigatório, início, semanas (mín. 1), frequência em texto livre → Fichas → Editar ficha (Salvar ficha) → Editar exercício, buscando na biblioteca antes de criar um novo → Salvar treino; sem ficha ou com ficha vazia, mostra o erro; voltar com alteração pede "Descartar alterações?") → Início é hoje? Sim: treino fica ativo, anterior vai ao Histórico, ficha de hoje = A, e o aluno vê o pop-up "Seu treino novo chegou" ao abrir o app. Não: fica agendado (só o professor vê; no máximo um por aluno, e com agendado não se cria outro; pode alterar a data ou cancelar) e ativa na data de início (com o mesmo pop-up para o aluno) → **Editar treino ativo** (fichas, exercícios, remover ficha com aviso, letras das outras fichas não mudam; nada bloqueado; sem aviso ao aluno) ou **Agendar novo treino** → Receber solicitação (selo na lista e botão "Criar treino" na tela do aluno; se o aluno cancelar antes de o professor agir, some o botão e o professor vê o aviso e pode falar com o aluno no WhatsApp).
+
+**Aluno (conta aberta, 27/10):** Login → "Criar conta" → Criar acesso (e-mail e senha de 8+ caracteres com letras e números) → Confirme seu e-mail (link de 1 dia; "Reenviar link") → Login → **sem professor: "Você ainda não tem um professor"** (pede o convite ao professor). Recebe o convite (link ou e-mail) → convite válido? Expirado: texto orientando a pedir novo convite ao professor. Substituído: "Este link não vale mais". Já usado: vai ao login. Válido: com conta e deslogado, "Você já tem uma conta" → Login → "Vincular ao professor?"; **já logado, vai direto para "Vincular ao professor?"** (com "Você está entrando como [e-mail]" e "Usar outra conta"); **com professor atual, "Trocar de professor?"** (dados de treino do professor antigo substituídos) → "Professor trocado". "Agora não" recusa o convite. Vinculou → "Conta vinculada" → **Primeiro acesso**: aviso de dados (marcar confirmação) → perfil, com telefone (Concluir) → Tem treino ativo? Não: tela "sem treino". Sim: Início → (treino novo ativo desde a última abertura: pop-up "Seu treino novo chegou" → "Ver meu treino" ou "Fechar") · (abrir ficha → ver ficha → editar carga opcional → Marcar como feito → registro criado e calendário/contagem/ficha de hoje atualizam; **sem conexão, a ação vai para a fila e é enviada quando a conexão volta, regra 116**) · (tocar num dia → painel do dia) · (navegação inferior → Frequência / Progressão / Histórico / Perfil) · (Solicitar novo treino → "Solicitação enviada" → opcional: Cancelar solicitação, enquanto o professor não agiu → confirmar na folha). Data de fim chegou → aviso "Treino concluído, solicite um novo"; o treino segue ativo e o aluno escolhe: **solicitar um novo treino ou "Continuar treinando com este treino"** (nesse caso segue normalmente até o professor ativar outro; com solicitação aberta, o link não aparece). Perfil → Conta → **"Sair"** (confirmar) ou **"Excluir minha conta"** (confirmar → Login com "Conta excluída.").
+
+**Aluno que já tem conta:** Login (e-mail e senha) → erro: toast "E-mail ou senha não conferem." / certo: Home, "sem treino" ou "Você ainda não tem um professor". Sessão vencida (30 dias sem uso): Login "Entre de novo". "Esqueci a senha" → pedir e-mail → "Confira seu e-mail" → link (1 dia; vencido: "Este link expirou" → "Pedir novo link"; já usado: "Este link não vale mais") → nova senha → "Senha alterada" → login.
+
+**Aluno sem internet (27/10, regra 116):** abre o app → copia do treino ativo guardada? Sim: Home com o aviso "Sem conexão" → ficha → marcar como feito ou editar carga → "Guardado. Envio quando voltar." (chip "AGUARDANDO ENVIO") → a conexão volta com o app aberto → fila enviada → "Registros enviados." Não: tela "Sem conexão" com "Tentar de novo". Telas que exigem conexão (meses antigos, Progressão, Histórico, solicitar treino, editar dados, excluir conta) mostram "Sem conexão" com "Tentar de novo".
+
+**Pontos de encontro:** convite enviado → recebido (ou vínculo de conta existente, ou troca de professor); convite recusado → status "Convite recusado" para quem convidou; treino ativo → home do aluno (e fecha a solicitação aberta; pop-up "Seu treino novo chegou" na próxima abertura); marcação do aluno → acompanhamento do professor (só leitura; chega quando a fila é enviada); perfil do aluno (com telefone) → visível ao professor, que abre o WhatsApp; solicitação do aluno → recebida pelo professor (e retirada se o aluno cancelar antes de o professor agir); exclusão da conta pelo aluno → o aluno some da lista do professor; convite do administrador → ativação do professor; bloqueio pelo administrador → logout e tela de bloqueio do professor.
+
+## 7. Prioridade
+
+### MVP
+- Modelo Treino > Ficha > Exercício (letras de ficha fixas)
+- Início: calendário da semana, semana do treino (3 de 8) e fichas
+- Navegação inferior (Início · Frequência · Progressão · Histórico · Perfil)
+- Marcar como feito (hoje ou dia passado)
+- Um treino ativo por vez; passados no Histórico (lista simples)
+- Continuar treinando depois da data de fim, até o professor ativar outro treino
+- **Pop-up "Seu treino novo chegou" ao abrir o app quando um treino novo ficou ativo (sem push)**
+- Ficha: cards por exercício com observação, tempo de descanso (informativo) e carga fixa
+- Biblioteca de exercícios (pré-definida + novos)
+- Progressão: lista de exercícios com carga registrada e histórico de carga por exercício
+- Frequência: calendário mensal, painel do dia e resumo do mês (só contagem)
+- **App web instalável (PWA); sem internet: fila local de envio (marcar, desfazer, editar carga) e treino ativo guardado para leitura, com avisos "Sem conexão", "AGUARDANDO ENVIO" e "Registros enviados"**
+- **Datas e "hoje" no fuso do aluno**
+- **Conta aberta com e-mail confirmado, login (e-mail e senha com requisitos mínimos, "esqueci a senha" por link de 1 dia, reenvio de link), sessão de 30 dias sem uso, "Sair" com confirmação e estado "Você ainda não tem um professor"**
+- Perfil do aluno (nome, nascimento, **telefone WhatsApp obrigatório**, altura, peso, restrições) preenchido ao vincular o professor, editável na aba Perfil, com validação de campos, e visível ao professor (com "Abrir WhatsApp")
+- Convite para aluno (novo ou com conta existente, deslogado ou já logado): vincular ao professor; **trocar de professor (um por vez)**; links expirado, usado e substituído e **convite recusado** com telas próprias
+- Entrada do aluno: criar conta, confirmar e-mail, primeiro acesso em 2 passos com confirmação do aviso de dados (retomando de onde parou)
+- Aba Perfil: meus dados, meu professor, conta (e-mail, sair, **excluir minha conta**), sobre (versão, termos, privacidade)
+- **Exclusão da própria conta pelo aluno (LGPD), sem passar pelo professor**
+- **Tela de conta bloqueada do aluno (a ação de bloquear aluno fica fora do MVP)**
+- **Três papéis (administrador, professor, aluno), um por e-mail, conferidos no servidor**
+- **Administrador: lista de professores, convidar (link de 1 dia), reenviar, enviar novo (expirado ou recusado), bloquear e desbloquear**
+- **Entrada do professor: ativar acesso, converter conta existente, link inválido e tela de acesso bloqueado com logout automático**
+- Montagem de treino em passos (nome obrigatório, início com seletor de data, semanas (mín. 1) com fim calculado, frequência sugerida em texto livre; fichas e exercícios reordenáveis, sem limite), com validação ao salvar e "Descartar alterações?" ao voltar
+- Biblioteca com busca, aviso de exercício parecido, ocultar da busca (com aviso de que as fichas continuam) e lista de ocultos
+- Treino agendado (no máximo um por aluno; alterar ou cancelar; com agendado não se cria outro) e "Agendar novo treino"
+- Editar o treino ativo (exercícios e fichas, com aviso ao remover ficha); o aluno vê a versão atual
+- Lista de alunos com busca, status (ativo, sem treino, quase no fim, convite pendente com variações expirado e recusado) e último treino
+- Cadastrar aluno (nome, e-mail e telefone opcionais) e convite: gerar, enviar por e-mail ou copiar link, reenviar, corrigir e-mail, gerar novo
+- Acompanhar o aluno em modo só leitura (calendário, ficha, progressão, perfil, histórico)
+- Solicitar novo treino, sem requisito mínimo (com "Solicitação enviada" e cancelamento com confirmação, enquanto o professor não agiu)
+- Textos longos truncados nas listas e cartões
+- Dono do dado em todas as entidades
+
+### Antes do lançamento (obrigatório, fora do escopo de produto do MVP)
+- **Exclusão da conta pelo aluno (LGPD)**: **desenhada** (regra 120). Falta definir com o jurídico o **prazo** e se alguma informação precisa ser **retida por obrigação legal**, e revisar os textos de privacidade e termos. **Validar também a regra 84** (altura e peso de menores) **e o tratamento do telefone** (regra 108). *(O jurídico fica para depois, por decisão de 27/10.)*
+
+### Depois do MVP
+- Duplicar treino / modelos de treino
+- Alerta de inatividade e ritmo real × esperado (ex.: "12 treinos em 4 semanas, abaixo da frequência sugerida")
+- **Histórico de peso, medidas e outros dados do perfil do aluno** (a aba Perfil já existe no MVP e já guarda a data de cada edição; falta só mostrar o histórico)
+- Gráficos de evolução de carga, para o aluno e para o professor (a lista de histórico é MVP)
+- Técnicas avançadas (bi-set, drop set, cadência)
+- Histórico **detalhado** de treinos criados
+- **Notificações push** (treino novo, perto do fim, lembrete de retorno); no MVP há só o pop-up ao abrir o app (regra 117)
+- **Modo offline completo** (abrir qualquer tela e pedir novo treino sem conexão; no MVP há só fila local e treino ativo guardado, regra 116) e envio da fila em segundo plano com o app fechado
+- Outras modalidades (cardio, funcional)
+- Mesclar exercícios duplicados
+- **Cronômetro de descanso (início manual)**
+- **Vídeo, GIF ou link de demonstração do exercício** (fora do MVP por completo, sem link nem arquivo)
+- **Login com Google**
+- **Remover ou arquivar aluno** (a exclusão da conta é do aluno, regra 120); **bloquear aluno** (regras 101 e 119)
+- **Versão web/desktop do professor** (regra 54)
+- **Verificação em duas etapas** para professor e administrador (regra 87)
+- Troca de e-mail da conta (regra 121)
+
+## 8. Pontos em aberto
+
+Nenhum ponto de produto bloqueando o MVP no momento.
+
+Pendências menores (não são regras ainda):
+- **Exclusão da conta (regra 120)**: prazo e retenção legal (E25), com o jurídico (deixado para depois). Premissa a confirmar: o mesmo e-mail pode criar uma conta nova e os dados antigos não voltam (E28).
+- **Jurídico**: dados de menores (regra 84), telefone (regra 108) e retenção.
+- **Aviso de treino novo (regra 117)**: confirmar se o pop-up deve aparecer também ao voltar ao app já aberto (hoje: ao abrir ou voltar a ficar visível).
+- **Sessão (regra 121)**: confirmar os 30 dias sem uso e o aviso de troca de senha em outros aparelhos (padrão de mercado, não validado).
+- **Aluno bloqueado (regra 119)**: sem ação que dispare a tela; exigiria rever a regra 87 (o administrador não vê alunos).
+
+Detalhes de design a confirmar (não são regras): na home "seguindo com o mesmo treino", o rótulo "Treino concluído" no lugar de "Semana X de Y" e a barra de progresso cheia; na caixa de confirmação do aviso de dados, a cor laranja quando marcada; na lista de alunos, a linha sem avatar (não coube com os dois chips).
+
+## 9. Glossário
+
+- **Administrador**: dono do produto, com e-mail próprio. Convida e bloqueia professores; não vê dados de alunos.
+- **Bloqueio**: suspensão reversível do acesso de um professor, feita pelo administrador (regra 94). A tela de conta bloqueada do aluno existe, mas a ação não (regra 119).
+- **Treino**: plano completo do aluno, com início e fim fixos (ex.: 8 semanas).
+- **Treino concluído**: treino ativo cuja data de fim já passou. Segue ativo até o professor ativar outro.
+- **Treino agendado**: treino com início futuro; só o professor vê. No máximo um por aluno.
+- **Ficha**: dia de treino dentro do treino (A, B, C…), com nome próprio e letra fixa.
+- **Letra da ficha**: identificador A, B, C… que nunca muda nem é reaproveitado (regra 111).
+- **Treino feito / marcação**: uma ficha marcada como feita pelo aluno (data + ficha). O app conta essas marcações.
+- **Frequência sugerida**: texto livre, ex.: "5x por semana". Só informação, não é meta.
+- **Semana do treino**: contagem a partir do dia de início (dias 1 a 7 = semana 1), no fuso do aluno.
+- **Ficha de hoje**: indicativo da próxima ficha existente na fila de rotação.
+- **Painel do dia**: painel aberto ao tocar num dia, na semana ou no mês.
+- **Navegação inferior**: menu flutuante do aluno com as abas Início, Frequência, Progressão, Histórico e Perfil.
+- **Fila local / aguardando envio**: ações do aluno feitas sem conexão, guardadas no aparelho e enviadas quando a conexão volta (regra 116).
+- **Pop-up de treino novo**: aviso dentro do app, ao abrir, de que um treino novo ficou ativo (regra 117). Não é notificação push.
+- **Convite de aluno**: link ou e-mail de uso único, válido por 7 dias, que o professor envia para o aluno criar o acesso ou, se o aluno já tem conta, para vincular a conta ao professor. Reenviar invalida o anterior.
+- **Convite de professor**: link de uso único, válido por 1 dia, que o administrador envia para um e-mail; ativa o acesso ou converte a conta existente.
+- **Convite pendente**: status do aluno (ou professor) que recebeu o convite e ainda não ativou o acesso (com as variações "convite expirado" e "convite recusado").
+- **Convite recusado**: convite encerrado porque a pessoa tocou em "Agora não" (regra 102). Quem convidou pode enviar outro.
+- **Vínculo**: ligação da conta de um aluno a um professor, feita pelo convite (regra 79). Cada aluno tem um professor por vez; trocar substitui os dados de treino do professor antigo (regra 98).
+- **Exclusão da conta**: ação do próprio aluno (aba Perfil, "Excluir minha conta") que apaga os dados dele e encerra o acesso (regra 120).
+- **Sessão**: login ativo no aparelho; dura 30 dias sem uso (regra 121).
+- **Primeiro acesso**: as 2 telas (aviso de dados e perfil, com telefone) que aparecem ao vincular o primeiro professor.
+- **Telefone (WhatsApp)**: número do aluno, obrigatório no primeiro acesso; o professor o usa para falar com o aluno pelo WhatsApp (regra 108).
