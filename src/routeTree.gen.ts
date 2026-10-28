@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AlunoRouteImport } from './routes/aluno'
 import { Route as BloqueadoRouteImport } from './routes/bloqueado'
+import { Route as ConfirmeSeuEmailRouteImport } from './routes/confirme-seu-email'
+import { Route as CriarContaRouteImport } from './routes/criar-conta'
 import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as PrimeiroAcessoRouteImport } from './routes/primeiro-acesso'
 import { Route as ProfessorRouteImport } from './routes/professor'
@@ -37,6 +39,16 @@ const AlunoRoute = AlunoRouteImport.update({
 const BloqueadoRoute = BloqueadoRouteImport.update({
   id: '/bloqueado',
   path: '/bloqueado',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfirmeSeuEmailRoute = ConfirmeSeuEmailRouteImport.update({
+  id: '/confirme-seu-email',
+  path: '/confirme-seu-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CriarContaRoute = CriarContaRouteImport.update({
+  id: '/criar-conta',
+  path: '/criar-conta',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EntrarRoute = EntrarRouteImport.update({
@@ -70,6 +82,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/aluno': typeof AlunoRoute
   '/bloqueado': typeof BloqueadoRoute
+  '/confirme-seu-email': typeof ConfirmeSeuEmailRoute
+  '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/professor': typeof ProfessorRoute
@@ -81,6 +95,8 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/aluno': typeof AlunoRoute
   '/bloqueado': typeof BloqueadoRoute
+  '/confirme-seu-email': typeof ConfirmeSeuEmailRoute
+  '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/professor': typeof ProfessorRoute
@@ -93,6 +109,8 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/aluno': typeof AlunoRoute
   '/bloqueado': typeof BloqueadoRoute
+  '/confirme-seu-email': typeof ConfirmeSeuEmailRoute
+  '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/professor': typeof ProfessorRoute
@@ -106,6 +124,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/aluno'
     | '/bloqueado'
+    | '/confirme-seu-email'
+    | '/criar-conta'
     | '/entrar'
     | '/primeiro-acesso'
     | '/professor'
@@ -117,6 +137,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/aluno'
     | '/bloqueado'
+    | '/confirme-seu-email'
+    | '/criar-conta'
     | '/entrar'
     | '/primeiro-acesso'
     | '/professor'
@@ -128,6 +150,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/aluno'
     | '/bloqueado'
+    | '/confirme-seu-email'
+    | '/criar-conta'
     | '/entrar'
     | '/primeiro-acesso'
     | '/professor'
@@ -140,6 +164,8 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AlunoRoute: typeof AlunoRoute
   BloqueadoRoute: typeof BloqueadoRoute
+  ConfirmeSeuEmailRoute: typeof ConfirmeSeuEmailRoute
+  CriarContaRoute: typeof CriarContaRoute
   EntrarRoute: typeof EntrarRoute
   PrimeiroAcessoRoute: typeof PrimeiroAcessoRoute
   ProfessorRoute: typeof ProfessorRoute
@@ -175,6 +201,20 @@ declare module '@tanstack/react-router' {
       path: '/bloqueado'
       fullPath: '/bloqueado'
       preLoaderRoute: typeof BloqueadoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confirme-seu-email': {
+      id: '/confirme-seu-email'
+      path: '/confirme-seu-email'
+      fullPath: '/confirme-seu-email'
+      preLoaderRoute: typeof ConfirmeSeuEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/criar-conta': {
+      id: '/criar-conta'
+      path: '/criar-conta'
+      fullPath: '/criar-conta'
+      preLoaderRoute: typeof CriarContaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/entrar': {
@@ -220,6 +260,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AlunoRoute: AlunoRoute,
   BloqueadoRoute: BloqueadoRoute,
+  ConfirmeSeuEmailRoute: ConfirmeSeuEmailRoute,
+  CriarContaRoute: CriarContaRoute,
   EntrarRoute: EntrarRoute,
   PrimeiroAcessoRoute: PrimeiroAcessoRoute,
   ProfessorRoute: ProfessorRoute,
