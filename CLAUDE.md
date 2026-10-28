@@ -2,7 +2,7 @@
 
 Aplicativo de treinos de academia gerenciado por um professor (MVP: apenas musculação).
 
-Antes de qualquer trabalho de produto, design ou código, leia `docs/contexto/contexto-produto.md`: ele consolida o modelo de dados, as regras de negócio (numeradas), as telas, os fluxos e a priorização MVP x Depois, atualizado até a 25ª rodada de decisões (27/10/2026). A fonte original é o board do Figma (https://www.figma.com/board/JNuuAUgUlhLvia1HZ5X3xO/Aplicativo-de-treinos---MVP).
+Antes de qualquer trabalho de produto, design ou código, leia `docs/contexto/contexto-produto.md`: ele consolida o modelo de dados, as regras de negócio (numeradas), as telas, os fluxos e a priorização MVP x Depois, atualizado até a 28ª rodada de decisões (28/10/2026). A fonte original é o board do Figma (https://www.figma.com/board/JNuuAUgUlhLvia1HZ5X3xO/Aplicativo-de-treinos---MVP).
 
 - Siga as regras do `docs/contexto/contexto-produto.md`; não invente regras novas sem confirmar.
 - Se algo conflitar ou estiver nos "Pontos em aberto", pergunte antes de implementar.
@@ -22,7 +22,7 @@ Decidida em `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel, 
 - `figma-paginas.md`: mapa de páginas do arquivo Figma "Coach In" (manda sobre os nomes citados nos outros arquivos).
 - `handoff-design-system.md`: convenções visuais e manhas do plugin do Figma.
 - `prompts-lotes-3-e-4.md`: prompts usados nos lotes 3 e 4 do design (referência histórica).
-- `rodada-19`, `rodada-22`, `rodada-23` e `rodada-24` (a 25ª rodada é só a regra 122, sem mapa do Figma): mapa do Figma e pendências de cada rodada de casos de borda (as regras em si estão no `contexto-produto.md`).
+- `rodada-19`, `rodada-22`, `rodada-23` e `rodada-24` (as rodadas 25 e 26 são só regras, 122 e 123 a 125, sem mapa do Figma; a 28ª (regras 127 a 130) tem a seção 12 de "Aluno · Entrada"; a 27ª, regra 126, tem as telas na página "Aluno · Ficha e painel do dia" e "Professor · Treino"): mapa do Figma e pendências de cada rodada de casos de borda (as regras em si estão no `contexto-produto.md`).
 
 O **repositório é a fonte da verdade**: edite em `docs/contexto/` e espelhe no Project "Coach In" do claude.ai ao fim de cada rodada (no Project os caminhos são `claude/...`). Detalhes em `docs/WORKFLOW.md`, seção 8.
 
