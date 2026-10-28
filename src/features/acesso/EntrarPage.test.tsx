@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { lerUltimoUso } from "@/lib/inatividade";
 import { ToastProvider } from "@/ui";
 import { EntrarPage } from "./EntrarPage";
 
@@ -59,6 +60,8 @@ describe("Entrar", () => {
       password: "abc12345",
     });
     expect(queryClient.getQueryData(["sessao"])).toBeUndefined();
+    // Entrar conta como uso (regra 121): a sessão nova não vence pelo uso antigo.
+    expect(Date.now() - (lerUltimoUso() ?? 0)).toBeLessThan(5000);
     expect(navegar).toHaveBeenCalledWith({ to: "/", replace: true });
   });
 
@@ -112,6 +115,20 @@ describe("Entrar", () => {
     expect(screen.getByText("Digite sua senha.")).toBeVisible();
     expect(screen.getByLabelText("E-mail")).toHaveFocus();
     expect(signInWithPassword).not.toHaveBeenCalled();
+  });
+
+  it('sessão vencida por inatividade: título "Entre de novo" (regra 121)', () => {
+    abrirTela({ sessaoExpirada: true });
+    expect(screen.getByRole("heading", { name: "Entre de novo" })).toBeVisible();
+    expect(
+      screen.getByText("Sua sessão expirou por inatividade. Use o e-mail e a senha do seu acesso."),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Entrar" })).toBeVisible();
+  });
+
+  it('sem sessão vencida, o título é "Entrar"', () => {
+    abrirTela();
+    expect(screen.getByRole("heading", { name: "Entrar" })).toBeVisible();
   });
 
   it("abre com o e-mail preenchido quando vem de outra tela (regra 83)", () => {

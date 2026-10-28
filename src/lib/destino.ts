@@ -4,7 +4,11 @@ export type Papel = Database["public"]["Enums"]["app_role"];
 
 /** O que o servidor diz sobre quem está usando o app. Nunca vem de user_metadata. */
 export type EstadoSessao =
-  | { tipo: "anonimo" }
+  | {
+      tipo: "anonimo";
+      /** A sessão foi encerrada por 30 dias sem uso: o Login mostra "Entre de novo" (regra 121). */
+      sessaoExpirada?: true;
+    }
   | {
       tipo: "logado";
       papel: Papel;

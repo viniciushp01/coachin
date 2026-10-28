@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { erroDeAuth } from "@/lib/erros";
 import { email, senhaDoLogin } from "@/lib/formularios";
-import { estadoSessaoQuery } from "@/lib/sessao";
+import { estadoSessaoQuery, registrarEntrada } from "@/lib/sessao";
 import { supabase } from "@/lib/supabase";
 import { BarraFixa, Button, FormField, Tela, useToast } from "@/ui";
 
@@ -13,22 +13,29 @@ const esquema = z.object({ email, senha: senhaDoLogin });
 
 const rotaEntrar = getRouteApi("/entrar");
 
-/** Entrada da rota `/entrar`: lê o e-mail da busca (`?email=`) e abre a tela. */
+/**
+ * Entrada da rota `/entrar`: lê o e-mail da busca (`?email=`) e, do estado da sessão que a
+ * guarda da rota carregou, se a sessão venceu por inatividade.
+ */
 export function TelaEntrar() {
   const { email: emailDaBusca } = rotaEntrar.useSearch();
-  return <EntrarPage emailInicial={emailDaBusca} />;
+  const { estado } = rotaEntrar.useRouteContext();
+  const sessaoExpirada = estado.tipo === "anonimo" && estado.sessaoExpirada === true;
+  return <EntrarPage emailInicial={emailDaBusca} sessaoExpirada={sessaoExpirada} />;
 }
 
 type EntrarPageProps = {
   /** E-mail já preenchido, vindo de outra tela (ex.: "Entrar com este e-mail", regra 83). */
   emailInicial?: string;
+  /** Sessão encerrada por 30 dias sem uso: título "Entre de novo" (regra 121). */
+  sessaoExpirada?: boolean;
 };
 
 /**
  * Entrar (regras 39, 47 e 51). A mesma tela serve aos três papéis; o destino vem do servidor.
  * Erro de credenciais em toast neutro, campos preenchidos, sem bloqueio por tentativas.
  */
-export function EntrarPage({ emailInicial = "" }: EntrarPageProps) {
+export function EntrarPage({ emailInicial = "", sessaoExpirada = false }: EntrarPageProps) {
   const navegar = useNavigate();
   const queryClient = useQueryClient();
   const mostrarToast = useToast();
@@ -52,7 +59,9 @@ export function EntrarPage({ emailInicial = "" }: EntrarPageProps) {
       mostrarToast("error", erroDeAuth(erro).message);
       return;
     }
-    // O estado guardado ainda é "anônimo": descarta antes de a raiz escolher o destino.
+    // Conta como uso (regra 121) e descarta o estado "anônimo" guardado antes de a raiz
+    // escolher o destino.
+    registrarEntrada();
     queryClient.removeQueries({ queryKey: estadoSessaoQuery.queryKey });
     await navegar({ to: "/", replace: true });
   }
@@ -61,8 +70,12 @@ export function EntrarPage({ emailInicial = "" }: EntrarPageProps) {
     <Tela barra="um">
       <form id="entrar" onSubmit={handleSubmit(entrar)} className="flex flex-col gap-16" noValidate>
         <div className="flex flex-col gap-8">
-          <h1 className="text-title-screen">Entrar</h1>
-          <p className="text-body text-text-secondary">Use o e-mail e a senha do seu acesso.</p>
+          <h1 className="text-title-screen">{sessaoExpirada ? "Entre de novo" : "Entrar"}</h1>
+          <p className="text-body text-text-secondary">
+            {sessaoExpirada
+              ? "Sua sessão expirou por inatividade. Use o e-mail e a senha do seu acesso."
+              : "Use o e-mail e a senha do seu acesso."}
+          </p>
         </div>
         <div className="flex flex-col gap-16">
           <FormField
