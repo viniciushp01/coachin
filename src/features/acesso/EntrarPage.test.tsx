@@ -147,6 +147,12 @@ describe("Entrar", () => {
     expect(screen.getByRole("heading", { name: "Entrar" })).toBeVisible();
   });
 
+  it('depois do link de confirmação: toast "E-mail confirmado." e e-mail preenchido (regra 128)', async () => {
+    abrirTela({ emailInicial: "ana@exemplo.com", emailConfirmado: true });
+    expect(await screen.findByText("E-mail confirmado.")).toBeVisible();
+    expect(screen.getByLabelText("E-mail")).toHaveValue("ana@exemplo.com");
+  });
+
   it("abre com o e-mail preenchido quando vem de outra tela (regra 83)", () => {
     abrirTela({ emailInicial: "ana@exemplo.com" });
     expect(screen.getByLabelText("E-mail")).toHaveValue("ana@exemplo.com");

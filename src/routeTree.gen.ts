@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AlunoRouteImport } from './routes/aluno'
 import { Route as BloqueadoRouteImport } from './routes/bloqueado'
 import { Route as ConfiraSeuEmailRouteImport } from './routes/confira-seu-email'
+import { Route as ConfirmarEmailRouteImport } from './routes/confirmar-email'
 import { Route as ConfirmeSeuEmailRouteImport } from './routes/confirme-seu-email'
 import { Route as CriarContaRouteImport } from './routes/criar-conta'
 import { Route as EntrarRouteImport } from './routes/entrar'
@@ -47,6 +48,11 @@ const BloqueadoRoute = BloqueadoRouteImport.update({
 const ConfiraSeuEmailRoute = ConfiraSeuEmailRouteImport.update({
   id: '/confira-seu-email',
   path: '/confira-seu-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfirmarEmailRoute = ConfirmarEmailRouteImport.update({
+  id: '/confirmar-email',
+  path: '/confirmar-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfirmeSeuEmailRoute = ConfirmeSeuEmailRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/aluno': typeof AlunoRoute
   '/bloqueado': typeof BloqueadoRoute
   '/confira-seu-email': typeof ConfiraSeuEmailRoute
+  '/confirmar-email': typeof ConfirmarEmailRoute
   '/confirme-seu-email': typeof ConfirmeSeuEmailRoute
   '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/aluno': typeof AlunoRoute
   '/bloqueado': typeof BloqueadoRoute
   '/confira-seu-email': typeof ConfiraSeuEmailRoute
+  '/confirmar-email': typeof ConfirmarEmailRoute
   '/confirme-seu-email': typeof ConfirmeSeuEmailRoute
   '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/aluno': typeof AlunoRoute
   '/bloqueado': typeof BloqueadoRoute
   '/confira-seu-email': typeof ConfiraSeuEmailRoute
+  '/confirmar-email': typeof ConfirmarEmailRoute
   '/confirme-seu-email': typeof ConfirmeSeuEmailRoute
   '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/aluno'
     | '/bloqueado'
     | '/confira-seu-email'
+    | '/confirmar-email'
     | '/confirme-seu-email'
     | '/criar-conta'
     | '/entrar'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/aluno'
     | '/bloqueado'
     | '/confira-seu-email'
+    | '/confirmar-email'
     | '/confirme-seu-email'
     | '/criar-conta'
     | '/entrar'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/aluno'
     | '/bloqueado'
     | '/confira-seu-email'
+    | '/confirmar-email'
     | '/confirme-seu-email'
     | '/criar-conta'
     | '/entrar'
@@ -201,6 +213,7 @@ export interface RootRouteChildren {
   AlunoRoute: typeof AlunoRoute
   BloqueadoRoute: typeof BloqueadoRoute
   ConfiraSeuEmailRoute: typeof ConfiraSeuEmailRoute
+  ConfirmarEmailRoute: typeof ConfirmarEmailRoute
   ConfirmeSeuEmailRoute: typeof ConfirmeSeuEmailRoute
   CriarContaRoute: typeof CriarContaRoute
   EntrarRoute: typeof EntrarRoute
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/confira-seu-email'
       fullPath: '/confira-seu-email'
       preLoaderRoute: typeof ConfiraSeuEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confirmar-email': {
+      id: '/confirmar-email'
+      path: '/confirmar-email'
+      fullPath: '/confirmar-email'
+      preLoaderRoute: typeof ConfirmarEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/confirme-seu-email': {
@@ -321,6 +341,7 @@ const rootRouteChildren: RootRouteChildren = {
   AlunoRoute: AlunoRoute,
   BloqueadoRoute: BloqueadoRoute,
   ConfiraSeuEmailRoute: ConfiraSeuEmailRoute,
+  ConfirmarEmailRoute: ConfirmarEmailRoute,
   ConfirmeSeuEmailRoute: ConfirmeSeuEmailRoute,
   CriarContaRoute: CriarContaRoute,
   EntrarRoute: EntrarRoute,

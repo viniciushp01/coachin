@@ -82,7 +82,7 @@ describe("Confirme seu e-mail (regras 89, 100 e 130)", () => {
     expect(resend).toHaveBeenCalledWith({
       type: "signup",
       email: "ana@exemplo.com",
-      options: { emailRedirectTo: `${location.origin}/entrar` },
+      options: { emailRedirectTo: expect.stringMatching(/\/confirmar-email\?pedido=\d+$/) },
     });
     expect(await screen.findByRole("button", { name: "Reenviar em 60 s" })).toBeDisabled();
 

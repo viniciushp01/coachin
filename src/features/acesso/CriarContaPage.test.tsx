@@ -78,7 +78,7 @@ describe("Criar acesso (regras 47, 78 e 89)", () => {
     expect(signUp).toHaveBeenCalledWith({
       email: "ana@exemplo.com",
       password: "abc12345",
-      options: { emailRedirectTo: `${location.origin}/entrar` },
+      options: { emailRedirectTo: expect.stringMatching(/\/confirmar-email\?pedido=\d+$/) },
     });
     expect(navegar).toHaveBeenCalledWith({
       to: "/confirme-seu-email",
