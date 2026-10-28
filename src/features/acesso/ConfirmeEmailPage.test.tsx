@@ -61,6 +61,18 @@ describe("Confirme seu e-mail (regras 89, 100 e 130)", () => {
     expect(screen.getByRole("button", { name: "Não recebeu? Reenviar link" })).toBeEnabled();
   });
 
+  it('enquanto o envio não termina (o e-mail pode levar segundos), "Reenviar link" fica desabilitado', async () => {
+    let terminar: (resposta: { data: object; error: null }) => void = () => {};
+    resend.mockReturnValue(new Promise((resolver) => (terminar = resolver)));
+    const usuario = abrirTela();
+
+    await usuario.click(screen.getByRole("button", { name: "Não recebeu? Reenviar link" }));
+    expect(screen.getByRole("button", { name: "Não recebeu? Reenviar link" })).toBeDisabled();
+
+    await act(async () => terminar({ data: {}, error: null }));
+    expect(await screen.findByRole("button", { name: "Reenviar em 60 s" })).toBeDisabled();
+  });
+
   it('"Reenviar link" manda outro e fica desabilitado por 60 s, com contagem', async () => {
     resend.mockResolvedValue({ data: {}, error: null });
     const usuario = abrirTela();
@@ -72,7 +84,7 @@ describe("Confirme seu e-mail (regras 89, 100 e 130)", () => {
       email: "ana@exemplo.com",
       options: { emailRedirectTo: `${location.origin}/entrar` },
     });
-    expect(screen.getByRole("button", { name: "Reenviar em 60 s" })).toBeDisabled();
+    expect(await screen.findByRole("button", { name: "Reenviar em 60 s" })).toBeDisabled();
 
     await act(() => vi.advanceTimersByTimeAsync(15_000));
     expect(screen.getByRole("button", { name: "Reenviar em 45 s" })).toBeDisabled();

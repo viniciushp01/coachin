@@ -74,6 +74,8 @@ export function TextButton({
       className={clsx(
         "inline-flex min-h-48 items-center justify-center gap-8 py-12",
         tom === "link" ? "text-link" : "text-body-strong text-text-secondary",
+        // Desabilitado (ex.: "Reenviar em 45 s"): mesma cor a 50%, como no Figma.
+        "disabled:cursor-default disabled:opacity-50",
         className,
       )}
       {...props}
