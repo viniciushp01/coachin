@@ -5,3 +5,4 @@ supabase
 *.md
 package-lock.json
 src/routeTree.gen.ts
+.claude
