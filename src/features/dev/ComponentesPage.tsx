@@ -138,6 +138,19 @@ function Demonstracoes() {
         <FormField rotulo="E-mail" tipo="email" placeholder="seuemail@exemplo.com" />
         <FormField rotulo="Nome" defaultValue="Vinicius" />
         <FormField rotulo="Senha" tipo="password" defaultValue="segredo123" />
+        <FormField
+          rotulo="Senha"
+          tipo="password"
+          placeholder="Crie uma senha"
+          dica="Mínimo de 8 caracteres, com letras e números."
+        />
+        <FormField
+          rotulo="Senha"
+          tipo="password"
+          defaultValue="abcdefgh"
+          dica="Mínimo de 8 caracteres, com letras e números."
+          erro="A senha precisa ter pelo menos 8 caracteres, com letras e números."
+        />
         <FormField rotulo="Nome" defaultValue="V" erro="Digite seu nome completo." />
         <TextAreaField rotulo="Restrições ou dores" placeholder="Ex.: dor leve no ombro" />
         <PhoneField
