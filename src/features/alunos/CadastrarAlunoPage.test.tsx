@@ -43,7 +43,9 @@ describe("Cadastrar aluno (regras 46, 57 e 109)", () => {
   it("mostra nome, e-mail e telefone opcionais e o aviso de WhatsApp", () => {
     abrir();
     expect(screen.getByRole("heading", { name: "Cadastrar aluno" })).toBeVisible();
-    expect(screen.getByText("Depois você gera o convite para ele criar o acesso.")).toBeVisible();
+    expect(
+      screen.getByText("Depois você gera o convite para o aluno criar o acesso."),
+    ).toBeVisible();
     expect(screen.getByLabelText("Nome")).toHaveAttribute("placeholder", "Nome do aluno");
     expect(screen.getByLabelText("E-mail (opcional)")).toBeVisible();
     expect(screen.getByLabelText("Telefone (opcional)")).toBeVisible();
@@ -141,7 +143,7 @@ describe("Convite gerado (regras 46 e 57)", () => {
     await usuario.click(gerar());
     expect(
       await screen.findByText(
-        "O link de Rafael Torres é de uso único e vale por 7 dias. Envie agora para ele criar o acesso.",
+        "O link de Rafael Torres é de uso único e vale por 7 dias. Envie agora para criar o acesso.",
       ),
     ).toBeVisible();
     expect(screen.getByRole("button", { name: "Copiar link" })).toBeVisible();

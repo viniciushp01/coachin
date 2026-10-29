@@ -55,7 +55,7 @@ describe("Passo 1 · Antes de começar (regras 49, 84 e 108)", () => {
     expect(screen.getByText("Seu professor vê estes dados")).toBeVisible();
     expect(
       screen.getByText(
-        "O Prof. Carlos Almeida vê seu nome, nascimento, telefone, altura, peso e restrições ou dores para montar o seu treino e falar com você. Altura e peso podem ser compartilhados em qualquer idade, mas é importante saber que o professor os vê. Restrições ou dores são dados de saúde e recebem cuidado especial, conforme a LGPD.",
+        "Carlos Almeida vê seu nome, nascimento, telefone, altura, peso e restrições ou dores para montar o seu treino e falar com você. Altura e peso podem ser compartilhados em qualquer idade, mas é importante saber que o professor os vê. Restrições ou dores são dados de saúde e recebem cuidado especial, conforme a LGPD.",
       ),
     ).toBeVisible();
   });

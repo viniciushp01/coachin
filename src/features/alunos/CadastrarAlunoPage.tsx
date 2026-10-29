@@ -3,27 +3,15 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
-import { urlDoApp } from "@/features/acesso/urlDoApp";
 import { ErroApp, erroDaResposta, MENSAGENS } from "@/lib/erros";
 import { email } from "@/lib/formularios";
 import { formatarTelefone, telefoneParaServidor } from "@/lib/perfil";
 import { rpc } from "@/lib/rpc";
-import {
-  BarraFixa,
-  BackButton,
-  Button,
-  EmptyState,
-  FormField,
-  Notice,
-  PhoneField,
-  Tela,
-  useToast,
-} from "@/ui";
+import { ConviteGerado, type LinkDoConvite } from "./ConviteGerado";
+import { BarraFixa, BackButton, Button, FormField, Notice, PhoneField, Tela, useToast } from "@/ui";
 
 /** Nome vazio no cadastro do aluno (Figma "Cadastrar · 2"); o "Digite seu nome." é do perfil. */
 const NOME_DO_ALUNO = "Digite o nome do aluno.";
-const LINK_COPIADO = "Link copiado."; // proposta: sem texto no Figma nem nas regras
-const COPIA_FALHOU = "Não foi possível copiar o link."; // proposta
 
 /** Cadastro → argumentos de `create_student_with_invite` (regras 57 e 109). */
 const esquema = z
@@ -46,15 +34,13 @@ const esquema = z
     };
   });
 
-type Convite = { nome: string; comEmail: boolean; token: string };
-
 /**
  * Cadastrar aluno e "Convite gerado" (regras 46, 57 e 109; Figma "Professor · Alunos", seções 2
  * e 3). O link do convite fica só na memória da tela: copiar é o caminho até o envio por e-mail
  * (#52).
  */
 export function CadastrarAlunoPage() {
-  const [convite, setConvite] = useState<Convite>();
+  const [convite, setConvite] = useState<LinkDoConvite>();
   return convite ? <ConviteGerado {...convite} /> : <Cadastro aoGerar={setConvite} />;
 }
 
@@ -66,7 +52,7 @@ const CAMPO_DO_ERRO = {
   phone_invalid: ["telefone", MENSAGENS.phone_invalid],
 } as const;
 
-function Cadastro({ aoGerar }: { aoGerar: (convite: Convite) => void }) {
+function Cadastro({ aoGerar }: { aoGerar: (convite: LinkDoConvite) => void }) {
   const navegar = useNavigate();
   const mostrarToast = useToast();
   const {
@@ -109,7 +95,7 @@ function Cadastro({ aoGerar }: { aoGerar: (convite: Convite) => void }) {
         <div className="flex flex-col gap-8">
           <h1 className="text-title-screen">Cadastrar aluno</h1>
           <p className="text-body text-text-secondary">
-            Depois você gera o convite para ele criar o acesso.
+            Depois você gera o convite para o aluno criar o acesso.
           </p>
         </div>
         <FormField
@@ -148,40 +134,6 @@ function Cadastro({ aoGerar }: { aoGerar: (convite: Convite) => void }) {
       <BarraFixa>
         <Button type="submit" form="cadastro" disabled={isSubmitting}>
           Gerar convite
-        </Button>
-      </BarraFixa>
-    </Tela>
-  );
-}
-
-function ConviteGerado({ nome, comEmail, token }: Convite) {
-  const navegar = useNavigate();
-  const mostrarToast = useToast();
-  const voltar = () => navegar({ to: "/professor" });
-
-  async function copiar() {
-    try {
-      await navigator.clipboard.writeText(urlDoApp(`/convite/${token}`));
-      mostrarToast("success", LINK_COPIADO);
-    } catch {
-      mostrarToast("error", COPIA_FALHOU);
-    }
-  }
-
-  return (
-    <Tela barra="dois">
-      <BackButton onClick={voltar} />
-      <EmptyState icone="check_circle" titulo="Convite gerado" className="flex-1 justify-center">
-        {`O link de ${nome} é de uso único e vale por 7 dias. `}
-        {comEmail
-          ? "Envie agora para ele criar o acesso."
-          : "Copie e envie por WhatsApp ou outro app."}
-      </EmptyState>
-      {/* Com e-mail, "Enviar por e-mail" vira o principal quando o envio existir (#52). */}
-      <BarraFixa>
-        <Button onClick={() => void copiar()}>Copiar link</Button>
-        <Button variante="secondary" onClick={voltar}>
-          Voltar à lista
         </Button>
       </BarraFixa>
     </Tela>

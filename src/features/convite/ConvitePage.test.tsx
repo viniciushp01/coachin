@@ -49,13 +49,15 @@ describe("Convite de aluno válido (regras 46 e 48)", () => {
 
   it("mostra o professor e a validade de 7 dias", () => {
     abrir(tela);
-    expect(screen.getByRole("heading", { name: "Você foi convidado para treinar" })).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Você recebeu um convite para treinar" }),
+    ).toBeVisible();
     expect(
       screen.getByText(
         "O professor Carlos Almeida convidou você para o Coach In. Crie o seu acesso para ver os seus treinos e acompanhar a sua frequência.",
       ),
     ).toBeVisible();
-    expect(screen.getByText("Prof. Carlos Almeida")).toBeVisible();
+    expect(screen.getByText("Carlos Almeida")).toBeVisible();
     expect(screen.getByText("Convite válido por 7 dias")).toBeVisible();
   });
 
@@ -96,7 +98,7 @@ describe("Você já tem uma conta (regra 79)", () => {
         "O professor Carlos Almeida quer acompanhar seu treino. Entre com a sua conta para vincular.",
       ),
     ).toBeVisible();
-    expect(screen.getByText("Prof. Carlos Almeida")).toBeVisible();
+    expect(screen.getByText("Carlos Almeida")).toBeVisible();
     await usuario.click(screen.getByRole("button", { name: "Entrar com minha conta" }));
     expect(lerConviteGuardado()).toBe("tok-1");
     expect(navegar).toHaveBeenCalledWith({ to: "/entrar", search: { email: "ana@exemplo.com" } });
@@ -160,8 +162,8 @@ describe("Vincular ao professor? (regras 79, 84, 97, 102 e 108)", () => {
         "Com o vínculo, o professor Carlos Almeida monta os seus treinos e acompanha a sua frequência.",
       ),
     ).toBeVisible();
-    expect(screen.getByText("Prof. Carlos Almeida")).toBeVisible();
-    expect(screen.getByText("Você está entrando como ana@exemplo.com.")).toBeVisible();
+    expect(screen.getByText("Carlos Almeida")).toBeVisible();
+    expect(screen.getByText("Você entrou com ana@exemplo.com.")).toBeVisible();
     expect(screen.getByText("O professor vê seus dados")).toBeVisible();
     expect(
       screen.getByText(
@@ -260,15 +262,15 @@ describe("Trocar de professor? (regras 98 e 102)", () => {
     expect(screen.getByRole("heading", { name: "Trocar de professor?" })).toBeVisible();
     expect(
       screen.getByText(
-        "Você já treina com o Prof. Carlos Almeida. No app, cada aluno tem um professor por vez.",
+        "Você já treina com Carlos Almeida. No app, cada aluno tem um professor por vez.",
       ),
     ).toBeVisible();
     expect(screen.getByText("Novo professor")).toBeVisible();
-    expect(screen.getByText("Prof. Marina Souza")).toBeVisible();
+    expect(screen.getByText("Marina Souza")).toBeVisible();
     expect(screen.getByText("Seus dados de treino serão substituídos")).toBeVisible();
     expect(
       screen.getByText(
-        "Se você trocar, os dados de treino do Prof. Carlos Almeida são substituídos pelos do novo professor. Você não pode ter dois professores ao mesmo tempo.",
+        "Se você trocar, os dados de treino de Carlos Almeida são substituídos pelos do novo professor. Você não pode ter dois professores ao mesmo tempo.",
       ),
     ).toBeVisible();
   });
@@ -292,7 +294,7 @@ describe("Trocar de professor? (regras 98 e 102)", () => {
     expect(await screen.findByRole("heading", { name: "Professor trocado" })).toBeVisible();
     expect(
       screen.getByText(
-        "Agora você treina com o Prof. Marina Souza. O seu treino aparece quando o professor montar.",
+        "Agora você treina com Marina Souza. O seu treino aparece quando o professor montar.",
       ),
     ).toBeVisible();
     await usuario.click(screen.getByRole("button", { name: "Ir para o início" }));

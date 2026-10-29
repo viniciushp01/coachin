@@ -99,7 +99,7 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
     case "valido":
       return (
         <ConviteComProfessor
-          titulo="Você foi convidado para treinar"
+          titulo="Você recebeu um convite para treinar"
           texto={`O professor ${tela.professor} convidou você para o Coach In. Crie o seu acesso para ver os seus treinos e acompanhar a sua frequência.`}
           professor={tela.professor}
           botao="Criar meu acesso"
@@ -132,7 +132,7 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
           enviando={enviando}
         >
           <div className="flex flex-col items-start">
-            <p className="text-body text-text-secondary">Você está entrando como {tela.email}.</p>
+            <p className="text-body text-text-secondary">Você entrou com {tela.email}.</p>
             <TextButton onClick={() => void usarOutraConta()} disabled={enviando}>
               Usar outra conta
             </TextButton>
@@ -148,7 +148,7 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
       return (
         <ConviteComProfessor
           titulo="Trocar de professor?"
-          texto={`Você já treina com o Prof. ${tela.professorAtual}. No app, cada aluno tem um professor por vez.`}
+          texto={`Você já treina com ${tela.professorAtual}. No app, cada aluno tem um professor por vez.`}
           rotulo="Novo professor"
           professor={tela.professor}
           botao="Continuar com meu professor"
@@ -160,8 +160,8 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
           enviando={enviando}
         >
           <Notice tom="info" titulo="Seus dados de treino serão substituídos">
-            Se você trocar, os dados de treino do Prof. {tela.professorAtual} são substituídos pelos
-            do novo professor. Você não pode ter dois professores ao mesmo tempo.
+            Se você trocar, os dados de treino de {tela.professorAtual} são substituídos pelos do
+            novo professor. Você não pode ter dois professores ao mesmo tempo.
           </Notice>
         </ConviteComProfessor>
       );
@@ -172,8 +172,7 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
           titulo="Professor trocado"
           botao={{ texto: "Ir para o início", aoTocar: () => navegar({ to: "/", replace: true }) }}
         >
-          Agora você treina com o Prof. {tela.professor}. O seu treino aparece quando o professor
-          montar.
+          Agora você treina com {tela.professor}. O seu treino aparece quando o professor montar.
         </ConviteSemValor>
       );
     case "vinculada":
@@ -248,7 +247,7 @@ function ConviteComProfessor({
         <p className="text-body text-text-secondary">{texto}</p>
         <div className="flex flex-col gap-8 rounded-card bg-bg-surface p-20">
           <span className="text-overline text-text-secondary">{rotulo}</span>
-          <span className="truncate text-title-card text-text-primary">Prof. {professor}</span>
+          <span className="truncate text-title-card text-text-primary">{professor}</span>
           <span className="text-caption text-text-secondary">Convite válido por 7 dias</span>
         </div>
         {children}
