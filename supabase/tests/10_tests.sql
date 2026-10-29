@@ -559,11 +559,30 @@ begin
   perform t.ok(true, 'e segue marcando treino');
   perform t.login('s3');
   perform t.err(format($q$ select public.accept_student_invite(%L) $q$, t.get('inv_s3')), 'teacher_unavailable');
+  r := public.get_invite_preview(t.get('inv_s3'));                         -- regra 133: tela própria já ao abrir
+  perform t.ok(r ->> 'state' = 'teacher_unavailable', 'preview: convite de professor bloqueado = teacher_unavailable');
+  perform t.ok(r ->> 'inviter_name' is not null, 'preview de professor bloqueado traz o nome do professor');
   perform t.login('admin');
   perform t.err(format($q$ select public.set_teacher_status(%L, 'blocked') $q$, t.uid('s1')), 'teacher_not_found');
   perform public.set_teacher_status(t.uid('t2'), 'active');
+  perform t.ok(public.get_invite_preview(t.get('inv_s3')) ->> 'state' = 'valid', 'desbloqueado no prazo, o convite volta a valer');
   perform t.login('t2');
   perform t.ok((select count(*) from public.students) >= 2, 'desbloquear devolve o acesso como estava');
+  -- Regra 134: segundo convite do professor atual. Desfeito no fim (bloco com exceção) para não
+  -- mudar as contagens dos testes seguintes.
+  begin
+    r := public.create_student_with_invite('Segundo convite');
+    perform t.login('s1');
+    perform t.ok((public.get_invite_preview(r ->> 'token') ->> 'already_linked')::boolean, 'preview: aluno já vinculado ao mesmo professor = already_linked');
+    perform t.err(format($q$ select public.accept_student_invite(%L) $q$, r ->> 'token'), 'already_linked');
+    perform t.login('s3');
+    perform t.ok(not (public.get_invite_preview(r ->> 'token') ->> 'already_linked')::boolean, 'preview: aluno sem vínculo com o professor = not already_linked');
+    perform t.anon();
+    perform t.ok(not (public.get_invite_preview(r ->> 'token') ->> 'already_linked')::boolean, 'preview sem login = not already_linked');
+    raise exception 'desfaz_segundo_convite';
+  exception when others then
+    if sqlerrm <> 'desfaz_segundo_convite' then raise; end if;
+  end;
 end $$;
 
 -- ---------------------------------------------------------------------
@@ -576,6 +595,10 @@ begin
   perform public.decline_invite(t.get('inv_s3'));
   perform t.err(format($q$ select public.accept_student_invite(%L) $q$, t.get('inv_s3')), 'invite_declined');
   perform t.ok(public.get_invite_preview(t.get('inv_s3')) ->> 'state' = 'declined', 'preview: convite recusado');
+  perform t.login('admin');                                                -- regra 137: recusado vem antes do bloqueio
+  perform public.set_teacher_status(t.uid('t2'), 'blocked');
+  perform t.ok(public.get_invite_preview(t.get('inv_s3')) ->> 'state' = 'declined', 'preview: recusado de professor bloqueado = declined');
+  perform public.set_teacher_status(t.uid('t2'), 'active');
   perform t.login('t2');
   perform t.ok((select list_status from public.teacher_student_list where student_id = v_s3) = 'convite_recusado', 'lista: convite recusado');
   r := public.reissue_invite((select id from public.invites where student_id = v_s3 order by created_at desc limit 1));

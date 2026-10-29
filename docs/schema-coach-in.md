@@ -1,6 +1,6 @@
 # Coach In · Desenho do banco de dados (para revisão)
 
-Estado: **aplicado no Supabase** (0001 a 0005 em 27/10/2026, 0006 em 28/10/2026; ver "Resultado da aplicação" no fim). As migrations foram testadas num Postgres 17 (PGlite) com a camada de autenticação do Supabase simulada (239 verificações, todas passando). Base de regras: `contexto-produto.md` (regras 1 a 122) e as decisões de 27/10 (arquivar na troca de professor, exercícios e cargas seguem o aluno).
+Estado: **aplicado no Supabase** (0001 a 0005 em 27/10/2026, 0006 em 28/10/2026, 0008 em 29/10/2026; a 0007, do catálogo, está no PR #4 e não foi aplicada; ver "Resultado da aplicação" no fim). As migrations foram testadas num Postgres 17 (PGlite) com a camada de autenticação do Supabase simulada (247 verificações, todas passando). Base de regras: `contexto-produto.md` (regras 1 a 122) e as decisões de 27/10 (arquivar na troca de professor, exercícios e cargas seguem o aluno).
 
 Arquivos (em `supabase/`):
 
@@ -12,7 +12,8 @@ Arquivos (em `supabase/`):
 | `migrations/20261027184907_seed_predefined_exercises.sql` | 149 exercícios pré-definidos de musculação |
 | `migrations/20261027192908_advisor_fixes.sql` | Correções do Advisor: `search_path` fixo, `(select auth.uid())` nas políticas, índices nas FKs (sem mudança de regra) |
 | `migrations/20261028094329_workout_before_link.sql` | 0006 · Regra 122: professor cria e edita treino para convite pendente, expirado ou recusado (`save_workout` e leitura de treinos) |
-| `tests/` | Simulação do Supabase, 239 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
+| `migrations/20261029213932_invite_preview_teacher_unavailable.sql` | 0008 · Regras 133, 134 e 137: `get_invite_preview` devolve `state = 'teacher_unavailable'` (convite de aluno válido de professor bloqueado) e `already_linked` (a conta logada já é aluno ativo desse professor) |
+| `tests/` | Simulação do Supabase, 247 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
 
 ## 1. Como o banco funciona (5 ideias)
 
@@ -107,7 +108,7 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 2. Rodar o **Security Advisor** do Supabase depois (alertas de RLS ou de função sem `search_path`).
 3. Criar o administrador conforme o comentário no fim da migration 0001.
 
-**Ordem de aplicação:** os arquivos de `supabase/migrations/`, em ordem numérica (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
+**Ordem de aplicação:** os arquivos de `supabase/migrations/`, em ordem numérica (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link, 0008 invite_preview_teacher_unavailable), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
 
 **Rodar os testes:** `supabase/tests/run.sh` (precisa de Postgres 16 instalado e Linux/WSL/macOS; sobe e derruba um banco descartável) ou, sem Postgres (Windows), `npm --prefix supabase/tests/pglite install` e `node supabase/tests/pglite/run.mjs` (Postgres 17.5 em WebAssembly, PGlite 0.4.6, banco em memória, um comando por transação como o `psql -f`; `--sem-pgcrypto` troca `digest` e `gen_random_bytes` por equivalentes nativos só no harness). Os dois devem terminar com "TODOS OS TESTES PASSARAM".
 
@@ -131,3 +132,11 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 - **Advisor:** igual ao anterior. Segurança: funções RPC `security definer` (1 para `anon`, `get_invite_preview`; 23 para `authenticated`) e `auth_leaked_password_protection`. Desempenho: `multiple_permissive_policies` (9) e `unused_index` (16). Nenhum alerta novo.
 - **Tipos:** sem diferença (nenhuma assinatura mudou); `database.types.ts` mantido.
 - **Teste de fumaça no projeto real**, num bloco desfeito ao final (nada gravado): professor de teste cadastra aluno sem conta, cria treino com início hoje, lê o treino (1) e a lista mostra `convite_pendente`; com o vínculo arquivado, `save_workout` dá `student_not_found`. Depois: 1 usuário (o administrador), 149 exercícios, nenhum aluno ou treino.
+
+### Resultado da aplicação da 0008 (29/10/2026, issue #53)
+
+- **O que muda:** só `get_invite_preview` (`create or replace`, mesma assinatura e mesmo `search_path`, grants mantidos). Precedência da regra 137: usado, substituído, vencido e recusado vêm antes, então só o convite de aluno válido vira `teacher_unavailable` quando o professor do cadastro (`students.teacher_id`, o mesmo que o `accept_student_invite` confere) está bloqueado; desbloqueado no prazo, volta a `valid`. O campo novo `already_linked` só fala da conta de quem abre (`auth.uid()`); sem login ou em convite de professor é `false`.
+- **Testes (PGlite, Postgres 17.5):** os testes novos falham sem ela. Com a 0008, **247 verificações** (seções 10 e 11: prévia de professor bloqueado, desbloqueio, recusado antes do bloqueio, `already_linked` para o aluno do mesmo professor, para outro aluno e sem login).
+- **Aplicação:** registrada como versão `20261029213932` (arquivo local renomeado para essa versão; texto idêntico por md5). Conferido: `get_invite_preview('lixo')` devolve `invalid`; `EXECUTE` para `anon` e `authenticated`; `search_path=public, extensions`.
+- **Advisor:** sem alerta novo do SQL. Segurança: funções RPC `security definer` (1 para `anon`, `get_invite_preview`; 23 para `authenticated`), `auth_leaked_password_protection` e `auth_otp_long_expiry` (configuração do Auth no painel, validade do link de e-mail acima de 1 hora; não vem desta migration). Desempenho: `multiple_permissive_policies` (9) e `unused_index` (10).
+- **Tipos:** sem diferença (`get_invite_preview` devolve `Json`); `database.types.ts` mantido.

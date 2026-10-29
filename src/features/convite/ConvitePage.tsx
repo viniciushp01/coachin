@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { ErroApp, erroDaResposta } from "@/lib/erros";
+import { ErroApp, MENSAGENS, erroDaResposta } from "@/lib/erros";
 import { DICA_SENHA_NOVA, senhaNova } from "@/lib/formularios";
 import { rpc } from "@/lib/rpc";
 import { estadoSessaoQuery, sair } from "@/lib/sessao";
@@ -30,10 +30,10 @@ import {
 type ConvitePageProps = { tela: TelaDoConvite; token: string };
 
 /**
- * Link do convite (regras 46, 48, 78, 79, 82, 93, 97 e 102; Figma "Aluno · Entrada", seções 1, 2,
- * 8 e 10, e "Professor · Entrada"). Sem navegação inferior. Ao sair para criar a conta ou entrar,
- * o convite fica guardado no aparelho para o app voltar a ele depois do login; convite que não
- * vale mais apaga o guardado.
+ * Link do convite (regras 46, 48, 78, 79, 82, 93, 97, 102, 133 e 134; Figma "Aluno · Entrada",
+ * seções 1, 2, 8, 10 e 13, e "Professor · Entrada"). Sem navegação inferior. Ao sair para criar
+ * a conta ou entrar, o convite fica guardado no aparelho para o app voltar a ele depois do login;
+ * convite que não vale mais apaga o guardado.
  */
 export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
   const navegar = useNavigate();
@@ -56,6 +56,17 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
   useEffect(() => {
     if (consome) apagarConviteGuardado();
   }, [consome]);
+
+  // Aluno já vinculado a este professor (regra 134): toast e início, ao abrir ou ao vincular. A
+  // marca evita o toast em dobro quando o efeito roda duas vezes (StrictMode).
+  const avisouJaVinculado = useRef(false);
+  const jaVinculado = tela.tela === "ja_vinculado";
+  useEffect(() => {
+    if (!jaVinculado || avisouJaVinculado.current) return;
+    avisouJaVinculado.current = true;
+    mostrarToast("error", MENSAGENS.already_linked);
+    void navegar({ to: "/", replace: true });
+  }, [jaVinculado, mostrarToast, navegar]);
 
   function seguir(destino: "/criar-conta" | "/entrar", email: string | null) {
     guardarConvite(token);
@@ -82,14 +93,14 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
   }
 
   /** Vincular, ou trocar de professor com a confirmação explícita (regras 79 e 98). */
-  async function aceitar(professor: string, trocar: boolean) {
+  async function aceitar(professor: string, trocar: boolean, email: string | null = null) {
     const ok = await enviar(
       () =>
         rpc(
           "accept_student_invite",
           trocar ? { p_token: token, p_confirm_switch: true } : { p_token: token },
         ),
-      (codigo) => telaDoErroDoConvite(codigo, professor),
+      (codigo) => telaDoErroDoConvite(codigo, professor, email),
     );
     if (!ok) return;
     // O vínculo muda o destino (primeiro acesso ou início): a sessão é lida de novo.
@@ -156,7 +167,7 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
           texto={`Com o vínculo, o professor ${tela.professor} monta os seus treinos e acompanha a sua frequência.`}
           professor={tela.professor}
           botao="Vincular ao professor"
-          aoTocar={() => void aceitar(tela.professor, false)}
+          aoTocar={() => void aceitar(tela.professor, false, tela.email)}
           secundario={{
             texto: "Agora não",
             aoTocar: () => void recusar((codigo) => telaDoErroDoConvite(codigo, tela.professor)),
@@ -289,6 +300,29 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
           quem administra o Coach In.
         </ConviteSemValor>
       );
+    case "indisponivel":
+      // Sem botão e sem a palavra "bloqueado" (regra 133); desbloqueado no prazo, o convite volta.
+      return (
+        <ConviteSemValor icone="info" titulo="Este convite não está disponível no momento">
+          Fale com {tela.professor} pelo canal em que vocês combinaram.
+        </ConviteSemValor>
+      );
+    case "conta_nao_aluno":
+      // Sem "Agora não": quem não é o convidado não recusa, e o convite segue pendente (regra 134).
+      return (
+        <ConviteSemValor
+          icone="person"
+          titulo="Este convite é para outra conta"
+          botao={{ texto: "Sair e entrar com outra conta", aoTocar: () => void usarOutraConta() }}
+          secundario={{ texto: "Voltar", aoTocar: () => navegar({ to: "/", replace: true }) }}
+          enviando={enviando}
+        >
+          {tela.email ? `Você entrou com ${tela.email}. ` : ""}Esta conta não é de aluno. Saia e
+          entre com a conta do aluno.
+        </ConviteSemValor>
+      );
+    case "ja_vinculado":
+      return null;
     case "ative_seu_acesso":
       return (
         <AtiveSeuAcesso
