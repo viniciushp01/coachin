@@ -45,7 +45,6 @@ const POR_PAPEL = {
     validade: "7 dias",
     pendente: "O aluno ainda não criou o acesso.",
     expirado: (nome: string) => `Gere um novo convite para ${nome} criar o acesso.`,
-    recusado: () => "O link foi encerrado. Envie outro convite se quiser tentar de novo.",
   },
   // Texto neutro quanto a gênero (regra 144): o nome no lugar do pronome.
   professor: {
@@ -53,8 +52,6 @@ const POR_PAPEL = {
     validade: "1 dia",
     pendente: "A pessoa ainda não ativou o acesso.",
     expirado: (nome: string) => `Gere um novo convite para ${nome} ativar o acesso.`,
-    recusado: (nome: string) =>
-      `${nome} escolheu não ativar o acesso agora e o link foi encerrado. Envie outro convite se quiser tentar de novo.`,
   },
 } as const;
 
@@ -132,7 +129,7 @@ export function AlunoComConvitePage({
     },
     recusado: {
       titulo: textoDaRecusa(convite),
-      texto: textos.recusado(aluno.nome),
+      texto: "O link foi encerrado. Envie outro convite se quiser tentar de novo.", // regra 142
       botao: "Enviar novo convite",
     },
   }[estado];

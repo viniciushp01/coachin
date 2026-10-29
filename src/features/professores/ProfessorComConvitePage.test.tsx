@@ -148,9 +148,7 @@ describe("Convite de professor recusado (regra 102)", () => {
     expect(screen.getByText("Convite recusado")).toBeVisible();
     expect(screen.getByText("Recusou o convite em 27/10")).toBeVisible();
     expect(
-      screen.getByText(
-        "Ricardo Souza escolheu não ativar o acesso agora e o link foi encerrado. Envie outro convite se quiser tentar de novo.",
-      ),
+      screen.getByText("O link foi encerrado. Envie outro convite se quiser tentar de novo."),
     ).toBeVisible();
     await usuario.click(screen.getByRole("button", { name: "Enviar novo convite" }));
     expect(rpc).toHaveBeenCalledWith("reissue_invite", { p_invite_id: "i1" });
