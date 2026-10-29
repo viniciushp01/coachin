@@ -12,7 +12,8 @@ Arquivos (em `supabase/`):
 | `migrations/20261027184907_seed_predefined_exercises.sql` | 149 exercícios pré-definidos de musculação |
 | `migrations/20261027192908_advisor_fixes.sql` | Correções do Advisor: `search_path` fixo, `(select auth.uid())` nas políticas, índices nas FKs (sem mudança de regra) |
 | `migrations/20261028094329_workout_before_link.sql` | 0006 · Regra 122: professor cria e edita treino para convite pendente, expirado ou recusado (`save_workout` e leitura de treinos) |
-| `tests/` | Simulação do Supabase, 239 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
+| `migrations/20261028103500_exercise_catalog.sql` | 0007 · Catálogo de exercícios (**pronta e testada, ainda não aplicada**): 249 pré-definidos (os 149 da 0004 renomeados no lugar, mesmo id), grupos musculares, equipamentos, apelidos, carga e medida; busca por apelido |
+| `tests/` | Simulação do Supabase, 274 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
 
 ## 1. Como o banco funciona (5 ideias)
 
@@ -31,7 +32,10 @@ Arquivos (em `supabase/`):
 | `student_profiles` | Perfil do aluno (nascimento, telefone, altura, peso, restrições) | Por conta, não por vínculo; guarda quando aceitou o aviso e quando concluiu (retomar o passo 2) |
 | `student_profile_changes` | Histórico de cada edição do perfil | Alimentado por gatilho; hoje só o aluno lê, para o histórico de peso futuro |
 | `invites` | Convites de aluno (7 dias) e de professor (1 dia) | Só o hash do token é gravado; reenviar substitui o anterior; "Agora não" vira `declined` |
-| `exercises` | Biblioteca (pré-definidos e criados por professor) | Nunca excluídos (um gatilho impede até para o dono); nome normalizado sem acento/caixa |
+| `exercises` | Biblioteca (pré-definidos e criados por professor) | Nunca excluídos (um gatilho impede até para o dono); nome normalizado sem acento/caixa. Desde a 0007: `slug` e `catalog_version` (só pré-definidos), `aliases` e `aliases_normalized` (busca), `load_mode` (`required`, `optional`, `none`), `measure` (`reps`, `time`) |
+| `muscle_groups` | Lista fechada de grupos musculares (15) | 0007. `exercises.muscle_group` aponta para ela; só migration escreve |
+| `equipment` | Lista fechada de equipamentos (55, em categorias) | 0007. Só migration escreve |
+| `exercise_equipment` | Equipamentos de cada exercício (posição 1 = principal) | 0007. Lê quem lê o exercício; só migration escreve |
 | `exercise_hidden` | "Ocultar da busca", por professor | |
 | `workouts` | Treino: nome, início, semanas, fim calculado, frequência em texto | Um treino por data de início por aluno |
 | `workout_days` | Fichas, com letra fixa | Remoção lógica; letra nunca reaproveitada. **Planejado (regra 126, depois da fatia 4):** `cardio_equipment` (`treadmill`/`bike`/`stairs`/`elliptical`/`free`) e `cardio_minutes` (1 a 180), `cardio_minutes` pode ser nulo (tempo em branco), mas só existe com equipamento preenchido; só indicação, sem marcação |
@@ -60,13 +64,13 @@ Conta **bloqueada** perde acesso a tudo, mas ainda lê o próprio perfil (para m
 
 **Convites e conta:** `get_invite_preview` (aceita sem login), `create_student_with_invite`, `create_teacher_invite`, `reissue_invite` (reenviar, gerar novo, corrigir e-mail), `accept_student_invite` (exige confirmar a troca se já tem professor), `accept_teacher_invite`, `decline_invite`, `set_teacher_status` (bloquear/desbloquear, encerra as sessões), `admin_teacher_student_counts`, `accept_data_notice`, `save_student_profile`, `delete_my_account`.
 
-**Biblioteca:** `search_exercises`, `similar_exercises`, `create_exercise`, `set_exercise_hidden`.
+**Biblioteca:** `search_exercises` e `similar_exercises` (olham o nome e, desde a 0007, os apelidos), `create_exercise` (desde a 0007 com 4 parâmetros: nome, grupo, `load_mode`, `measure`; o grupo precisa estar em `muscle_groups`), `set_exercise_hidden`.
 
 **Treino:** `save_workout` (cria ou edita o treino inteiro de uma vez), `cancel_scheduled_workout`.
 
 **Aluno:** `mark_done`, `undo_done`, `set_load`, `request_new_workout`, `cancel_training_request`, `pending_new_workout_notice`, `acknowledge_new_workout`.
 
-**Erros** são códigos curtos para o app traduzir para pt-BR, por exemplo: `invite_expired`, `invite_replaced`, `invite_used`, `invite_declined`, `email_mismatch`, `switch_requires_confirmation`, `scheduled_exists`, `start_in_past`, `workout_needs_day`, `day_needs_exercise`, `date_out_of_range`, `workout_not_current`, `professor_already_acted`, `request_already_open`, `exercise_exists`, `phone_invalid`, `height_invalid`, `weight_invalid`, `forbidden`. A lista completa sai de `grep "raise exception" supabase/migrations/*.sql`.
+**Erros** são códigos curtos para o app traduzir para pt-BR, por exemplo: `invite_expired`, `invite_replaced`, `invite_used`, `invite_declined`, `email_mismatch`, `switch_requires_confirmation`, `scheduled_exists`, `start_in_past`, `workout_needs_day`, `day_needs_exercise`, `date_out_of_range`, `workout_not_current`, `professor_already_acted`, `request_already_open`, `exercise_exists`, `muscle_group_invalid`, `load_mode_invalid`, `measure_invalid`, `phone_invalid`, `height_invalid`, `weight_invalid`, `forbidden`. A lista completa sai de `grep "raise exception" supabase/migrations/*.sql`.
 
 ## 5. Decisões que tomei e você precisa confirmar
 
@@ -103,7 +107,7 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 2. Rodar o **Security Advisor** do Supabase depois (alertas de RLS ou de função sem `search_path`).
 3. Criar o administrador conforme o comentário no fim da migration 0001.
 
-**Ordem de aplicação:** os arquivos de `supabase/migrations/`, em ordem numérica (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
+**Ordem de aplicação:** os arquivos de `supabase/migrations/`, em ordem numérica (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link, 0007 exercise_catalog — esta ainda não aplicada), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
 
 **Rodar os testes:** `supabase/tests/run.sh` (precisa de Postgres 16 instalado e Linux/WSL/macOS; sobe e derruba um banco descartável) ou, sem Postgres (Windows), `npm --prefix supabase/tests/pglite install` e `node supabase/tests/pglite/run.mjs` (Postgres 17.5 em WebAssembly, PGlite 0.4.6, banco em memória, um comando por transação como o `psql -f`; `--sem-pgcrypto` troca `digest` e `gen_random_bytes` por equivalentes nativos só no harness). Os dois devem terminar com "TODOS OS TESTES PASSARAM".
 
@@ -127,3 +131,11 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 - **Advisor:** igual ao anterior. Segurança: funções RPC `security definer` (1 para `anon`, `get_invite_preview`; 23 para `authenticated`) e `auth_leaked_password_protection`. Desempenho: `multiple_permissive_policies` (9) e `unused_index` (16). Nenhum alerta novo.
 - **Tipos:** sem diferença (nenhuma assinatura mudou); `database.types.ts` mantido.
 - **Teste de fumaça no projeto real**, num bloco desfeito ao final (nada gravado): professor de teste cadastra aluno sem conta, cria treino com início hoje, lê o treino (1) e a lista mostra `convite_pendente`; com o vínculo arquivado, `save_workout` dá `student_not_found`. Depois: 1 usuário (o administrador), 149 exercícios, nenhum aluno ou treino.
+
+### 0007 · Catálogo de exercícios (pronta, ainda não aplicada)
+
+- **Especificação e dados:** `docs/contexto/catalogo-exercicios.md` e `docs/contexto/exercicios.catalogo.json`.
+- **Testes:** 274 verificações no PGlite (35 novas na seção 6b; dois testes antigos passaram a usar os nomes novos "Puxada alta aberta" e "Tríceps na polia com corda").
+- **Antes de aplicar:** item 6 da Fase 0 verde; issue com o número 0007 reservado; um agente por vez. A migration para com erro se um dos 149 pré-definidos não for achado pelo nome da 0004, e avisa (NOTICE) se um professor já tiver exercício com nome igual ao de um do catálogo.
+- **Depois de aplicar:** gerar tipos (`create_exercise` muda de assinatura; `exercises` ganha colunas; 3 tabelas novas), rodar o Security Advisor, conferir 249 pré-definidos, 15 grupos e 55 equipamentos, e registrar o resultado aqui.
+- **Efeito visível:** 61 exercícios mudam de nome e 11 de grupo (ids iguais). Não há fichas reais ainda.
