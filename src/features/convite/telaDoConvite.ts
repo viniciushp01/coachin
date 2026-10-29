@@ -4,7 +4,7 @@ import type { EstadoSessao } from "@/lib/destino";
 export type PreviaDoConvite =
   | { estado: "invalido" }
   | {
-      estado: "valido" | "expirado" | "usado" | "substituido" | "recusado";
+      estado: "valido" | "expirado" | "usado" | "substituido" | "recusado" | "indisponivel";
       tipo: "aluno" | "professor";
       /** Nome de quem convidou (professor, ou administrador no convite de professor). */
       professor: string;
@@ -12,6 +12,8 @@ export type PreviaDoConvite =
       email: string | null;
       /** O e-mail do cadastro já tem conta; nulo quando o convite não tem e-mail. */
       temConta: boolean | null;
+      /** A conta logada já é aluno ativo deste professor (regra 134). */
+      jaVinculado: boolean;
     };
 
 const ESTADOS = {
@@ -20,6 +22,8 @@ const ESTADOS = {
   used: "usado",
   replaced: "substituido",
   declined: "recusado",
+  // Professor bloqueado com o convite ainda válido (regra 133).
+  teacher_unavailable: "indisponivel",
 } as const;
 
 /** Lê a resposta crua (`Json`) de `get_invite_preview`. Qualquer coisa estranha é link inválido. */
@@ -34,6 +38,7 @@ export function lerPrevia(resposta: unknown): PreviaDoConvite {
     professor: typeof r.inviter_name === "string" ? r.inviter_name : "",
     email: typeof r.email === "string" ? r.email : null,
     temConta: typeof r.account_exists === "boolean" ? r.account_exists : null,
+    jaVinculado: r.already_linked === true,
   };
 }
 
@@ -49,7 +54,10 @@ export type TelaDoConvite =
   | { tela: "ative_seu_acesso"; email: string | null }
   | { tela: "ativar_professor" }
   | { tela: "outra_conta"; email: string }
-  | { tela: "professor_nao_vale_mais" };
+  | { tela: "professor_nao_vale_mais" }
+  | { tela: "indisponivel"; professor: string }
+  | { tela: "conta_nao_aluno"; email: string | null }
+  | { tela: "ja_vinculado" };
 
 /**
  * Qual tela o link do convite abre, cruzando o convite com a sessão deste aparelho.
@@ -58,6 +66,10 @@ export type TelaDoConvite =
  *   vê "Trocar de professor?" com o nome do atual (regra 98).
  * - Expirado e recusado mostram "Este convite expirou" (regras 48 e 132); já usado, "Este convite
  *   já foi usado" (48); substituído ou desconhecido, "Este link não vale mais" (82).
+ * - Precedência (regra 137): os estados do convite, depois o professor bloqueado ("Este convite
+ *   não está disponível no momento", 133), depois a conta logada: professor ou administrador vê
+ *   "Este convite é para outra conta" (134, também quando entrou pelo convite) e aluno já
+ *   vinculado a este professor recebe o toast e vai para o início (134).
  * - Convite de professor (regras 93 e 97): fora de validade, "Este link não vale mais" com o texto
  *   do professor; deslogado, "Você já tem uma conta" ou "Ative seu acesso"; logado, "Ativar
  *   acesso de professor?" só na conta do e-mail do convite, senão "Este convite é para outra
@@ -79,8 +91,14 @@ export function telaDoConvite(
       return { tela: "usado" };
     case "substituido":
       return { tela: "nao_vale_mais" };
+    case "indisponivel":
+      return { tela: "indisponivel", professor };
     case "valido":
-      if (sessao.tipo === "logado" && sessao.papel === "aluno" && sessao.temProfessor) {
+      if (sessao.tipo === "logado" && sessao.papel !== "aluno") {
+        return { tela: "conta_nao_aluno", email: sessao.email };
+      }
+      if (sessao.tipo === "logado" && previa.jaVinculado) return { tela: "ja_vinculado" };
+      if (sessao.tipo === "logado" && sessao.temProfessor) {
         return { tela: "trocar", professor, professorAtual: professorAtual ?? "" };
       }
       if (sessao.tipo === "logado") return { tela: "vincular", professor, email: sessao.email };
@@ -112,18 +130,32 @@ function telaDoConviteDeProfessor(
  * servidor confere o papel antes do convite.
  */
 export function telaDoErroDoConviteDeProfessor(codigo: string): TelaDoConvite | null {
-  const mudou =
-    codigo === "invite_not_pending" ||
-    codigo === "already_teacher" ||
-    telaDoErroDoConvite(codigo, "") !== null;
-  return mudou ? { tela: "professor_nao_vale_mais" } : null;
+  return CONVITE_DE_PROFESSOR_MUDOU.includes(codigo) ? { tela: "professor_nao_vale_mais" } : null;
 }
+
+const CONVITE_DE_PROFESSOR_MUDOU = [
+  "invite_expired",
+  "invite_declined",
+  "invite_used",
+  "invite_replaced",
+  "invite_invalid",
+  "invite_not_pending",
+  "already_teacher",
+];
 
 /**
  * Erros de `accept_student_invite` e `decline_invite` que têm tela própria: o convite mudou
- * enquanto a tela estava aberta (venceu, foi recusado, usado ou substituído). Os demais são toast.
+ * enquanto a tela estava aberta (venceu, foi recusado, usado ou substituído), a conta não é de
+ * aluno (`role_not_allowed`) ou já é deste professor (`already_linked`, regra 134). Os demais são
+ * toast, como `teacher_unavailable` (regra 133).
  */
-export function telaDoErroDoConvite(codigo: string, professor: string): TelaDoConvite | null {
+export function telaDoErroDoConvite(
+  codigo: string,
+  professor: string,
+  email: string | null = null,
+): TelaDoConvite | null {
+  if (codigo === "role_not_allowed") return { tela: "conta_nao_aluno", email };
+  if (codigo === "already_linked") return { tela: "ja_vinculado" };
   if (codigo === "invite_expired" || codigo === "invite_declined") {
     return { tela: "expirado", professor };
   }

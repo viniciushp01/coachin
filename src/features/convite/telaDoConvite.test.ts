@@ -14,6 +14,7 @@ const valido: PreviaDoConvite = {
   professor: "Carlos Almeida",
   email: null,
   temConta: null,
+  jaVinculado: false,
 };
 
 const anonimo: EstadoSessao = { tipo: "anonimo" };
@@ -46,6 +47,18 @@ describe("lerPrevia (resposta de get_invite_preview)", () => {
       professor: "Carlos Almeida",
       email: "ana@exemplo.com",
       temConta: true,
+      jaVinculado: false,
+    });
+  });
+
+  it("traduz professor indisponível e conta já vinculada (regras 133 e 134)", () => {
+    const base = { kind: "student", inviter_name: "Carlos Almeida", email: null };
+    expect(lerPrevia({ ...base, state: "teacher_unavailable" })).toMatchObject({
+      estado: "indisponivel",
+      professor: "Carlos Almeida",
+    });
+    expect(lerPrevia({ ...base, state: "valid", already_linked: true })).toMatchObject({
+      jaVinculado: true,
     });
   });
 
@@ -133,6 +146,60 @@ describe("telaDoConvite · convite de aluno", () => {
     });
     expect(telaDoConvite({ estado: "invalido" }, aluno)).toEqual({ tela: "nao_vale_mais" });
   });
+
+  const professorLogado: EstadoSessao = { ...aluno, papel: "professor", email: "carlos@email.com" };
+  const adminLogado: EstadoSessao = { ...aluno, papel: "admin", email: "adm@email.com" };
+
+  it("professor bloqueado: Este convite não está disponível no momento, logado ou não (regra 133)", () => {
+    const indisponivel = { ...valido, estado: "indisponivel" } as const;
+    for (const sessao of [anonimo, aluno, professorLogado]) {
+      expect(telaDoConvite(indisponivel, sessao)).toEqual({
+        tela: "indisponivel",
+        professor: "Carlos Almeida",
+      });
+    }
+  });
+
+  it("professor bloqueado vem antes da troca de professor (regra 137)", () => {
+    expect(
+      telaDoConvite(
+        { ...valido, estado: "indisponivel" },
+        { ...aluno, temProfessor: true },
+        "Marina Souza",
+      ),
+    ).toEqual({ tela: "indisponivel", professor: "Carlos Almeida" });
+  });
+
+  it("conta de professor ou administrador: Este convite é para outra conta (regra 134, casos 1 e 3)", () => {
+    expect(telaDoConvite(valido, professorLogado)).toEqual({
+      tela: "conta_nao_aluno",
+      email: "carlos@email.com",
+    });
+    expect(telaDoConvite(valido, adminLogado)).toEqual({
+      tela: "conta_nao_aluno",
+      email: "adm@email.com",
+    });
+  });
+
+  it("aluno já vinculado ao mesmo professor: toast e início, não Trocar de professor? (regra 134)", () => {
+    expect(
+      telaDoConvite(
+        { ...valido, jaVinculado: true },
+        { ...aluno, temProfessor: true },
+        "Carlos Almeida",
+      ),
+    ).toEqual({ tela: "ja_vinculado" });
+  });
+
+  it("estados do convite vêm antes do papel da conta (regra 137)", () => {
+    expect(telaDoConvite({ ...valido, estado: "usado" }, professorLogado)).toEqual({
+      tela: "usado",
+    });
+    expect(telaDoConvite({ ...valido, estado: "recusado" }, professorLogado)).toEqual({
+      tela: "expirado",
+      professor: "Carlos Almeida",
+    });
+  });
 });
 
 describe("telaDoConvite · convite de professor (regras 93 e 97)", () => {
@@ -142,6 +209,7 @@ describe("telaDoConvite · convite de professor (regras 93 e 97)", () => {
     professor: "Admin",
     email: "ana@exemplo.com",
     temConta: true,
+    jaVinculado: false,
   };
 
   it("deslogado, e-mail com conta: Você já tem uma conta, com o e-mail do convite", () => {
@@ -202,8 +270,17 @@ describe("telaDoErroDoConvite (o convite mudou com a tela aberta)", () => {
     expect(telaDoErroDoConvite("invite_invalid", "Carlos")).toEqual({ tela: "nao_vale_mais" });
   });
 
+  it("conta de professor ou administrador e conta já vinculada têm tela própria (regra 134)", () => {
+    expect(telaDoErroDoConvite("role_not_allowed", "Carlos", "carlos@email.com")).toEqual({
+      tela: "conta_nao_aluno",
+      email: "carlos@email.com",
+    });
+    expect(telaDoErroDoConvite("already_linked", "Carlos")).toEqual({ tela: "ja_vinculado" });
+  });
+
   it("os demais erros ficam para o toast", () => {
     expect(telaDoErroDoConvite("sem_conexao", "Carlos")).toBeNull();
+    // Regra 133: quem abriu antes do bloqueio vê o toast "Este professor não está disponível."
     expect(telaDoErroDoConvite("teacher_unavailable", "Carlos")).toBeNull();
   });
 });
@@ -228,5 +305,8 @@ describe("telaDoErroDoConviteDeProfessor", () => {
   it("os demais erros ficam para o toast (ex.: email_mismatch, sem conexão)", () => {
     expect(telaDoErroDoConviteDeProfessor("email_mismatch")).toBeNull();
     expect(telaDoErroDoConviteDeProfessor("sem_conexao")).toBeNull();
+    // Os casos do convite de aluno não viram "Este link não vale mais" no de professor.
+    expect(telaDoErroDoConviteDeProfessor("role_not_allowed")).toBeNull();
+    expect(telaDoErroDoConviteDeProfessor("already_linked")).toBeNull();
   });
 });

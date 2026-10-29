@@ -467,3 +467,98 @@ describe("Link de ativação que não vale mais (Figma Professor · Entrada, 5)"
     expect(lerConviteGuardado()).toBeNull();
   });
 });
+
+describe("Convite de professor bloqueado (regra 133; Figma Aluno · Entrada, 13, tela 13)", () => {
+  it("pede para falar com o professor, sem botão e sem a palavra bloqueado", () => {
+    guardarConvite("tok-1");
+    abrir({ tela: "indisponivel", professor: "Carlos Almeida" });
+    expect(
+      screen.getByRole("heading", { name: "Este convite não está disponível no momento" }),
+    ).toBeVisible();
+    expect(
+      screen.getByText("Fale com Carlos Almeida pelo canal em que vocês combinaram."),
+    ).toBeVisible();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.queryByText(/bloquead/i)).toBeNull();
+    expect(lerConviteGuardado()).toBeNull();
+  });
+
+  it('bloqueado depois de abrir: "Vincular ao professor" mostra o toast e a tela fica', async () => {
+    rpc.mockImplementation(async () => {
+      throw new ErroApp("teacher_unavailable");
+    });
+    const usuario = abrir({ tela: "vincular", professor: "Carlos Almeida", email: "ana@x.com" });
+    await usuario.click(screen.getByRole("button", { name: "Vincular ao professor" }));
+    expect(await screen.findByText("Este professor não está disponível.")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Vincular ao professor?" })).toBeVisible();
+  });
+});
+
+describe("Convite de aluno aberto por conta de professor ou administrador (regra 134; tela 14)", () => {
+  const tela: TelaDoConvite = { tela: "conta_nao_aluno", email: "carlos@email.com" };
+
+  it("diz que a conta não é de aluno, com Sair e entrar com outra conta e Voltar, sem Agora não", () => {
+    abrir(tela);
+    expect(screen.getByRole("heading", { name: "Este convite é para outra conta" })).toBeVisible();
+    expect(
+      screen.getByText(
+        "Você entrou com carlos@email.com. Esta conta não é de aluno. Saia e entre com a conta do aluno.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Sair e entrar com outra conta" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Voltar" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Agora não" })).toBeNull();
+  });
+
+  it('"Sair e entrar com outra conta" sai neste aparelho e guarda o convite para depois do login', async () => {
+    sair.mockResolvedValue(undefined);
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Sair e entrar com outra conta" }));
+    expect(sair).toHaveBeenCalled();
+    expect(lerConviteGuardado()).toBe("tok-1");
+    expect(navegar).toHaveBeenCalledWith({ to: "/entrar" });
+  });
+
+  it('"Voltar" vai ao destino do papel sem recusar o convite', async () => {
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Voltar" }));
+    expect(rpc).not.toHaveBeenCalled();
+    expect(navegar).toHaveBeenCalledWith({ to: "/", replace: true });
+  });
+
+  it("o servidor recusa o vínculo por papel (role_not_allowed): a mesma tela", async () => {
+    rpc.mockImplementation(async () => {
+      throw new ErroApp("role_not_allowed");
+    });
+    const usuario = abrir({
+      tela: "vincular",
+      professor: "Carlos Almeida",
+      email: "carlos@email.com",
+    });
+    await usuario.click(screen.getByRole("button", { name: "Vincular ao professor" }));
+    expect(
+      await screen.findByRole("heading", { name: "Este convite é para outra conta" }),
+    ).toBeVisible();
+    expect(screen.getByText(/Você entrou com carlos@email.com\./)).toBeVisible();
+  });
+});
+
+describe("Aluno já vinculado ao mesmo professor (regra 134)", () => {
+  it("ao abrir: toast e ida para o início, sem recusar o convite", async () => {
+    abrir({ tela: "ja_vinculado" });
+    expect(await screen.findByText("Sua conta já está vinculada a este professor.")).toBeVisible();
+    expect(navegar).toHaveBeenCalledTimes(1);
+    expect(navegar).toHaveBeenCalledWith({ to: "/", replace: true });
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("o servidor responde already_linked ao vincular: o mesmo toast e o início", async () => {
+    rpc.mockImplementation(async () => {
+      throw new ErroApp("already_linked");
+    });
+    const usuario = abrir({ tela: "vincular", professor: "Carlos Almeida", email: "ana@x.com" });
+    await usuario.click(screen.getByRole("button", { name: "Vincular ao professor" }));
+    expect(await screen.findByText("Sua conta já está vinculada a este professor.")).toBeVisible();
+    expect(navegar).toHaveBeenCalledWith({ to: "/", replace: true });
+  });
+});
