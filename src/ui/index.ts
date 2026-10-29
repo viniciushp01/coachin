@@ -1,5 +1,6 @@
 export { BarraFixa } from "./BarraFixa";
 export { Button, ButtonCompact, TextButton } from "./Button";
+export { CheckboxRow } from "./CheckboxRow";
 export { Chip, type TomChip } from "./Chip";
 export { EmptyState } from "./EmptyState";
 export { CODIGOS_PAIS } from "./codigosPais";
@@ -11,5 +12,6 @@ export { ESPACO_NAVBAR, NavBar, type AbaAluno } from "./NavBar";
 export { Notice } from "./Notice";
 export { SectionRow } from "./SectionRow";
 export { Sheet } from "./Sheet";
+export { StepIndicator } from "./StepIndicator";
 export { Tela } from "./Tela";
 export { Toast, ToastProvider, useToast, type TomToast } from "./Toast";
