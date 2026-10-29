@@ -27,6 +27,7 @@ import { Route as AdminConvidarProfessorRouteImport } from './routes/admin_.conv
 import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
 import { Route as DevComponentesRouteImport } from './routes/dev.componentes'
 import { Route as ProfessorCadastrarAlunoRouteImport } from './routes/professor_.cadastrar-aluno'
+import { Route as AdminConviteConviteIdRouteImport } from './routes/admin_.convite.$conviteId'
 import { Route as ProfessorAlunosAlunoIdRouteImport } from './routes/professor_.alunos.$alunoId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -119,6 +120,11 @@ const ProfessorCadastrarAlunoRoute = ProfessorCadastrarAlunoRouteImport.update({
   path: '/professor/cadastrar-aluno',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminConviteConviteIdRoute = AdminConviteConviteIdRouteImport.update({
+  id: '/admin_/convite/$conviteId',
+  path: '/admin/convite/$conviteId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfessorAlunosAlunoIdRoute = ProfessorAlunosAlunoIdRouteImport.update({
   id: '/professor_/alunos/$alunoId',
   path: '/professor/alunos/$alunoId',
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/convite/$token': typeof ConviteTokenRoute
   '/dev/componentes': typeof DevComponentesRoute
   '/professor/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
+  '/admin/convite/$conviteId': typeof AdminConviteConviteIdRoute
   '/professor/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
 }
 export interface FileRoutesByTo {
@@ -165,6 +172,7 @@ export interface FileRoutesByTo {
   '/convite/$token': typeof ConviteTokenRoute
   '/dev/componentes': typeof DevComponentesRoute
   '/professor/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
+  '/admin/convite/$conviteId': typeof AdminConviteConviteIdRoute
   '/professor/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
 }
 export interface FileRoutesById {
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/convite/$token': typeof ConviteTokenRoute
   '/dev/componentes': typeof DevComponentesRoute
   '/professor_/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
+  '/admin_/convite/$conviteId': typeof AdminConviteConviteIdRoute
   '/professor_/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
 }
 export interface FileRouteTypes {
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/convite/$token'
     | '/dev/componentes'
     | '/professor/cadastrar-aluno'
+    | '/admin/convite/$conviteId'
     | '/professor/alunos/$alunoId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -231,6 +241,7 @@ export interface FileRouteTypes {
     | '/convite/$token'
     | '/dev/componentes'
     | '/professor/cadastrar-aluno'
+    | '/admin/convite/$conviteId'
     | '/professor/alunos/$alunoId'
   id:
     | '__root__'
@@ -252,6 +263,7 @@ export interface FileRouteTypes {
     | '/convite/$token'
     | '/dev/componentes'
     | '/professor_/cadastrar-aluno'
+    | '/admin_/convite/$conviteId'
     | '/professor_/alunos/$alunoId'
   fileRoutesById: FileRoutesById
 }
@@ -274,6 +286,7 @@ export interface RootRouteChildren {
   ConviteTokenRoute: typeof ConviteTokenRoute
   DevComponentesRoute: typeof DevComponentesRoute
   ProfessorCadastrarAlunoRoute: typeof ProfessorCadastrarAlunoRoute
+  AdminConviteConviteIdRoute: typeof AdminConviteConviteIdRoute
   ProfessorAlunosAlunoIdRoute: typeof ProfessorAlunosAlunoIdRoute
 }
 
@@ -405,6 +418,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfessorCadastrarAlunoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin_/convite/$conviteId': {
+      id: '/admin_/convite/$conviteId'
+      path: '/admin/convite/$conviteId'
+      fullPath: '/admin/convite/$conviteId'
+      preLoaderRoute: typeof AdminConviteConviteIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/professor_/alunos/$alunoId': {
       id: '/professor_/alunos/$alunoId'
       path: '/professor/alunos/$alunoId'
@@ -434,6 +454,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConviteTokenRoute: ConviteTokenRoute,
   DevComponentesRoute: DevComponentesRoute,
   ProfessorCadastrarAlunoRoute: ProfessorCadastrarAlunoRoute,
+  AdminConviteConviteIdRoute: AdminConviteConviteIdRoute,
   ProfessorAlunosAlunoIdRoute: ProfessorAlunosAlunoIdRoute,
 }
 export const routeTree = rootRouteImport

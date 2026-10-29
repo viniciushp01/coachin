@@ -6,13 +6,17 @@ import {
   buscarPorNome,
   CHIP_DO_PROFESSOR,
   resumoDaLista,
+  type EstadoDoProfessor,
   type LinhaDeProfessor,
 } from "./listaDeProfessores";
+
+/** Só o convite abre tela nesta fatia; a tela do professor ativo ou bloqueado é da fatia 9. */
+const COM_TELA_DO_CONVITE = new Set<EstadoDoProfessor>(["pendente", "expirado", "recusado"]);
 
 /**
  * Lista de professores, a tela raiz do administrador (regras 92, 102 e 114; Figma "Admin ·
  * Professores", seção 1): resumo, busca por nome, uma linha por professor com o chip do estado
- * e "Convidar professor" fixo no rodapé. As linhas abrem a pessoa no #45 e no #46.
+ * e "Convidar professor" fixo no rodapé. As linhas com convite abrem a tela do convite (#45).
  */
 export function ListaDeProfessoresPage({ linhas }: { linhas: LinhaDeProfessor[] }) {
   const navegar = useNavigate();
@@ -64,6 +68,15 @@ export function ListaDeProfessoresPage({ linhas }: { linhas: LinhaDeProfessor[] 
                     nome={l.nome}
                     status={CHIP_DO_PROFESSOR[l.estado]}
                     detalhe={l.detalhe}
+                    onClick={
+                      COM_TELA_DO_CONVITE.has(l.estado)
+                        ? () =>
+                            void navegar({
+                              to: "/admin/convite/$conviteId",
+                              params: { conviteId: l.id },
+                            })
+                        : undefined
+                    }
                   />
                 </li>
               ))}

@@ -113,10 +113,17 @@ describe("Lista de professores (regras 92, 102 e 114)", () => {
     expect(within(folha).getByRole("button", { name: "Continuar no app" })).toBeInTheDocument();
   });
 
-  it("linhas ainda não abrem nada: sem botão nem seta (regra 145)", () => {
-    abrir();
-    expect(
-      within(screen.getAllByRole("listitem")[0] as HTMLElement).queryByRole("button"),
-    ).toBeNull();
+  it("linhas com convite abrem a tela do convite; ativo e bloqueado não abrem (regra 145)", async () => {
+    const usuario = abrir();
+    const itens = screen.getAllByRole("listitem");
+    const botao = (i: number) => within(itens[i] as HTMLElement).queryByRole("button");
+    expect(botao(1)).toBeNull();
+    expect(botao(3)).toBeNull();
+    for (const i of [0, 2, 4]) expect(botao(i)).not.toBeNull();
+    await usuario.click(botao(2) as HTMLElement);
+    expect(navegar).toHaveBeenCalledWith({
+      to: "/admin/convite/$conviteId",
+      params: { conviteId: "c1" },
+    });
   });
 });

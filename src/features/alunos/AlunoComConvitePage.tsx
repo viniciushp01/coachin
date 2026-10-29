@@ -35,7 +35,28 @@ const SEM_COPIAR_LINK =
 /** Erros do reenvio que significam "este convite não vale mais": a área mostra o atual. */
 const CONVITE_MUDOU = ["student_already_linked", "invite_used", "invite_replaced"];
 /** Erros de "Corrigir e reenviar" que pertencem ao campo de e-mail. */
-const ERRO_DO_EMAIL = ["email_invalid", "student_email_taken"];
+const ERRO_DO_EMAIL = ["email_invalid", "student_email_taken", "email_is_admin", "already_teacher"];
+
+/** O que muda entre o convite de aluno (professor) e o de professor (administrador). */
+export type Papel = "aluno" | "professor";
+const POR_PAPEL = {
+  aluno: {
+    volta: "/professor",
+    validade: "7 dias",
+    pendente: "O aluno ainda não criou o acesso.",
+    expirado: (nome: string) => `Gere um novo convite para ${nome} criar o acesso.`,
+    recusado: () => "O link foi encerrado. Envie outro convite se quiser tentar de novo.",
+  },
+  // Texto neutro quanto a gênero (regra 144): o nome no lugar do pronome.
+  professor: {
+    volta: "/admin",
+    validade: "1 dia",
+    pendente: "A pessoa ainda não ativou o acesso.",
+    expirado: (nome: string) => `Gere um novo convite para ${nome} ativar o acesso.`,
+    recusado: (nome: string) =>
+      `${nome} escolheu não ativar o acesso agora e o link foi encerrado. Envie outro convite se quiser tentar de novo.`,
+  },
+} as const;
 
 /**
  * Aluno com convite, na visão do professor (regras 55, 58 e 102; Figma "Professor · Alunos",
@@ -48,15 +69,17 @@ export function AlunoComConvitePage({
   aluno,
   convite,
   agora = new Date(),
-}: AlunoComConvite & { agora?: Date }) {
+  papel = "aluno",
+}: AlunoComConvite & { agora?: Date; papel?: Papel }) {
+  const textos = POR_PAPEL[papel];
   const navegar = useNavigate();
   const mostrarToast = useToast();
   const [corrigindo, setCorrigindo] = useState(false);
   const [enviando, setEnviando] = useState(false);
-  const [gerado, setGerado] = useState<LinkDoConvite & { reenviado: boolean }>();
+  const [gerado, setGerado] = useState<LinkDoConvite & { reenviado: boolean; papel: Papel }>();
   // A rota só abre esta tela com um estado visível (lerAlunoComConvite).
   const estado = estadoDoConvite(convite, agora) as EstadoVisivel;
-  const voltar = () => navegar({ to: "/professor" });
+  const voltar = () => navegar({ to: textos.volta });
 
   /** Gera o link novo. Erro do campo de e-mail volta para quem chamou; os demais viram toast. */
   async function reemitir(novoEmail?: string): Promise<ErroApp | undefined> {
@@ -70,6 +93,7 @@ export function AlunoComConvitePage({
         nome: aluno.nome,
         comEmail: Boolean(novoEmail ?? aluno.email),
         token: resposta.token,
+        papel,
         reenviado: estado === "pendente",
       });
     } catch (causa) {
@@ -87,6 +111,7 @@ export function AlunoComConvitePage({
       <CorrigirEmail
         nome={aluno.nome}
         emailAtual={aluno.email}
+        validade={textos.validade}
         enviando={enviando}
         aoVoltar={() => setCorrigindo(false)}
         aoCorrigir={reemitir}
@@ -97,17 +122,17 @@ export function AlunoComConvitePage({
   const conteudo = {
     pendente: {
       titulo: `Convite válido até ${dataCurta(convite.expires_at)}`,
-      texto: `Enviado em ${dataCurta(convite.created_at)}. O aluno ainda não criou o acesso.`,
+      texto: `Enviado em ${dataCurta(convite.created_at)}. ${textos.pendente}`,
       botao: "Reenviar convite",
     },
     expirado: {
       titulo: `Este convite expirou em ${dataCurta(convite.expires_at)}`,
-      texto: `O link antigo não funciona mais. Gere um novo convite para ${aluno.nome} criar o acesso.`,
+      texto: `O link antigo não funciona mais. ${textos.expirado(aluno.nome)}`,
       botao: "Gerar novo convite",
     },
     recusado: {
       titulo: textoDaRecusa(convite),
-      texto: "O link foi encerrado. Envie outro convite se quiser tentar de novo.",
+      texto: textos.recusado(aluno.nome),
       botao: "Enviar novo convite",
     },
   }[estado];
@@ -167,13 +192,21 @@ const esquemaDoEmail = z.object({ email });
 type CorrigirEmailProps = {
   nome: string;
   emailAtual: string;
+  validade: string;
   enviando: boolean;
   aoVoltar: () => void;
   aoCorrigir: (email: string) => Promise<ErroApp | undefined>;
 };
 
 /** "Corrigir e-mail" (regra 58): o novo link vai para o e-mail corrigido; o anterior para. */
-function CorrigirEmail({ nome, emailAtual, enviando, aoVoltar, aoCorrigir }: CorrigirEmailProps) {
+function CorrigirEmail({
+  nome,
+  emailAtual,
+  validade,
+  enviando,
+  aoVoltar,
+  aoCorrigir,
+}: CorrigirEmailProps) {
   const {
     register,
     handleSubmit,
@@ -206,17 +239,21 @@ function CorrigirEmail({ nome, emailAtual, enviando, aoVoltar, aoCorrigir }: Cor
         {...register("email")}
       />
       <Notice tom="info" titulo="O link anterior deixa de valer">
-        O novo link vale por 7 dias. Confira o e-mail antes de reenviar.
+        O novo link vale por {validade}. Confira o e-mail antes de reenviar.
       </Notice>
     </Cabecalho>
   );
 }
 
 /** "Convite gerado" com o toast "Convite reenviado." quando era um reenvio do pendente. */
-function ConviteReemitido({ reenviado, ...link }: LinkDoConvite & { reenviado: boolean }) {
+function ConviteReemitido({
+  reenviado,
+  papel,
+  ...link
+}: LinkDoConvite & { reenviado: boolean; papel: Papel }) {
   const mostrarToast = useToast();
   useEffect(() => {
     if (reenviado) mostrarToast("success", "Convite reenviado.");
   }, [reenviado, mostrarToast]);
-  return <ConviteGerado {...link} />;
+  return <ConviteGerado papel={papel} {...link} />;
 }
