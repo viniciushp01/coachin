@@ -308,3 +308,152 @@ describe("Trocar de professor? (regras 98 e 102)", () => {
     expect(await screen.findByRole("heading", { name: "Este convite expirou" })).toBeVisible();
   });
 });
+
+describe("Convite de professor · Você já tem uma conta (regra 93)", () => {
+  const tela: TelaDoConvite = { tela: "professor_ja_tem_conta", email: "ana@exemplo.com" };
+
+  it("pede o login com a conta do e-mail do convite", () => {
+    abrir(tela);
+    expect(screen.getByRole("heading", { name: "Você já tem uma conta" })).toBeVisible();
+    expect(
+      screen.getByText("Entre com a conta deste e-mail para virar professor no Coach In."),
+    ).toBeVisible();
+  });
+
+  it('"Entrar com minha conta" guarda o convite e leva ao Login com o e-mail', async () => {
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Entrar com minha conta" }));
+    expect(lerConviteGuardado()).toBe("tok-1");
+    expect(navegar).toHaveBeenCalledWith({ to: "/entrar", search: { email: "ana@exemplo.com" } });
+  });
+
+  it("não apaga o convite guardado (ainda falta o login)", () => {
+    guardarConvite("tok-1");
+    abrir(tela);
+    expect(lerConviteGuardado()).toBe("tok-1");
+  });
+});
+
+describe("Ativar acesso de professor? (regras 93, 97 e 102)", () => {
+  const tela: TelaDoConvite = { tela: "ativar_professor" };
+
+  it("avisa que o acesso de aluno é encerrado e os dados ficam guardados, sem acesso", () => {
+    abrir(tela);
+    expect(screen.getByRole("heading", { name: "Ativar acesso de professor?" })).toBeVisible();
+    expect(
+      screen.getByText(
+        "Sua conta vai passar a ser de professor. Cada e-mail tem uma única função no Coach In.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByText("Seu acesso de aluno será encerrado")).toBeVisible();
+    expect(
+      screen.getByText(
+        "Seus dados de treino ficam guardados, sem acesso, e você deixa de aparecer na lista do seu professor atual.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Agora não" })).toBeVisible();
+  });
+
+  it("apaga o convite guardado: a pessoa já chegou nele", () => {
+    guardarConvite("tok-1");
+    abrir(tela);
+    expect(lerConviteGuardado()).toBeNull();
+  });
+
+  it('"Ativar acesso de professor" converte a conta, relê a sessão e vai à lista de alunos', async () => {
+    rpc.mockResolvedValue({ role: "professor" });
+    const cliente = new QueryClient();
+    cliente.setQueryData(["sessao"], { tipo: "logado", papel: "aluno" });
+    render(
+      <QueryClientProvider client={cliente}>
+        <ToastProvider>
+          <ConvitePage tela={tela} token="tok-1" />
+        </ToastProvider>
+      </QueryClientProvider>,
+    );
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Ativar acesso de professor" }));
+    expect(rpc).toHaveBeenCalledWith("accept_teacher_invite", { p_token: "tok-1" });
+    expect(navegar).toHaveBeenCalledWith({ to: "/professor", replace: true });
+    expect(cliente.getQueryData(["sessao"])).toBeUndefined();
+  });
+
+  it('"Agora não" recusa o convite e volta para onde a pessoa estava (regra 102)', async () => {
+    rpc.mockResolvedValue(null);
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Agora não" }));
+    expect(rpc).toHaveBeenCalledWith("decline_invite", { p_token: "tok-1" });
+    expect(navegar).toHaveBeenCalledWith({ to: "/", replace: true });
+  });
+
+  it("convite que mudou no meio do caminho: Este link não vale mais (do professor)", async () => {
+    rpc.mockImplementation(async () => {
+      throw new ErroApp("invite_expired");
+    });
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Ativar acesso de professor" }));
+    expect(await screen.findByRole("heading", { name: "Este link não vale mais" })).toBeVisible();
+    expect(
+      screen.getByText(
+        "Ele expirou, já foi usado ou foi substituído por outro. Peça um novo link de ativação a quem administra o Coach In.",
+      ),
+    ).toBeVisible();
+    expect(navegar).not.toHaveBeenCalled();
+  });
+
+  it("outros erros viram toast e a tela fica (ex.: e-mail diferente)", async () => {
+    rpc.mockImplementation(async () => {
+      throw new ErroApp("email_mismatch");
+    });
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Ativar acesso de professor" }));
+    expect(await screen.findByText("Este convite foi enviado para outro e-mail.")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Ativar acesso de professor?" })).toBeVisible();
+  });
+});
+
+describe("Este convite é para outra conta (regra 97)", () => {
+  const tela: TelaDoConvite = { tela: "outra_conta", email: "vinicius@exemplo.com" };
+
+  it("mostra a conta da sessão e explica que o convite é de outro e-mail", () => {
+    abrir(tela);
+    expect(screen.getByRole("heading", { name: "Este convite é para outra conta" })).toBeVisible();
+    expect(
+      screen.getByText(
+        "Você entrou com vinicius@exemplo.com, e este convite foi enviado para outro e-mail. Saia e entre com a conta do e-mail que recebeu o convite.",
+      ),
+    ).toBeVisible();
+  });
+
+  it('"Sair e entrar com outra conta" sai neste aparelho e vai ao Login guardando o convite', async () => {
+    sair.mockResolvedValue(undefined);
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Sair e entrar com outra conta" }));
+    expect(sair).toHaveBeenCalled();
+    expect(lerConviteGuardado()).toBe("tok-1");
+    expect(navegar).toHaveBeenCalledWith({ to: "/entrar" });
+  });
+
+  it('"Agora não" volta para onde a pessoa estava, sem mexer no convite', async () => {
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Agora não" }));
+    expect(rpc).not.toHaveBeenCalled();
+    expect(navegar).toHaveBeenCalledWith({ to: "/", replace: true });
+  });
+});
+
+describe("Link de ativação que não vale mais (Figma Professor · Entrada, 5)", () => {
+  it("vencido, usado ou substituído: pedir novo link a quem administra, sem botão", () => {
+    guardarConvite("tok-1");
+    abrir({ tela: "professor_nao_vale_mais" });
+    expect(screen.getByRole("heading", { name: "Este link não vale mais" })).toBeVisible();
+    expect(
+      screen.getByText(
+        "Ele expirou, já foi usado ou foi substituído por outro. Peça um novo link de ativação a quem administra o Coach In.",
+      ),
+    ).toBeVisible();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(lerConviteGuardado()).toBeNull();
+  });
+});

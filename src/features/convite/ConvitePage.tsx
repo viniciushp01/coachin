@@ -16,13 +16,17 @@ import {
   type NomeIcone,
 } from "@/ui";
 import { apagarConviteGuardado, guardarConvite } from "./conviteGuardado";
-import { telaDoErroDoConvite, type TelaDoConvite } from "./telaDoConvite";
+import {
+  telaDoErroDoConvite,
+  telaDoErroDoConviteDeProfessor,
+  type TelaDoConvite,
+} from "./telaDoConvite";
 
 type ConvitePageProps = { tela: TelaDoConvite; token: string };
 
 /**
- * Link do convite (regras 46, 48, 79, 82, 97 e 102; Figma "Aluno · Entrada", seções 1, 2, 8 e
- * 10). Sem navegação inferior. Ao sair para criar a conta ou entrar, o convite fica guardado no
+ * Link do convite (regras 46, 48, 79, 82, 93, 97 e 102; Figma "Aluno · Entrada", seções 1, 2, 8 e
+ * 10, e "Professor · Entrada"). Sem navegação inferior. Ao sair para criar a conta ou entrar, o convite fica guardado no
  * aparelho para o app voltar a ele depois do login; convite que não vale mais apaga o guardado.
  */
 export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
@@ -38,7 +42,9 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
   const [enviando, setEnviando] = useState(false);
 
   // Quem chega logado já está no convite (ou num que não vale mais): o guardado cumpriu o papel.
-  const consome = telaInicial.tela !== "valido" && telaInicial.tela !== "ja_tem_conta";
+  const consome = !(
+    ["valido", "ja_tem_conta", "professor_ja_tem_conta", "ative_seu_acesso"] as const
+  ).some((t) => t === telaInicial.tela);
   useEffect(() => {
     if (consome) apagarConviteGuardado();
   }, [consome]);
@@ -49,14 +55,17 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
   }
 
   /** Chama o banco; erro com tela própria troca a tela, os demais viram toast. */
-  async function enviar(chamada: () => Promise<unknown>, professor: string) {
+  async function enviar(
+    chamada: () => Promise<unknown>,
+    telaDoErro: (codigo: string) => TelaDoConvite | null,
+  ) {
     setEnviando(true);
     try {
       await chamada();
       return true;
     } catch (causa) {
       const erro = causa instanceof ErroApp ? causa : erroDaResposta(causa);
-      const outraTela = telaDoErroDoConvite(erro.codigo, professor);
+      const outraTela = telaDoErro(erro.codigo);
       if (outraTela) setTela(outraTela);
       else mostrarToast("error", erro.message);
       setEnviando(false);
@@ -72,7 +81,7 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
           "accept_student_invite",
           trocar ? { p_token: token, p_confirm_switch: true } : { p_token: token },
         ),
-      professor,
+      (codigo) => telaDoErroDoConvite(codigo, professor),
     );
     if (!ok) return;
     // O vínculo muda o destino (primeiro acesso ou início): a sessão é lida de novo.
@@ -81,13 +90,25 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
   }
 
   /** "Agora não" e "Continuar com meu professor": convite recusado, volta ao destino (102). */
-  async function recusar(professor: string) {
-    if (await enviar(() => rpc("decline_invite", { p_token: token }), professor)) {
+  async function recusar(telaDoErro: (codigo: string) => TelaDoConvite | null) {
+    if (await enviar(() => rpc("decline_invite", { p_token: token }), telaDoErro)) {
       await navegar({ to: "/", replace: true });
     }
   }
 
-  /** "Usar outra conta" (regra 97): sai só neste aparelho e volta ao convite depois do login. */
+  /** "Ativar acesso de professor" (regra 93): o papel novo vem do servidor ao reler a sessão. */
+  async function ativarProfessor() {
+    const ok = await enviar(
+      () => rpc("accept_teacher_invite", { p_token: token }),
+      telaDoErroDoConviteDeProfessor,
+    );
+    if (!ok) return;
+    queryClient.removeQueries({ queryKey: estadoSessaoQuery.queryKey });
+    await navegar({ to: "/professor", replace: true });
+  }
+
+  /** "Usar outra conta" e "Sair e entrar com outra conta" (regra 97): sai só neste aparelho e
+   * volta ao convite depois do login. */
   async function usarOutraConta() {
     setEnviando(true);
     guardarConvite(token);
@@ -128,7 +149,10 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
           professor={tela.professor}
           botao="Vincular ao professor"
           aoTocar={() => void aceitar(tela.professor, false)}
-          secundario={{ texto: "Agora não", aoTocar: () => void recusar(tela.professor) }}
+          secundario={{
+            texto: "Agora não",
+            aoTocar: () => void recusar((codigo) => telaDoErroDoConvite(codigo, tela.professor)),
+          }}
           enviando={enviando}
         >
           <div className="flex flex-col items-start">
@@ -152,7 +176,7 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
           rotulo="Novo professor"
           professor={tela.professor}
           botao="Continuar com meu professor"
-          aoTocar={() => void recusar(tela.professor)}
+          aoTocar={() => void recusar((codigo) => telaDoErroDoConvite(codigo, tela.professor))}
           secundario={{
             texto: "Trocar de professor",
             aoTocar: () => void aceitar(tela.professor, true),
@@ -208,8 +232,57 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
           professor (WhatsApp, e-mail…) e use o link mais recente.
         </ConviteSemValor>
       );
-    // Provisório: a entrada do professor vem no #49.
-    case "professor":
+    case "professor_ja_tem_conta":
+      return (
+        <ConviteComProfessor
+          titulo="Você já tem uma conta"
+          texto="Entre com a conta deste e-mail para virar professor no Coach In."
+          botao="Entrar com minha conta"
+          aoTocar={() => seguir("/entrar", tela.email)}
+        />
+      );
+    case "ativar_professor":
+      return (
+        <ConviteComProfessor
+          titulo="Ativar acesso de professor?"
+          texto="Sua conta vai passar a ser de professor. Cada e-mail tem uma única função no Coach In."
+          botao="Ativar acesso de professor"
+          aoTocar={() => void ativarProfessor()}
+          secundario={{
+            texto: "Agora não",
+            aoTocar: () => void recusar(telaDoErroDoConviteDeProfessor),
+          }}
+          enviando={enviando}
+        >
+          <Notice tom="info" titulo="Seu acesso de aluno será encerrado">
+            Seus dados de treino ficam guardados, sem acesso, e você deixa de aparecer na lista do
+            seu professor atual.
+          </Notice>
+        </ConviteComProfessor>
+      );
+    case "outra_conta":
+      // "Agora não" não recusa: o convite é de outro e-mail (o servidor responderia email_mismatch).
+      return (
+        <ConviteSemValor
+          icone="person"
+          titulo="Este convite é para outra conta"
+          botao={{ texto: "Sair e entrar com outra conta", aoTocar: () => void usarOutraConta() }}
+          secundario={{ texto: "Agora não", aoTocar: () => navegar({ to: "/", replace: true }) }}
+          enviando={enviando}
+        >
+          Você entrou com {tela.email}, e este convite foi enviado para outro e-mail. Saia e entre
+          com a conta do e-mail que recebeu o convite.
+        </ConviteSemValor>
+      );
+    case "professor_nao_vale_mais":
+      return (
+        <ConviteSemValor icone="swap_horiz" titulo="Este link não vale mais">
+          Ele expirou, já foi usado ou foi substituído por outro. Peça um novo link de ativação a
+          quem administra o Coach In.
+        </ConviteSemValor>
+      );
+    // Provisório: "Ative seu acesso" (e-mail sem conta) vem no #51.
+    case "ative_seu_acesso":
       return <AreaProvisoria nome="convite de professor" area="convidado" />;
   }
 }
@@ -219,7 +292,8 @@ type ConviteComProfessorProps = {
   texto: string;
   /** Rótulo do cartão: "Seu professor" ou, na troca, "Novo professor". */
   rotulo?: string;
-  professor: string;
+  /** Sem professor, a tela não tem cartão (convite de professor, Figma "Professor · Entrada"). */
+  professor?: string;
   botao: string;
   aoTocar: () => void;
   /** Botão de contorno abaixo do principal (ex.: "Agora não"). */
@@ -245,11 +319,13 @@ function ConviteComProfessor({
       <div className="flex flex-col gap-16 pt-40">
         <h1 className="text-title-lg text-text-primary">{titulo}</h1>
         <p className="text-body text-text-secondary">{texto}</p>
-        <div className="flex flex-col gap-8 rounded-card bg-bg-surface p-20">
-          <span className="text-overline text-text-secondary">{rotulo}</span>
-          <span className="truncate text-title-card text-text-primary">{professor}</span>
-          <span className="text-caption text-text-secondary">Convite válido por 7 dias</span>
-        </div>
+        {professor !== undefined && (
+          <div className="flex flex-col gap-8 rounded-card bg-bg-surface p-20">
+            <span className="text-overline text-text-secondary">{rotulo}</span>
+            <span className="truncate text-title-card text-text-primary">{professor}</span>
+            <span className="text-caption text-text-secondary">Convite válido por 7 dias</span>
+          </div>
+        )}
         {children}
       </div>
       <BarraFixa>
@@ -270,19 +346,39 @@ type ConviteSemValorProps = {
   icone: NomeIcone;
   titulo: string;
   botao?: { texto: string; aoTocar: () => void };
+  /** Botão de contorno abaixo do principal ("Agora não" em "Este convite é para outra conta"). */
+  secundario?: { texto: string; aoTocar: () => void };
+  enviando?: boolean;
   children: ReactNode;
 };
 
-/** Convite sem valor (expirado, já usado, substituído) e "Conta vinculada": até um botão. */
-function ConviteSemValor({ icone, titulo, botao, children }: ConviteSemValorProps) {
+/**
+ * Convite sem valor (expirado, já usado, substituído), "Conta vinculada" e "Este convite é para
+ * outra conta": ícone, título, texto e até dois botões.
+ */
+function ConviteSemValor({
+  icone,
+  titulo,
+  botao,
+  secundario,
+  enviando = false,
+  children,
+}: ConviteSemValorProps) {
   return (
-    <Tela barra={botao ? "um" : undefined}>
+    <Tela barra={secundario ? "dois" : botao ? "um" : undefined}>
       <EmptyState icone={icone} titulo={titulo} className="flex-1 justify-center">
         {children}
       </EmptyState>
       {botao && (
         <BarraFixa>
-          <Button onClick={botao.aoTocar}>{botao.texto}</Button>
+          <Button onClick={botao.aoTocar} disabled={enviando}>
+            {botao.texto}
+          </Button>
+          {secundario && (
+            <Button variante="secondary" onClick={secundario.aoTocar} disabled={enviando}>
+              {secundario.texto}
+            </Button>
+          )}
         </BarraFixa>
       )}
     </Tela>
