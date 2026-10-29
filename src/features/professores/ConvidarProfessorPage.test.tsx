@@ -46,7 +46,11 @@ describe("Convidar professor (regras 87 e 92)", () => {
     expect(screen.getByRole("heading", { name: "Convidar professor" })).toBeVisible();
     expect(screen.getByLabelText("Nome")).toHaveAttribute("placeholder", "Nome do professor");
     expect(screen.getByLabelText("E-mail")).toHaveAttribute("placeholder", "nome@exemplo.com");
-    expect(screen.getByText(/O convite vale só para o e-mail informado\./)).toBeVisible();
+    expect(
+      screen.getByText(
+        "O convite vale só para o e-mail informado. A pessoa convidada recebe o link para ativar o acesso de professor.",
+      ),
+    ).toBeVisible();
     expect(screen.queryByText(/\bela\b/)).not.toBeInTheDocument();
     expect(
       screen.getByText(
