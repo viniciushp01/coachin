@@ -63,10 +63,29 @@ describe("Convite pendente (regras 55 e 58)", () => {
     expect(screen.getByText("Convite reenviado.")).toBeVisible();
   });
 
+  it('sem "Copiar link": o texto de apoio aponta para Reenviar convite (regra 142)', () => {
+    abrir();
+    expect(screen.queryByRole("button", { name: "Copiar link" })).toBeNull();
+    expect(
+      screen.getByText(
+        "O link só aparece quando é gerado: para pegar outro, toque em Reenviar convite (o anterior deixa de valer).",
+      ),
+    ).toBeVisible();
+  });
+
   it("sem e-mail no cadastro: o texto diz isso e não há Corrigir e-mail", () => {
     abrir({ ...pendente, aluno: { ...pendente.aluno, email: null } });
     expect(screen.getByText("Sem e-mail no cadastro")).toBeVisible();
     expect(screen.queryByRole("button", { name: "Corrigir e-mail" })).toBeNull();
+  });
+
+  it('sem e-mail: Reenviar convite leva a "Convite gerado" com Copiar link (regra 142)', async () => {
+    rpc.mockResolvedValue(novoLink);
+    const usuario = abrir({ ...pendente, aluno: { ...pendente.aluno, email: null } });
+    await usuario.click(screen.getByRole("button", { name: "Reenviar convite" }));
+    expect(await screen.findByRole("heading", { name: "Convite gerado" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Copiar link" })).toBeVisible();
+    expect(screen.getByText(/Copie e envie por WhatsApp ou outro app\./)).toBeVisible();
   });
 
   it("voltar leva à área do professor", async () => {
@@ -136,7 +155,9 @@ describe("Convite expirado (regra 58)", () => {
     expect(screen.getByText("Convite expirado")).toBeVisible();
     expect(screen.getByText("Este convite expirou em 24/10")).toBeVisible();
     expect(
-      screen.getByText("O link antigo não funciona mais. Gere um novo para ele criar o acesso."),
+      screen.getByText(
+        "O link antigo não funciona mais. Gere um novo convite para Beatriz Nunes criar o acesso.",
+      ),
     ).toBeVisible();
     await usuario.click(screen.getByRole("button", { name: "Gerar novo convite" }));
     expect(rpc).toHaveBeenCalledWith("reissue_invite", { p_invite_id: "i3" });
@@ -156,9 +177,7 @@ describe("Convite recusado (regra 102)", () => {
     expect(screen.getByText("Convite recusado")).toBeVisible();
     expect(screen.getByText("Recusou o convite em 27/10")).toBeVisible();
     expect(
-      screen.getByText(
-        "Ele escolheu não vincular a conta agora e o link foi encerrado. Envie outro convite se quiser tentar de novo.",
-      ),
+      screen.getByText("O link foi encerrado. Envie outro convite se quiser tentar de novo."),
     ).toBeVisible();
     await usuario.click(screen.getByRole("button", { name: "Enviar novo convite" }));
     expect(rpc).toHaveBeenCalledWith("reissue_invite", { p_invite_id: "i1" });

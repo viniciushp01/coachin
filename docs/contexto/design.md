@@ -12,6 +12,7 @@ Estrutura: **Parte 1 (fixa)** tokens, tipografia, regras e padrões de tela. **P
 - Um único botão laranja (`Button primary`) por tela. Ações secundárias em contorno ou texto. A caixa marcada do `CheckboxRow` também usa laranja, mas é controle de seleção, não botão. O chip `tone=brand` também é laranja, mas é só rótulo.
 - Gradiente só na barra de progresso (`gradient/brand-progress`), um por tela.
 - Tom acolhedor, **nunca culpa**: dia sem treino em tom neutro ("Sem registro"), sem vermelho. Vermelho (`status/danger`) só para erro ou ação destrutiva. Erros transitórios (ex.: login) vão em `Toast tone=error`; erros de validação de tela (ex.: treino sem ficha) vão em `Notice tone=danger`; ações de cancelar, remover, descartar, sair ou excluir a própria conta usam contorno, não vermelho. Convite expirado **não** é erro: usa tom neutro. **Ficar sem internet também não é erro**: tom neutro (regra 116). **Sessão expirada também não é erro**: é só o Login com o título "Entre de novo" (regra 121).
+- **Texto neutro de gênero (regra 144):** usar o nome da pessoa ou reescrever; sem "ela/dela", "convidado", "logado"; "professor" e "aluno" só como papel; sem "Prof."/"Profa.".
 - Sem vídeo, GIF ou link de demonstração em lugar nenhum (fora do MVP).
 - App escuro, um único tema (modo `dark`). Todo texto em pt-BR.
 - **Tudo em múltiplos de 4** (mais 0 e 2): espaçamento, raios, tamanhos de fonte, alturas de linha. Nunca usar 3, 5, 6, 10, 14… Única exceção: `text/nav-label` com 10 px (só rótulo da NavBar). Divisores de 1 px e bordas de 1/2/4 são permitidos.

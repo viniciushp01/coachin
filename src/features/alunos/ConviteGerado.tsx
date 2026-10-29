@@ -31,9 +31,7 @@ export function ConviteGerado({ nome, comEmail, token }: LinkDoConvite) {
       <BackButton onClick={voltar} />
       <EmptyState icone="check_circle" titulo="Convite gerado" className="flex-1 justify-center">
         {`O link de ${nome} é de uso único e vale por 7 dias. `}
-        {comEmail
-          ? "Envie agora para ele criar o acesso."
-          : "Copie e envie por WhatsApp ou outro app."}
+        {comEmail ? "Envie agora para criar o acesso." : "Copie e envie por WhatsApp ou outro app."}
       </EmptyState>
       <BarraFixa>
         <Button onClick={() => void copiar()}>Copiar link</Button>

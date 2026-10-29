@@ -95,7 +95,7 @@ function Cadastro({ aoGerar }: { aoGerar: (convite: LinkDoConvite) => void }) {
         <div className="flex flex-col gap-8">
           <h1 className="text-title-screen">Cadastrar aluno</h1>
           <p className="text-body text-text-secondary">
-            Depois você gera o convite para ele criar o acesso.
+            Depois você gera o convite para o aluno criar o acesso.
           </p>
         </div>
         <FormField

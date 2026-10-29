@@ -28,6 +28,10 @@ import {
 } from "./conviteDoAluno";
 import { ConviteGerado, type LinkDoConvite } from "./ConviteGerado";
 
+/** Texto de apoio do pendente (regra 142). */
+const SEM_COPIAR_LINK =
+  "O link só aparece quando é gerado: para pegar outro, toque em Reenviar convite (o anterior deixa de valer).";
+
 /** Erros do reenvio que significam "este convite não vale mais": a área mostra o atual. */
 const CONVITE_MUDOU = ["student_already_linked", "invite_used", "invite_replaced"];
 /** Erros de "Corrigir e reenviar" que pertencem ao campo de e-mail. */
@@ -37,8 +41,8 @@ const ERRO_DO_EMAIL = ["email_invalid", "student_email_taken"];
  * Aluno com convite, na visão do professor (regras 55, 58 e 102; Figma "Professor · Alunos",
  * seções 4 e 6): pendente, corrigir e-mail, expirado e recusado. Toda ação gera um link novo
  * (`reissue_invite`, o anterior deixa de valer) e abre "Convite gerado".
- * Fora por ora (#64): "Copiar link" no pendente e o estado "já tem conta". Textos sobre o aluno
- * no masculino genérico até a decisão (#64).
+ * Pendente não tem "Copiar link": o banco só guarda o hash do token (regra 142). Não há estado
+ * "já tem conta": o aluno com conta aparece como convite pendente (regra 143).
  */
 export function AlunoComConvitePage({
   aluno,
@@ -98,13 +102,12 @@ export function AlunoComConvitePage({
     },
     expirado: {
       titulo: `Este convite expirou em ${dataCurta(convite.expires_at)}`,
-      texto: "O link antigo não funciona mais. Gere um novo para ele criar o acesso.",
+      texto: `O link antigo não funciona mais. Gere um novo convite para ${aluno.nome} criar o acesso.`,
       botao: "Gerar novo convite",
     },
     recusado: {
       titulo: textoDaRecusa(convite),
-      texto:
-        "Ele escolheu não vincular a conta agora e o link foi encerrado. Envie outro convite se quiser tentar de novo.",
+      texto: "O link foi encerrado. Envie outro convite se quiser tentar de novo.",
       botao: "Enviar novo convite",
     },
   }[estado];
@@ -125,6 +128,9 @@ export function AlunoComConvitePage({
       <Notice tom="neutral" titulo={conteudo.titulo}>
         {conteudo.texto}
       </Notice>
+      {estado === "pendente" && (
+        <p className="text-caption text-text-secondary">{SEM_COPIAR_LINK}</p>
+      )}
     </Cabecalho>
   );
 }

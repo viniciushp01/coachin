@@ -91,10 +91,10 @@ function PassoAviso({ professor, jaAceito, aoContinuar }: PassoAvisoProps) {
       <StepIndicator passo={1} total={2} />
       <h1 className="text-title-screen">Antes de começar</h1>
       <Notice tom="info" titulo="Seu professor vê estes dados">
-        O Prof. {professor} vê seu nome, nascimento, telefone, altura, peso e restrições ou dores
-        para montar o seu treino e falar com você. Altura e peso podem ser compartilhados em
-        qualquer idade, mas é importante saber que o professor os vê. Restrições ou dores são dados
-        de saúde e recebem cuidado especial, conforme a LGPD.
+        {professor} vê seu nome, nascimento, telefone, altura, peso e restrições ou dores para
+        montar o seu treino e falar com você. Altura e peso podem ser compartilhados em qualquer
+        idade, mas é importante saber que o professor os vê. Restrições ou dores são dados de saúde
+        e recebem cuidado especial, conforme a LGPD.
       </Notice>
       <CheckboxRow checked={marcada} onChange={(e) => setMarcada(e.target.checked)}>
         Li e entendi que o professor acessa esses dados para montar o meu treino.
