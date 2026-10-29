@@ -22,7 +22,7 @@ Arquivo: Coach In (`IDP8M2IKanbn60dyqmzjh1`).
 | 📌 PRODUTO | ↳ FigJam | FigJam (agora com as decisões das rodadas 19 a 23) |
 | 🧭 VISÃO GERAL | Todas as telas | (nova) cópia de todas as telas em seções (a 23ª rodada está no fim da página) |
 | | Fluxo completo | (nova) quadro da jornada de ponta a ponta, com os casos de borda E1 a E29 e a raia "Aluno · Sem conexão" no fim |
-| 👤 ALUNO | Aluno · Entrada | Entrada do aluno (seções 1 a 7, **8 · Casos de borda**, **9 · Conta aberta e sem convite**) |
+| 👤 ALUNO | Aluno · Entrada | Entrada do aluno (seções 1 a 7, **8 · Casos de borda**, **9 · Conta aberta e sem convite**, **13 · Convites: casos sem regra (29ª rodada)**) |
 | | ↳ Fluxo · Aluno · Entrada | Fluxo · Entrada do aluno (com as trilhas F a J no fim) |
 | | Aluno · Home | Home do aluno |
 | | Aluno · Ficha e painel do dia | Ficha e painel do dia (seção 3 · Sem internet, 23ª rodada) |
