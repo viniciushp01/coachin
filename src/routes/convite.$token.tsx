@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ConvitePage } from "@/features/convite/ConvitePage";
-import { lerProfessorAtual } from "@/features/convite/professorAtual";
+import { lerProfessorAtual } from "@/lib/vinculo";
 import { lerPrevia, telaDoConvite } from "@/features/convite/telaDoConvite";
 import { rpc } from "@/lib/rpc";
 import { estadoSessaoQuery } from "@/lib/sessao";
