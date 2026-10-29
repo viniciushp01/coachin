@@ -1,8 +1,8 @@
 /**
  * "Ative seu acesso" (regras 78, 87 e 93): professor convidado cujo e-mail ainda não tem conta.
  * O banco só converte conta existente, então a função cria a conta já confirmada, com o e-mail
- * do convite (nunca um e-mail vindo do app), e aceita o convite como essa conta. Se o aceite
- * falhar, a conta criada é apagada: ou a pessoa vira professor, ou nada muda.
+ * do convite (nunca um e-mail vindo do app), e aceita o convite como essa conta. Se o banco
+ * recusar o aceite, a conta criada é apagada: ou a pessoa vira professor, ou nada muda.
  *
  * Lógica pura: o acesso ao Supabase entra por `Servicos` (ver index.ts), para testar sem rede.
  */
