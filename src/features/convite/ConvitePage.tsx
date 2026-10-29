@@ -29,12 +29,12 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
   const navegar = useNavigate();
   const queryClient = useQueryClient();
   const mostrarToast = useToast();
-  // A resposta do banco pode trocar a tela: "Conta vinculada", ou o convite mudou no caminho.
-  // Fica no estado da tela: se o loader rodar de novo (ex.: SIGNED_IN ao voltar ao app), o
-  // convite já aparece como usado, e "Conta vinculada" não pode virar "já foi usado".
-  const [tela, setTela] = useState<TelaDoConvite | { tela: "vinculada"; professor: string }>(
-    telaInicial,
-  );
+  // A resposta do banco pode trocar a tela: "Conta vinculada", "Professor trocado", ou o
+  // convite mudou no caminho. Fica no estado da tela: se o loader rodar de novo (ex.: SIGNED_IN
+  // ao voltar ao app), o convite já aparece como usado, e o sucesso não pode virar "já foi usado".
+  const [tela, setTela] = useState<
+    TelaDoConvite | { tela: "vinculada" | "trocado"; professor: string }
+  >(telaInicial);
   const [enviando, setEnviando] = useState(false);
 
   // Quem chega logado já está no convite (ou num que não vale mais): o guardado cumpriu o papel.
@@ -48,26 +48,43 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
     void navegar({ to: destino, search: email ? { email } : {} });
   }
 
-  /** Vincular ou recusar: erro com tela própria troca a tela; os demais viram toast. */
-  async function responder(funcao: "accept_student_invite" | "decline_invite", professor: string) {
+  /** Chama o banco; erro com tela própria troca a tela, os demais viram toast. */
+  async function enviar(chamada: () => Promise<unknown>, professor: string) {
     setEnviando(true);
     try {
-      await rpc(funcao, { p_token: token });
+      await chamada();
+      return true;
     } catch (causa) {
       const erro = causa instanceof ErroApp ? causa : erroDaResposta(causa);
       const outraTela = telaDoErroDoConvite(erro.codigo, professor);
       if (outraTela) setTela(outraTela);
       else mostrarToast("error", erro.message);
       setEnviando(false);
-      return;
+      return false;
     }
-    if (funcao === "decline_invite") {
-      await navegar({ to: "/", replace: true });
-      return;
-    }
-    // Vincular muda o destino (primeiro acesso ou início): a sessão é lida de novo.
+  }
+
+  /** Vincular, ou trocar de professor com a confirmação explícita (regras 79 e 98). */
+  async function aceitar(professor: string, trocar: boolean) {
+    const ok = await enviar(
+      () =>
+        rpc(
+          "accept_student_invite",
+          trocar ? { p_token: token, p_confirm_switch: true } : { p_token: token },
+        ),
+      professor,
+    );
+    if (!ok) return;
+    // O vínculo muda o destino (primeiro acesso ou início): a sessão é lida de novo.
     queryClient.removeQueries({ queryKey: estadoSessaoQuery.queryKey });
-    setTela({ tela: "vinculada", professor });
+    setTela({ tela: trocar ? "trocado" : "vinculada", professor });
+  }
+
+  /** "Agora não" e "Continuar com meu professor": convite recusado, volta ao destino (102). */
+  async function recusar(professor: string) {
+    if (await enviar(() => rpc("decline_invite", { p_token: token }), professor)) {
+      await navegar({ to: "/", replace: true });
+    }
   }
 
   /** "Usar outra conta" (regra 97): sai só neste aparelho e volta ao convite depois do login. */
@@ -110,11 +127,8 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
           texto={`Com o vínculo, o professor ${tela.professor} monta os seus treinos e acompanha a sua frequência.`}
           professor={tela.professor}
           botao="Vincular ao professor"
-          aoTocar={() => void responder("accept_student_invite", tela.professor)}
-          secundario={{
-            texto: "Agora não",
-            aoTocar: () => void responder("decline_invite", tela.professor),
-          }}
+          aoTocar={() => void aceitar(tela.professor, false)}
+          secundario={{ texto: "Agora não", aoTocar: () => void recusar(tela.professor) }}
           enviando={enviando}
         >
           <div className="flex flex-col items-start">
@@ -129,6 +143,38 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
             dores são dados de saúde (LGPD).
           </Notice>
         </ConviteComProfessor>
+      );
+    case "trocar":
+      return (
+        <ConviteComProfessor
+          titulo="Trocar de professor?"
+          texto={`Você já treina com o Prof. ${tela.professorAtual}. No app, cada aluno tem um professor por vez.`}
+          rotulo="Novo professor"
+          professor={tela.professor}
+          botao="Continuar com meu professor"
+          aoTocar={() => void recusar(tela.professor)}
+          secundario={{
+            texto: "Trocar de professor",
+            aoTocar: () => void aceitar(tela.professor, true),
+          }}
+          enviando={enviando}
+        >
+          <Notice tom="info" titulo="Seus dados de treino serão substituídos">
+            Se você trocar, os dados de treino do Prof. {tela.professorAtual} são substituídos pelos
+            do novo professor. Você não pode ter dois professores ao mesmo tempo.
+          </Notice>
+        </ConviteComProfessor>
+      );
+    case "trocado":
+      return (
+        <ConviteSemValor
+          icone="check_circle"
+          titulo="Professor trocado"
+          botao={{ texto: "Ir para o início", aoTocar: () => navegar({ to: "/", replace: true }) }}
+        >
+          Agora você treina com o Prof. {tela.professor}. O seu treino aparece quando o professor
+          montar.
+        </ConviteSemValor>
       );
     case "vinculada":
       return (
@@ -172,6 +218,8 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
 type ConviteComProfessorProps = {
   titulo: string;
   texto: string;
+  /** Rótulo do cartão: "Seu professor" ou, na troca, "Novo professor". */
+  rotulo?: string;
   professor: string;
   botao: string;
   aoTocar: () => void;
@@ -185,6 +233,7 @@ type ConviteComProfessorProps = {
 function ConviteComProfessor({
   titulo,
   texto,
+  rotulo = "Seu professor",
   professor,
   botao,
   aoTocar,
@@ -198,7 +247,7 @@ function ConviteComProfessor({
         <h1 className="text-title-lg text-text-primary">{titulo}</h1>
         <p className="text-body text-text-secondary">{texto}</p>
         <div className="flex flex-col gap-8 rounded-card bg-bg-surface p-20">
-          <span className="text-overline text-text-secondary">Seu professor</span>
+          <span className="text-overline text-text-secondary">{rotulo}</span>
           <span className="truncate text-title-card text-text-primary">Prof. {professor}</span>
           <span className="text-caption text-text-secondary">Convite válido por 7 dias</span>
         </div>

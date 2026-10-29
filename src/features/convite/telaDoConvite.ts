@@ -41,6 +41,7 @@ export type TelaDoConvite =
   | { tela: "valido"; professor: string; email: string | null }
   | { tela: "ja_tem_conta"; professor: string; email: string | null }
   | { tela: "vincular"; professor: string; email: string }
+  | { tela: "trocar"; professor: string; professorAtual: string }
   | { tela: "expirado"; professor: string }
   | { tela: "usado" }
   | { tela: "nao_vale_mais" }
@@ -49,12 +50,17 @@ export type TelaDoConvite =
 /**
  * Qual tela o link do convite abre, cruzando o convite com a sessão deste aparelho.
  * - Válido e deslogado: "Criar meu acesso" ou, se o e-mail já tem conta, "Você já tem uma conta"
- *   (regras 48 e 79). Logado: vai direto para vincular (regra 97).
+ *   (regras 48 e 79). Logado: vai direto para vincular (regra 97); aluno que já tem professor
+ *   vê "Trocar de professor?" com o nome do atual (regra 98).
  * - Expirado e recusado mostram "Este convite expirou" (regras 48 e 132); já usado, "Este convite
  *   já foi usado" (48); substituído ou desconhecido, "Este link não vale mais" (82).
  * - Convite de professor tem a sua própria entrada (regras 93 e 97).
  */
-export function telaDoConvite(previa: PreviaDoConvite, sessao: EstadoSessao): TelaDoConvite {
+export function telaDoConvite(
+  previa: PreviaDoConvite,
+  sessao: EstadoSessao,
+  professorAtual: string | null = null,
+): TelaDoConvite {
   if (previa.estado === "invalido") return { tela: "nao_vale_mais" };
   if (previa.tipo === "professor") return { tela: "professor" };
   const { professor } = previa;
@@ -67,6 +73,9 @@ export function telaDoConvite(previa: PreviaDoConvite, sessao: EstadoSessao): Te
     case "substituido":
       return { tela: "nao_vale_mais" };
     case "valido":
+      if (sessao.tipo === "logado" && sessao.papel === "aluno" && sessao.temProfessor) {
+        return { tela: "trocar", professor, professorAtual: professorAtual ?? "" };
+      }
       if (sessao.tipo === "logado") return { tela: "vincular", professor, email: sessao.email };
       return previa.temConta
         ? { tela: "ja_tem_conta", professor, email: previa.email }
