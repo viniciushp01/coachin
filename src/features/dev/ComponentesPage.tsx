@@ -3,6 +3,7 @@ import {
   BackButton,
   Button,
   ButtonCompact,
+  CheckboxRow,
   Chip,
   EmptyState,
   ESPACO_NAVBAR,
@@ -13,6 +14,7 @@ import {
   PhoneField,
   SectionRow,
   Sheet,
+  StepIndicator,
   TextAreaField,
   TextButton,
   Toast,
@@ -29,6 +31,15 @@ function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
       <h2 className="text-overline text-text-secondary">{titulo}</h2>
       {children}
     </section>
+  );
+}
+
+function CaixaDeExemplo() {
+  const [marcada, setMarcada] = useState(false);
+  return (
+    <CheckboxRow checked={marcada} onChange={(e) => setMarcada(e.target.checked)}>
+      Li e entendi que o professor acessa esses dados para montar o meu treino.
+    </CheckboxRow>
   );
 }
 
@@ -134,6 +145,15 @@ function Demonstracoes() {
         <Notice tom="danger" titulo="Adicione pelo menos uma ficha">
           O treino precisa de uma ficha com exercícios para ser salvo.
         </Notice>
+      </Secao>
+
+      <Secao titulo="StepIndicator">
+        <StepIndicator passo={1} total={2} />
+        <StepIndicator passo={2} total={2} />
+      </Secao>
+
+      <Secao titulo="CheckboxRow">
+        <CaixaDeExemplo />
       </Secao>
 
       <Secao titulo="FormField, PhoneField">
