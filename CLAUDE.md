@@ -12,6 +12,19 @@ Antes de qualquer trabalho de produto, design ou código, leia `docs/contexto/co
 
 Leia `docs/WORKFLOW.md` antes de planejar trabalho novo: papéis, fases, ciclo de cada fatia, trabalho em paralelo e sincronização dos documentos. Resumo: o repositório é a fonte da verdade, só o Claude Code aplica migrations, e ninguém inventa regra de negócio.
 
+## Economia de tokens (vale para toda tarefa)
+
+Gastar menos sem baixar a qualidade: corte leitura e repetição, nunca testes, CI ou a definição de pronto do WORKFLOW.
+
+- **Uma sessão por ticket ou PR**, aberta em `C:\dev\CoachIn`. Terminou, encerra; a próxima tarefa começa em sessão nova. O que precisa passar adiante vai para o ticket, o PR ou `/handoff`, não para o histórico.
+- **Ler sob demanda.** Não leia `contexto-produto.md` nem `design.md` inteiros: busque (Grep) as regras e os componentes que o ticket cita e leia só esses trechos. Releia um arquivo só se ele mudou.
+- **Ticket autossuficiente.** Todo ticket cita regras por número, páginas do Figma e arquivos tocados. Faltou algo, complete o ticket antes de começar, para o próximo agente não refazer a busca.
+- **Subagentes e revisões na medida.** PR pequeno ou mecânico: CI verde + autorrevisão. Revisão em agente separado só para RLS, auth, migration, exclusão de conta ou PR grande. Não abra sessão ou subagente para pesquisa que um Grep resolve.
+- **Figma e navegador econômicos.** Prefira ler dados (textos, medidas via `figma_execute`) a capturas; captura só da seção do ticket, com `scale` baixo. No navegador, `get_page_text`/JavaScript antes de screenshot.
+- **Comandos enxutos.** Rode verificações juntas e filtre a saída (`tail`, `grep`); não repita o que o CI já confere.
+- **Modelo certo para a tarefa.** Textos, issues, ajustes pequenos e docs: modelo mais barato ou esforço menor. Banco, RLS, arquitetura e decisões difíceis: o modelo mais forte.
+- **Perguntas em lote.** Junte as dúvidas numa só pergunta ou num só issue `needs-info`.
+
 ## Stack
 
 Decidida em `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel, Tailwind v4 com os tokens do `design.md`, TanStack Router e Query, vite-plugin-pwa, idb). Leia antes de escrever código do app.
