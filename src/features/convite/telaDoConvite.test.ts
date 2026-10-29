@@ -4,6 +4,7 @@ import {
   lerPrevia,
   telaDoConvite,
   telaDoErroDoConvite,
+  telaDoErroDoConviteDeProfessor,
   type PreviaDoConvite,
 } from "./telaDoConvite";
 
@@ -134,11 +135,52 @@ describe("telaDoConvite · convite de aluno", () => {
   });
 });
 
-describe("telaDoConvite · convite de professor", () => {
-  it("fica para a entrada do professor (#49)", () => {
-    expect(telaDoConvite({ ...valido, tipo: "professor" }, anonimo)).toEqual({
-      tela: "professor",
+describe("telaDoConvite · convite de professor (regras 93 e 97)", () => {
+  const professor: PreviaDoConvite = {
+    estado: "valido",
+    tipo: "professor",
+    professor: "Admin",
+    email: "ana@exemplo.com",
+    temConta: true,
+  };
+
+  it("deslogado, e-mail com conta: Você já tem uma conta, com o e-mail do convite", () => {
+    expect(telaDoConvite(professor, anonimo)).toEqual({
+      tela: "professor_ja_tem_conta",
+      email: "ana@exemplo.com",
     });
+  });
+
+  it("deslogado, e-mail sem conta: Ative seu acesso (próximo ticket)", () => {
+    expect(telaDoConvite({ ...professor, temConta: false }, anonimo)).toEqual({
+      tela: "ative_seu_acesso",
+      email: "ana@exemplo.com",
+    });
+  });
+
+  it("logado na conta do convite: direto em Ativar acesso de professor? (regra 97)", () => {
+    expect(telaDoConvite(professor, aluno)).toEqual({ tela: "ativar_professor" });
+    expect(telaDoConvite({ ...professor, email: "Ana@Exemplo.com" }, aluno)).toEqual({
+      tela: "ativar_professor",
+    });
+  });
+
+  it("logado em outra conta: Este convite é para outra conta, com o e-mail da sessão", () => {
+    expect(telaDoConvite({ ...professor, email: "carlos@exemplo.com" }, aluno)).toEqual({
+      tela: "outra_conta",
+      email: "ana@exemplo.com",
+    });
+  });
+
+  it("vencido, usado, substituído ou recusado: Este link não vale mais (do professor)", () => {
+    for (const estado of ["expirado", "usado", "substituido", "recusado"] as const) {
+      expect(telaDoConvite({ ...professor, estado }, aluno)).toEqual({
+        tela: "professor_nao_vale_mais",
+      });
+      expect(telaDoConvite({ ...professor, estado }, anonimo)).toEqual({
+        tela: "professor_nao_vale_mais",
+      });
+    }
   });
 });
 
@@ -163,5 +205,28 @@ describe("telaDoErroDoConvite (o convite mudou com a tela aberta)", () => {
   it("os demais erros ficam para o toast", () => {
     expect(telaDoErroDoConvite("sem_conexao", "Carlos")).toBeNull();
     expect(telaDoErroDoConvite("teacher_unavailable", "Carlos")).toBeNull();
+  });
+});
+
+describe("telaDoErroDoConviteDeProfessor", () => {
+  it("convite que mudou (vencido, recusado, usado, substituído): Este link não vale mais", () => {
+    for (const codigo of [
+      "invite_expired",
+      "invite_declined",
+      "invite_used",
+      "invite_replaced",
+      "invite_invalid",
+      // decline_invite responde só isto para convite que não está pendente.
+      "invite_not_pending",
+      // Ativado em outra aba: o servidor confere o papel antes do convite.
+      "already_teacher",
+    ]) {
+      expect(telaDoErroDoConviteDeProfessor(codigo)).toEqual({ tela: "professor_nao_vale_mais" });
+    }
+  });
+
+  it("os demais erros ficam para o toast (ex.: email_mismatch, sem conexão)", () => {
+    expect(telaDoErroDoConviteDeProfessor("email_mismatch")).toBeNull();
+    expect(telaDoErroDoConviteDeProfessor("sem_conexao")).toBeNull();
   });
 });

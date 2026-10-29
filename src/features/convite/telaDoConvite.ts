@@ -45,7 +45,11 @@ export type TelaDoConvite =
   | { tela: "expirado"; professor: string }
   | { tela: "usado" }
   | { tela: "nao_vale_mais" }
-  | { tela: "professor" };
+  | { tela: "professor_ja_tem_conta"; email: string | null }
+  | { tela: "ative_seu_acesso"; email: string | null }
+  | { tela: "ativar_professor" }
+  | { tela: "outra_conta"; email: string }
+  | { tela: "professor_nao_vale_mais" };
 
 /**
  * Qual tela o link do convite abre, cruzando o convite com a sessão deste aparelho.
@@ -54,7 +58,10 @@ export type TelaDoConvite =
  *   vê "Trocar de professor?" com o nome do atual (regra 98).
  * - Expirado e recusado mostram "Este convite expirou" (regras 48 e 132); já usado, "Este convite
  *   já foi usado" (48); substituído ou desconhecido, "Este link não vale mais" (82).
- * - Convite de professor tem a sua própria entrada (regras 93 e 97).
+ * - Convite de professor (regras 93 e 97): fora de validade, "Este link não vale mais" com o texto
+ *   do professor; deslogado, "Você já tem uma conta" ou "Ative seu acesso"; logado, "Ativar
+ *   acesso de professor?" só na conta do e-mail do convite, senão "Este convite é para outra
+ *   conta". O servidor confere o e-mail de novo ao ativar (`email_mismatch`).
  */
 export function telaDoConvite(
   previa: PreviaDoConvite,
@@ -62,7 +69,7 @@ export function telaDoConvite(
   professorAtual: string | null = null,
 ): TelaDoConvite {
   if (previa.estado === "invalido") return { tela: "nao_vale_mais" };
-  if (previa.tipo === "professor") return { tela: "professor" };
+  if (previa.tipo === "professor") return telaDoConviteDeProfessor(previa, sessao);
   const { professor } = previa;
   switch (previa.estado) {
     case "expirado":
@@ -81,6 +88,35 @@ export function telaDoConvite(
         ? { tela: "ja_tem_conta", professor, email: previa.email }
         : { tela: "valido", professor, email: previa.email };
   }
+}
+
+function telaDoConviteDeProfessor(
+  previa: Exclude<PreviaDoConvite, { estado: "invalido" }>,
+  sessao: EstadoSessao,
+): TelaDoConvite {
+  if (previa.estado !== "valido") return { tela: "professor_nao_vale_mais" };
+  if (sessao.tipo === "anonimo") {
+    return previa.temConta
+      ? { tela: "professor_ja_tem_conta", email: previa.email }
+      : { tela: "ative_seu_acesso", email: previa.email };
+  }
+  return previa.email?.toLowerCase() === sessao.email.toLowerCase()
+    ? { tela: "ativar_professor" }
+    : { tela: "outra_conta", email: sessao.email };
+}
+
+/**
+ * Erros de `accept_teacher_invite` e `decline_invite` no convite de professor com tela própria:
+ * todo convite que mudou é "Este link não vale mais". `decline_invite` responde só
+ * `invite_not_pending`; `already_teacher` é o convite já ativado (ex.: em outra aba), porque o
+ * servidor confere o papel antes do convite.
+ */
+export function telaDoErroDoConviteDeProfessor(codigo: string): TelaDoConvite | null {
+  const mudou =
+    codigo === "invite_not_pending" ||
+    codigo === "already_teacher" ||
+    telaDoErroDoConvite(codigo, "") !== null;
+  return mudou ? { tela: "professor_nao_vale_mais" } : null;
 }
 
 /**
