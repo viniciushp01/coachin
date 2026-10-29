@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useId, useState, type ComponentProps, type ReactNode } from "react";
+import { useId, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { CODIGOS_PAIS } from "./codigosPais";
 import { Icon } from "./Icon";
 
@@ -99,6 +99,92 @@ export function FormField({
           >
             <Icon nome={mostrarSenha ? "visibility" : "visibility_off"} />
           </button>
+        )}
+      </div>
+    </Moldura>
+  );
+}
+
+type DataFieldProps = CampoBase &
+  Omit<ComponentProps<"input">, "type" | "min" | "max"> & {
+    /** Data escolhida no seletor do aparelho, já em "dd/mm/aaaa". */
+    aoEscolherData: (texto: string) => void;
+    /** Limites do seletor, "aaaa-mm-dd" (padrão: de 1900 até sem limite). */
+    min?: string | number;
+    max?: string | number;
+  };
+
+/** O navegador abre o seletor de data por código? (Safari antigo e alguns WebViews não.) */
+const temSeletorDeData = () =>
+  typeof HTMLInputElement !== "undefined" &&
+  typeof HTMLInputElement.prototype.showPicker === "function";
+
+/**
+ * Data digitável (máscara dd/mm/aaaa, feita por quem usa) com o ícone de calendário na ponta
+ * direita, que abre o seletor do aparelho (regra 141). Sem `showPicker`, fica só a digitação.
+ */
+export function DataField({
+  rotulo,
+  erro,
+  dica,
+  id,
+  className,
+  aoEscolherData,
+  min = "1900-01-01",
+  max,
+  ...props
+}: DataFieldProps) {
+  const idGerado = useId();
+  const idCampo = id ?? idGerado;
+  const seletor = useRef<HTMLInputElement>(null);
+  const [comCalendario] = useState(temSeletorDeData);
+
+  return (
+    <Moldura id={idCampo} rotulo={rotulo} erro={erro} dica={dica}>
+      <div
+        className={clsx(
+          caixa,
+          "relative h-[52px] items-center justify-between gap-12 px-16",
+          erro ? "border-border-danger" : "border-border-subtle",
+          className,
+        )}
+      >
+        <input
+          id={idCampo}
+          type="text"
+          inputMode="numeric"
+          placeholder="dd/mm/aaaa"
+          maxLength={10}
+          aria-invalid={erro ? true : undefined}
+          aria-describedby={idDaDescricao(idCampo, { erro, dica })}
+          className="h-full min-w-0 flex-1 bg-transparent outline-none placeholder:text-text-disabled"
+          {...props}
+        />
+        {comCalendario && (
+          <>
+            {/* O seletor nativo fica escondido sob o ícone; a data escolhida nunca é impossível. */}
+            <input
+              ref={seletor}
+              type="date"
+              tabIndex={-1}
+              aria-hidden="true"
+              min={min}
+              max={max}
+              onChange={(e) => {
+                const [ano, mes, dia] = e.target.value.split("-");
+                if (ano && mes && dia) aoEscolherData(`${dia}/${mes}/${ano}`);
+              }}
+              className="pointer-events-none absolute right-16 bottom-0 size-px opacity-0"
+            />
+            <button
+              type="button"
+              onClick={() => seletor.current?.showPicker()}
+              aria-label="Abrir calendário"
+              className="-mr-8 flex size-40 shrink-0 items-center justify-center text-text-secondary"
+            >
+              <Icon nome="calendar_month" />
+            </button>
+          </>
         )}
       </div>
     </Moldura>

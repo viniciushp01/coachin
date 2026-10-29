@@ -7,8 +7,20 @@ import { MENSAGENS } from "./erros";
  * `save_student_profile` recebe. Usado no passo 2 do primeiro acesso e, depois, em "Editar dados".
  */
 
-/** Sem regra de produto para data vazia ou impossível (a regra 85 só fala da data futura). */
-export const DATA_INVALIDA = "Digite a data de nascimento, como 15/03/1995."; // proposta
+/** Nascimento vazio ou incompleto (regra 141). */
+export const DATA_VAZIA = "Digite a data de nascimento, como 15/03/1995."; // [produto] regra 141
+/** Data que não existe (31/02) ou anterior a 1900 (regra 141). */
+export const DATA_INEXISTENTE = "Essa data não existe. Confira o dia e o mês."; // [produto] regra 141
+/** O seletor de data e a validação não aceitam nascimento antes disto (regra 141). */
+export const PRIMEIRO_NASCIMENTO = "1900-01-01";
+
+/** Máscara dd/mm/aaaa enquanto a pessoa digita: só dígitos, barras automáticas (regra 141). */
+export function mascararData(texto: string): string {
+  const d = texto.replace(/\D/g, "").slice(0, 8);
+  if (d.length <= 2) return d;
+  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
+  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
+}
 
 /** "dd/mm/aaaa" → "aaaa-mm-dd", ou nulo se a data não existe. */
 export function lerData(texto: string): string | null {
@@ -93,12 +105,16 @@ export function esquemaDoPerfil(hoje: string) {
       const altura = lerMedida(v.altura);
       const peso = lerMedida(v.peso);
       if (!nome) erro("nome", MENSAGENS.name_required);
-      if (!nascimento) erro("nascimento", DATA_INVALIDA);
+      const completa = /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(v.nascimento.trim());
+      if (!completa) erro("nascimento", DATA_VAZIA);
+      else if (!nascimento || nascimento < PRIMEIRO_NASCIMENTO)
+        erro("nascimento", DATA_INEXISTENTE);
       else if (nascimento > hoje) erro("nascimento", MENSAGENS.birth_date_invalid);
       if (!telefone) erro("telefone", MENSAGENS.phone_invalid);
       if (altura === null || altura < 1 || altura > 2.5) erro("altura", MENSAGENS.height_invalid);
       if (peso === null || peso < 20 || peso > 300) erro("peso", MENSAGENS.weight_invalid);
-      if (!nascimento || !telefone || altura === null || peso === null) return z.NEVER;
+      if (!nascimento || nascimento < PRIMEIRO_NASCIMENTO || nascimento > hoje) return z.NEVER;
+      if (!telefone || altura === null || peso === null) return z.NEVER;
       return {
         p_full_name: nome,
         p_birth_date: nascimento,

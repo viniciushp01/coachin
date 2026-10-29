@@ -4,6 +4,7 @@ import {
   formatarTelefone,
   lerData,
   lerMedida,
+  mascararData,
   telefoneDoServidor,
   telefoneParaServidor,
 } from "./perfil";
@@ -18,6 +19,20 @@ describe("lerData (dd/mm/aaaa)", () => {
     expect(lerData("31/02/2000")).toBeNull();
     expect(lerData("2000-02-01")).toBeNull();
     expect(lerData("")).toBeNull();
+  });
+});
+
+describe("mascararData (regra 141)", () => {
+  it("põe as barras sozinho enquanto a pessoa digita", () => {
+    expect(mascararData("1")).toBe("1");
+    expect(mascararData("150")).toBe("15/0");
+    expect(mascararData("15031995")).toBe("15/03/1995");
+    expect(mascararData("15/03/19955")).toBe("15/03/1995");
+  });
+
+  it("ignora o que não é dígito", () => {
+    expect(mascararData("15-03")).toBe("15/03");
+    expect(mascararData("")).toBe("");
   });
 });
 
@@ -113,12 +128,31 @@ describe("esquemaDoPerfil (regras 85 e 99)", () => {
     });
   });
 
-  it("nascimento hoje é válido; vazio ou impossível pede a data", () => {
+  const erroDoNascimento = (nascimento: string) =>
+    esquemaDoPerfil(hoje).safeParse({ ...valido, nascimento }).error?.issues[0]?.message;
+
+  it("nascimento hoje é válido", () => {
     expect(esquemaDoPerfil(hoje).safeParse({ ...valido, nascimento: "29/10/2026" }).success).toBe(
       true,
     );
-    const vazio = esquemaDoPerfil(hoje).safeParse({ ...valido, nascimento: "31/02/2000" });
-    expect(vazio.error?.issues[0]?.message).toBe("Digite a data de nascimento, como 15/03/1995.");
+  });
+
+  it("vazio ou incompleto pede a data (regra 141)", () => {
+    expect(erroDoNascimento("")).toBe("Digite a data de nascimento, como 15/03/1995.");
+    expect(erroDoNascimento("15/03")).toBe("Digite a data de nascimento, como 15/03/1995.");
+  });
+
+  it("data que não existe ou anterior a 1900 (regra 141)", () => {
+    expect(erroDoNascimento("31/02/2000")).toBe("Essa data não existe. Confira o dia e o mês.");
+    expect(erroDoNascimento("30/02/2000")).toBe("Essa data não existe. Confira o dia e o mês.");
+    expect(erroDoNascimento("31/12/1899")).toBe("Essa data não existe. Confira o dia e o mês.");
+    expect(erroDoNascimento("01/01/1900")).toBeUndefined();
+  });
+
+  it("no futuro (regra 85)", () => {
+    expect(erroDoNascimento("30/10/2026")).toBe(
+      "Essa data ainda não chegou. Confira o nascimento.",
+    );
   });
 
   it("restrições é opcional e tem as pontas aparadas", () => {

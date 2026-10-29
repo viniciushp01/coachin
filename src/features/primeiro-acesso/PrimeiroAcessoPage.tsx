@@ -5,13 +5,14 @@ import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import type { VinculoAtivo } from "@/lib/vinculo";
 import { ErroApp, erroDaResposta } from "@/lib/erros";
-import { esquemaDoPerfil, formatarTelefone, telefoneDoServidor } from "@/lib/perfil";
+import { esquemaDoPerfil, formatarTelefone, mascararData, telefoneDoServidor } from "@/lib/perfil";
 import { rpc } from "@/lib/rpc";
 import { estadoSessaoQuery } from "@/lib/sessao";
 import {
   BarraFixa,
   Button,
   CheckboxRow,
+  DataField,
   FormField,
   IconButton,
   Notice,
@@ -182,13 +183,16 @@ function PassoPerfil({ vinculo, hoje, aoVoltar }: PassoPerfilProps) {
           erro={errors.nome?.message}
           {...register("nome")}
         />
-        <FormField
+        <DataField
           rotulo="Data de nascimento"
-          inputMode="numeric"
           autoComplete="bday"
-          placeholder="dd/mm/aaaa"
+          max={hoje}
+          aoEscolherData={(texto) => setValue("nascimento", texto, { shouldValidate: true })}
           erro={errors.nascimento?.message}
-          {...register("nascimento")}
+          {...register("nascimento", {
+            onChange: (e: { target: HTMLInputElement }) =>
+              setValue("nascimento", mascararData(e.target.value)),
+          })}
         />
         <PhoneField
           rotulo="Telefone (WhatsApp)"
