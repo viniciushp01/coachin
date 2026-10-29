@@ -5,7 +5,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ErroApp } from "@/lib/erros";
 import { ToastProvider } from "@/ui";
-import { AlunoComConvitePage, type AlunoComConvite } from "./AlunoComConvitePage";
+import { AlunoComConvitePage } from "./AlunoComConvitePage";
+import type { AlunoComConvite } from "./conviteDoAluno";
 
 const navegar = vi.fn();
 vi.mock("@tanstack/react-router", async (original) => ({
@@ -96,6 +97,14 @@ describe("Corrigir e-mail (regra 58)", () => {
     expect(await screen.findByRole("heading", { name: "Convite gerado" })).toBeVisible();
   });
 
+  it("voltar sai da correção sem reenviar", async () => {
+    const usuario = abrir();
+    await usuario.click(screen.getByRole("button", { name: "Corrigir e-mail" }));
+    await usuario.click(screen.getByRole("button", { name: "Voltar" }));
+    expect(screen.getByRole("button", { name: "Reenviar convite" })).toBeVisible();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
   it("e-mail inválido ou já usado por outro aluno: erro no campo", async () => {
     rpc.mockRejectedValue(new ErroApp("student_email_taken"));
     const usuario = abrir();
@@ -162,5 +171,22 @@ describe("Erros ao reenviar", () => {
     const usuario = abrir();
     await usuario.click(screen.getByRole("button", { name: "Reenviar convite" }));
     expect(await screen.findByText("Este aluno já ativou o acesso.")).toBeVisible();
+    expect(navegar).toHaveBeenCalledWith({ to: "/professor" });
+  });
+
+  it("sem conexão: toast e a tela fica", async () => {
+    rpc.mockRejectedValue(new ErroApp("sem_conexao"));
+    const usuario = abrir();
+    await usuario.click(screen.getByRole("button", { name: "Reenviar convite" }));
+    expect(await screen.findByText("Sem conexão. Tente de novo.")).toBeVisible();
+    expect(navegar).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Reenviar convite" })).toBeEnabled();
+  });
+});
+
+describe("Recusa sem data registrada", () => {
+  it("diz só que recusou, sem inventar a data", () => {
+    abrir({ ...pendente, convite: { ...pendente.convite, status: "declined", declined_at: null } });
+    expect(screen.getByText("Recusou o convite")).toBeVisible();
   });
 });

@@ -6,13 +6,13 @@ const LINK_COPIADO = "Link copiado."; // proposta: sem texto no Figma nem nas re
 const COPIA_FALHOU = "Não foi possível copiar o link."; // proposta
 
 /** O link só existe aqui: o banco guarda apenas o hash do token (docs/schema-coach-in.md). */
-export type Convite = { nome: string; comEmail: boolean; token: string };
+export type LinkDoConvite = { nome: string; comEmail: boolean; token: string };
 
 /**
  * "Convite gerado" (regra 57; Figma "Professor · Alunos", seção 3), depois de cadastrar o aluno
  * ou de reenviar o convite. Com e-mail, "Enviar por e-mail" vira o principal no #52.
  */
-export function ConviteGerado({ nome, comEmail, token }: Convite) {
+export function ConviteGerado({ nome, comEmail, token }: LinkDoConvite) {
   const navegar = useNavigate();
   const mostrarToast = useToast();
   const voltar = () => navegar({ to: "/professor" });

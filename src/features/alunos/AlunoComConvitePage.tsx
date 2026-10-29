@@ -1,8 +1,10 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import type { Database } from "@db/database.types";
-import { ErroApp, erroDaResposta, MENSAGENS } from "@/lib/erros";
-import { email as esquemaEmail } from "@/lib/formularios";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { ErroApp, erroDaResposta } from "@/lib/erros";
+import { email } from "@/lib/formularios";
 import { rpc } from "@/lib/rpc";
 import {
   BackButton,
@@ -16,22 +18,20 @@ import {
   useToast,
   type TomChip,
 } from "@/ui";
-import { dataCurta, estadoDoConvite } from "./conviteDoAluno";
-import { ConviteGerado, type Convite } from "./ConviteGerado";
+import {
+  CHIP_DO_ESTADO,
+  dataCurta,
+  estadoDoConvite,
+  textoDaRecusa,
+  type AlunoComConvite,
+  type EstadoVisivel,
+} from "./conviteDoAluno";
+import { ConviteGerado, type LinkDoConvite } from "./ConviteGerado";
 
-export type AlunoComConvite = {
-  aluno: { id: string; nome: string; email: string | null };
-  convite: Pick<
-    Database["public"]["Tables"]["invites"]["Row"],
-    "id" | "status" | "expires_at" | "created_at" | "declined_at"
-  >;
-};
-
-const CHIP: Record<"pendente" | "expirado" | "recusado", { tom: TomChip; texto: string }> = {
-  pendente: { tom: "info", texto: "Convite pendente" },
-  expirado: { tom: "neutral", texto: "Convite expirado" },
-  recusado: { tom: "neutral", texto: "Convite recusado" },
-};
+/** Erros do reenvio que significam "este convite não vale mais": a área mostra o atual. */
+const CONVITE_MUDOU = ["student_already_linked", "invite_used", "invite_replaced"];
+/** Erros de "Corrigir e reenviar" que pertencem ao campo de e-mail. */
+const ERRO_DO_EMAIL = ["email_invalid", "student_email_taken"];
 
 /**
  * Aluno com convite, na visão do professor (regras 55, 58 e 102; Figma "Professor · Alunos",
@@ -49,11 +49,12 @@ export function AlunoComConvitePage({
   const mostrarToast = useToast();
   const [corrigindo, setCorrigindo] = useState(false);
   const [enviando, setEnviando] = useState(false);
-  const [gerado, setGerado] = useState<Convite & { reenviado: boolean }>();
-  const estado = estadoDoConvite(convite, agora);
+  const [gerado, setGerado] = useState<LinkDoConvite & { reenviado: boolean }>();
+  // A rota só abre esta tela com um estado visível (lerAlunoComConvite).
+  const estado = estadoDoConvite(convite, agora) as EstadoVisivel;
   const voltar = () => navegar({ to: "/professor" });
 
-  /** Gera o link novo; erro de campo volta para quem chamou, os demais viram toast. */
+  /** Gera o link novo. Erro do campo de e-mail volta para quem chamou; os demais viram toast. */
   async function reemitir(novoEmail?: string): Promise<ErroApp | undefined> {
     setEnviando(true);
     try {
@@ -70,22 +71,13 @@ export function AlunoComConvitePage({
     } catch (causa) {
       const erro = causa instanceof ErroApp ? causa : erroDaResposta(causa);
       setEnviando(false);
-      if (novoEmail && (erro.codigo === "email_invalid" || erro.codigo === "student_email_taken")) {
-        return erro;
-      }
+      if (novoEmail && ERRO_DO_EMAIL.includes(erro.codigo)) return erro;
       mostrarToast("error", erro.message);
+      if (CONVITE_MUDOU.includes(erro.codigo)) void voltar();
     }
   }
 
   if (gerado) return <ConviteReemitido {...gerado} />;
-  if (estado !== "pendente" && estado !== "expirado" && estado !== "recusado") {
-    // Usado ou substituído: o aluno já ativou ou há um convite mais novo; a lista mostra o atual.
-    return (
-      <Cabecalho nome={aluno.nome} aoVoltar={voltar}>
-        <Notice tom="neutral" titulo="Este convite não está mais ativo" />
-      </Cabecalho>
-    );
-  }
   if (corrigindo && aluno.email) {
     return (
       <CorrigirEmail
@@ -98,7 +90,6 @@ export function AlunoComConvitePage({
     );
   }
 
-  const textoDoEmail = aluno.email ?? "Sem e-mail no cadastro";
   const conteudo = {
     pendente: {
       titulo: `Convite válido até ${dataCurta(convite.expires_at)}`,
@@ -111,7 +102,7 @@ export function AlunoComConvitePage({
       botao: "Gerar novo convite",
     },
     recusado: {
-      titulo: `Recusou o convite em ${dataCurta(convite.declined_at ?? convite.created_at)}`,
+      titulo: textoDaRecusa(convite),
       texto:
         "Ele escolheu não vincular a conta agora e o link foi encerrado. Envie outro convite se quiser tentar de novo.",
       botao: "Enviar novo convite",
@@ -121,12 +112,12 @@ export function AlunoComConvitePage({
   return (
     <Cabecalho
       nome={aluno.nome}
-      chip={CHIP[estado]}
+      chip={CHIP_DO_ESTADO[estado]}
       aoVoltar={voltar}
       botao={{ texto: conteudo.botao, aoTocar: () => void reemitir(), enviando }}
     >
       <div className="flex flex-col items-start">
-        <p className="text-body text-text-secondary">{textoDoEmail}</p>
+        <p className="text-body text-text-secondary">{aluno.email ?? "Sem e-mail no cadastro"}</p>
         {estado === "pendente" && aluno.email && (
           <TextButton onClick={() => setCorrigindo(true)}>Corrigir e-mail</TextButton>
         )}
@@ -140,31 +131,32 @@ export function AlunoComConvitePage({
 
 type CabecalhoProps = {
   nome: string;
-  chip?: { tom: TomChip; texto: string };
+  chip: { tom: TomChip; texto: string };
   aoVoltar: () => void;
-  botao?: { texto: string; aoTocar: () => void; enviando: boolean };
+  botao: { texto: string; aoTocar: () => void; enviando: boolean };
   children: ReactNode;
 };
 
+/** Nome, chip, conteúdo e o botão principal no rodapé (Figma "Convite do aluno"). */
 function Cabecalho({ nome, chip, aoVoltar, botao, children }: CabecalhoProps) {
   return (
-    <Tela barra={botao ? "um" : undefined}>
+    <Tela barra="um">
       <BackButton onClick={aoVoltar} />
       <div className="flex flex-col items-start gap-8">
         <h1 className="w-full truncate text-title-screen">{nome}</h1>
-        {chip && <Chip tom={chip.tom}>{chip.texto}</Chip>}
+        <Chip tom={chip.tom}>{chip.texto}</Chip>
       </div>
       {children}
-      {botao && (
-        <BarraFixa>
-          <Button onClick={botao.aoTocar} disabled={botao.enviando}>
-            {botao.texto}
-          </Button>
-        </BarraFixa>
-      )}
+      <BarraFixa>
+        <Button onClick={botao.aoTocar} disabled={botao.enviando}>
+          {botao.texto}
+        </Button>
+      </BarraFixa>
     </Tela>
   );
 }
+
+const esquemaDoEmail = z.object({ email });
 
 type CorrigirEmailProps = {
   nome: string;
@@ -176,35 +168,36 @@ type CorrigirEmailProps = {
 
 /** "Corrigir e-mail" (regra 58): o novo link vai para o e-mail corrigido; o anterior para. */
 function CorrigirEmail({ nome, emailAtual, enviando, aoVoltar, aoCorrigir }: CorrigirEmailProps) {
-  const [valor, setValor] = useState(emailAtual);
-  const [erro, setErro] = useState<string>();
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(esquemaDoEmail), defaultValues: { email: emailAtual } });
 
-  async function corrigir() {
-    const lido = esquemaEmail.safeParse(valor);
-    if (!lido.success) {
-      setErro(MENSAGENS.email_invalid);
-      return;
-    }
-    setErro(undefined);
-    const falha = await aoCorrigir(lido.data);
-    if (falha) setErro(falha.message);
+  async function corrigir(dados: z.infer<typeof esquemaDoEmail>) {
+    const falha = await aoCorrigir(dados.email);
+    if (falha) setError("email", { message: falha.message }, { shouldFocus: true });
   }
 
   return (
     <Cabecalho
       nome={nome}
-      chip={CHIP.pendente}
+      chip={CHIP_DO_ESTADO.pendente}
       aoVoltar={aoVoltar}
-      botao={{ texto: "Corrigir e reenviar", aoTocar: () => void corrigir(), enviando }}
+      botao={{
+        texto: "Corrigir e reenviar",
+        aoTocar: () => void handleSubmit(corrigir)(),
+        enviando,
+      }}
     >
       <FormField
         rotulo="E-mail do convite"
         tipo="email"
         inputMode="email"
         autoComplete="off"
-        value={valor}
-        onChange={(e) => setValor(e.target.value)}
-        erro={erro}
+        erro={errors.email?.message}
+        {...register("email")}
       />
       <Notice tom="info" titulo="O link anterior deixa de valer">
         O novo link vale por 7 dias. Confira o e-mail antes de reenviar.
@@ -214,10 +207,10 @@ function CorrigirEmail({ nome, emailAtual, enviando, aoVoltar, aoCorrigir }: Cor
 }
 
 /** "Convite gerado" com o toast "Convite reenviado." quando era um reenvio do pendente. */
-function ConviteReemitido({ reenviado, ...convite }: Convite & { reenviado: boolean }) {
+function ConviteReemitido({ reenviado, ...link }: LinkDoConvite & { reenviado: boolean }) {
   const mostrarToast = useToast();
   useEffect(() => {
     if (reenviado) mostrarToast("success", "Convite reenviado.");
   }, [reenviado, mostrarToast]);
-  return <ConviteGerado {...convite} />;
+  return <ConviteGerado {...link} />;
 }

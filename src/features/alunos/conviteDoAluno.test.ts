@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dataCurta, estadoDoConvite } from "./conviteDoAluno";
+import { dataCurta, estadoDoConvite, textoDaRecusa } from "./conviteDoAluno";
 
 const agora = new Date("2026-10-29T12:00:00Z");
 const base = {
@@ -31,5 +31,16 @@ describe("estadoDoConvite (regras 55, 58 e 102)", () => {
 describe("dataCurta", () => {
   it("dd/mm no fuso do aparelho", () => {
     expect(dataCurta("2026-11-03T12:00:00Z")).toBe("03/11");
+  });
+});
+
+describe("textoDaRecusa (regra 102)", () => {
+  it("com a data da recusa, e só o fato sem ela", () => {
+    expect(
+      textoDaRecusa({ ...base, status: "declined", declined_at: "2026-10-27T15:00:00Z" }),
+    ).toBe("Recusou o convite em 27/10");
+    expect(textoDaRecusa({ ...base, status: "declined", declined_at: null })).toBe(
+      "Recusou o convite",
+    );
   });
 });

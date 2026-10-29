@@ -7,7 +7,7 @@ import { ErroApp, erroDaResposta, MENSAGENS } from "@/lib/erros";
 import { email } from "@/lib/formularios";
 import { formatarTelefone, telefoneParaServidor } from "@/lib/perfil";
 import { rpc } from "@/lib/rpc";
-import { ConviteGerado, type Convite } from "./ConviteGerado";
+import { ConviteGerado, type LinkDoConvite } from "./ConviteGerado";
 import { BarraFixa, BackButton, Button, FormField, Notice, PhoneField, Tela, useToast } from "@/ui";
 
 /** Nome vazio no cadastro do aluno (Figma "Cadastrar · 2"); o "Digite seu nome." é do perfil. */
@@ -40,7 +40,7 @@ const esquema = z
  * (#52).
  */
 export function CadastrarAlunoPage() {
-  const [convite, setConvite] = useState<Convite>();
+  const [convite, setConvite] = useState<LinkDoConvite>();
   return convite ? <ConviteGerado {...convite} /> : <Cadastro aoGerar={setConvite} />;
 }
 
@@ -52,7 +52,7 @@ const CAMPO_DO_ERRO = {
   phone_invalid: ["telefone", MENSAGENS.phone_invalid],
 } as const;
 
-function Cadastro({ aoGerar }: { aoGerar: (convite: Convite) => void }) {
+function Cadastro({ aoGerar }: { aoGerar: (convite: LinkDoConvite) => void }) {
   const navegar = useNavigate();
   const mostrarToast = useToast();
   const {
