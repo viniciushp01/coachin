@@ -105,9 +105,18 @@ function telaDoConviteDeProfessor(
     : { tela: "outra_conta", email: sessao.email };
 }
 
-/** Erros de `accept_teacher_invite` e `decline_invite` no convite de professor com tela própria. */
+/**
+ * Erros de `accept_teacher_invite` e `decline_invite` no convite de professor com tela própria:
+ * todo convite que mudou é "Este link não vale mais". `decline_invite` responde só
+ * `invite_not_pending`; `already_teacher` é o convite já ativado (ex.: em outra aba), porque o
+ * servidor confere o papel antes do convite.
+ */
 export function telaDoErroDoConviteDeProfessor(codigo: string): TelaDoConvite | null {
-  return telaDoErroDoConvite(codigo, "") ? { tela: "professor_nao_vale_mais" } : null;
+  const mudou =
+    codigo === "invite_not_pending" ||
+    codigo === "already_teacher" ||
+    telaDoErroDoConvite(codigo, "") !== null;
+  return mudou ? { tela: "professor_nao_vale_mais" } : null;
 }
 
 /**

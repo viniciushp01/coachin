@@ -402,6 +402,16 @@ describe("Ativar acesso de professor? (regras 93, 97 e 102)", () => {
     expect(navegar).not.toHaveBeenCalled();
   });
 
+  it('"Agora não" com convite que já não está pendente: Este link não vale mais', async () => {
+    rpc.mockImplementation(async () => {
+      throw new ErroApp("invite_not_pending");
+    });
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Agora não" }));
+    expect(await screen.findByRole("heading", { name: "Este link não vale mais" })).toBeVisible();
+    expect(navegar).not.toHaveBeenCalled();
+  });
+
   it("outros erros viram toast e a tela fica (ex.: e-mail diferente)", async () => {
     rpc.mockImplementation(async () => {
       throw new ErroApp("email_mismatch");

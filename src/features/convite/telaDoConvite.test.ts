@@ -216,6 +216,10 @@ describe("telaDoErroDoConviteDeProfessor", () => {
       "invite_used",
       "invite_replaced",
       "invite_invalid",
+      // decline_invite responde só isto para convite que não está pendente.
+      "invite_not_pending",
+      // Ativado em outra aba: o servidor confere o papel antes do convite.
+      "already_teacher",
     ]) {
       expect(telaDoErroDoConviteDeProfessor(codigo)).toEqual({ tela: "professor_nao_vale_mais" });
     }
