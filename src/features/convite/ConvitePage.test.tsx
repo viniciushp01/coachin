@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ErroApp } from "@/lib/erros";
 import { ToastProvider } from "@/ui";
 import { ConvitePage } from "./ConvitePage";
 import { guardarConvite, lerConviteGuardado } from "./conviteGuardado";
@@ -13,18 +15,30 @@ vi.mock("@tanstack/react-router", async (original) => ({
   ...(await original<typeof import("@tanstack/react-router")>()),
   useNavigate: () => navegar,
 }));
-vi.mock("@/lib/sessao", () => ({ sair: vi.fn() }));
+const sair = vi.fn();
+vi.mock("@/lib/sessao", () => ({
+  sair: () => sair(),
+  estadoSessaoQuery: { queryKey: ["sessao"] },
+}));
+const rpc = vi.fn();
+vi.mock("@/lib/rpc", () => ({ rpc: (...args: unknown[]) => rpc(...args) }));
 
 function abrir(tela: TelaDoConvite, token = "tok-1") {
   render(
-    <ToastProvider>
-      <ConvitePage tela={tela} token={token} />
-    </ToastProvider>,
+    <QueryClientProvider client={new QueryClient()}>
+      <ToastProvider>
+        <ConvitePage tela={tela} token={token} />
+      </ToastProvider>
+    </QueryClientProvider>,
   );
   return userEvent.setup();
 }
 
-beforeEach(() => navegar.mockReset());
+beforeEach(() => {
+  navegar.mockReset();
+  sair.mockReset();
+  rpc.mockReset();
+});
 afterEach(() => {
   cleanup();
   localStorage.clear();
@@ -131,10 +145,105 @@ describe("Convite que não vale mais", () => {
   });
 });
 
-describe("Logado", () => {
-  it("chegar ao convite já logado consome o convite guardado (sem voltar a ele a cada abertura)", () => {
+describe("Vincular ao professor? (regras 79, 84, 97, 102 e 108)", () => {
+  const tela: TelaDoConvite = {
+    tela: "vincular",
+    professor: "Carlos Almeida",
+    email: "ana@exemplo.com",
+  };
+
+  it("mostra o professor, a conta em uso e o aviso de dados", () => {
+    abrir(tela);
+    expect(screen.getByRole("heading", { name: "Vincular ao professor?" })).toBeVisible();
+    expect(
+      screen.getByText(
+        "Com o vínculo, o professor Carlos Almeida monta os seus treinos e acompanha a sua frequência.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByText("Prof. Carlos Almeida")).toBeVisible();
+    expect(screen.getByText("Você está entrando como ana@exemplo.com.")).toBeVisible();
+    expect(screen.getByText("O professor vê seus dados")).toBeVisible();
+    expect(
+      screen.getByText(
+        "Nome, nascimento, telefone, altura, peso e restrições ou dores, para montar o treino e falar com você. Altura e peso podem ser compartilhados em qualquer idade; restrições ou dores são dados de saúde (LGPD).",
+      ),
+    ).toBeVisible();
+  });
+
+  it("chegar já logado consome o convite guardado", () => {
     guardarConvite("tok-1");
-    abrir({ tela: "vincular", professor: "Carlos Almeida" });
+    abrir(tela);
     expect(lerConviteGuardado()).toBeNull();
+  });
+
+  it('"Vincular ao professor" aceita o convite e mostra "Conta vinculada"', async () => {
+    rpc.mockResolvedValue({ needs_first_access: true });
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Vincular ao professor" }));
+    expect(rpc).toHaveBeenCalledWith("accept_student_invite", { p_token: "tok-1" });
+    expect(await screen.findByRole("heading", { name: "Conta vinculada" })).toBeVisible();
+    expect(
+      screen.getByText(
+        "O professor Carlos Almeida agora monta os seus treinos. Eles aparecem no seu início.",
+      ),
+    ).toBeVisible();
+    await usuario.click(screen.getByRole("button", { name: "Ir para o início" }));
+    expect(navegar).toHaveBeenCalledWith({ to: "/", replace: true });
+  });
+
+  it('"Conta vinculada" fica mesmo se o loader rodar de novo e o convite já vier usado', async () => {
+    rpc.mockResolvedValue({ needs_first_access: true });
+    const cliente = new QueryClient();
+    const arvore = (t: TelaDoConvite) => (
+      <QueryClientProvider client={cliente}>
+        <ToastProvider>
+          <ConvitePage tela={t} token="tok-1" />
+        </ToastProvider>
+      </QueryClientProvider>
+    );
+    const { rerender } = render(arvore(tela));
+    await userEvent.setup().click(screen.getByRole("button", { name: "Vincular ao professor" }));
+    await screen.findByRole("heading", { name: "Conta vinculada" });
+    rerender(arvore({ tela: "usado" }));
+    expect(screen.getByRole("heading", { name: "Conta vinculada" })).toBeVisible();
+  });
+
+  it("convite que venceu enquanto a tela estava aberta: a tela do convite expirado", async () => {
+    rpc.mockRejectedValue(new ErroApp("invite_expired"));
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Vincular ao professor" }));
+    expect(await screen.findByRole("heading", { name: "Este convite expirou" })).toBeVisible();
+  });
+
+  it("convite substituído no meio do caminho: Este link não vale mais", async () => {
+    rpc.mockRejectedValue(new ErroApp("invite_replaced"));
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Vincular ao professor" }));
+    expect(await screen.findByRole("heading", { name: "Este link não vale mais" })).toBeVisible();
+  });
+
+  it("outros erros viram toast e a tela fica (ex.: sem conexão)", async () => {
+    rpc.mockRejectedValue(new ErroApp("sem_conexao"));
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Vincular ao professor" }));
+    expect(await screen.findByText("Sem conexão. Tente de novo.")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Vincular ao professor?" })).toBeVisible();
+  });
+
+  it('"Agora não" recusa o convite e volta para onde a pessoa estava (regra 102)', async () => {
+    rpc.mockResolvedValue(null);
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Agora não" }));
+    expect(rpc).toHaveBeenCalledWith("decline_invite", { p_token: "tok-1" });
+    expect(navegar).toHaveBeenCalledWith({ to: "/", replace: true });
+  });
+
+  it('"Usar outra conta" sai deste aparelho e vai ao Login guardando o convite (regra 97)', async () => {
+    sair.mockResolvedValue(undefined);
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Usar outra conta" }));
+    expect(sair).toHaveBeenCalled();
+    expect(lerConviteGuardado()).toBe("tok-1");
+    expect(navegar).toHaveBeenCalledWith({ to: "/entrar" });
   });
 });

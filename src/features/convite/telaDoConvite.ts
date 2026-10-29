@@ -40,7 +40,7 @@ export function lerPrevia(resposta: unknown): PreviaDoConvite {
 export type TelaDoConvite =
   | { tela: "valido"; professor: string; email: string | null }
   | { tela: "ja_tem_conta"; professor: string; email: string | null }
-  | { tela: "vincular"; professor: string }
+  | { tela: "vincular"; professor: string; email: string }
   | { tela: "expirado"; professor: string }
   | { tela: "usado" }
   | { tela: "nao_vale_mais" }
@@ -67,9 +67,22 @@ export function telaDoConvite(previa: PreviaDoConvite, sessao: EstadoSessao): Te
     case "substituido":
       return { tela: "nao_vale_mais" };
     case "valido":
-      if (sessao.tipo === "logado") return { tela: "vincular", professor };
+      if (sessao.tipo === "logado") return { tela: "vincular", professor, email: sessao.email };
       return previa.temConta
         ? { tela: "ja_tem_conta", professor, email: previa.email }
         : { tela: "valido", professor, email: previa.email };
   }
+}
+
+/**
+ * Erros de `accept_student_invite` e `decline_invite` que têm tela própria: o convite mudou
+ * enquanto a tela estava aberta (venceu, foi recusado, usado ou substituído). Os demais são toast.
+ */
+export function telaDoErroDoConvite(codigo: string, professor: string): TelaDoConvite | null {
+  if (codigo === "invite_expired" || codigo === "invite_declined") {
+    return { tela: "expirado", professor };
+  }
+  if (codigo === "invite_used") return { tela: "usado" };
+  if (codigo === "invite_replaced" || codigo === "invite_invalid") return { tela: "nao_vale_mais" };
+  return null;
 }

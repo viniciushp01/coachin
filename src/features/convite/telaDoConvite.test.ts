@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { EstadoSessao } from "@/lib/destino";
-import { lerPrevia, telaDoConvite, type PreviaDoConvite } from "./telaDoConvite";
+import {
+  lerPrevia,
+  telaDoConvite,
+  telaDoErroDoConvite,
+  type PreviaDoConvite,
+} from "./telaDoConvite";
 
 const valido: PreviaDoConvite = {
   estado: "valido",
@@ -16,6 +21,7 @@ const aluno: EstadoSessao = {
   papel: "aluno",
   bloqueado: false,
   nome: "Ana",
+  email: "ana@exemplo.com",
   temProfessor: false,
   avisoAceito: false,
   perfilConcluido: false,
@@ -90,6 +96,7 @@ describe("telaDoConvite · convite de aluno", () => {
     expect(telaDoConvite(valido, aluno)).toEqual({
       tela: "vincular",
       professor: "Carlos Almeida",
+      email: "ana@exemplo.com",
     });
   });
 
@@ -124,5 +131,29 @@ describe("telaDoConvite · convite de professor", () => {
     expect(telaDoConvite({ ...valido, tipo: "professor" }, anonimo)).toEqual({
       tela: "professor",
     });
+  });
+});
+
+describe("telaDoErroDoConvite (o convite mudou com a tela aberta)", () => {
+  it("vencido ou recusado: Este convite expirou (regras 48 e 132)", () => {
+    expect(telaDoErroDoConvite("invite_expired", "Carlos")).toEqual({
+      tela: "expirado",
+      professor: "Carlos",
+    });
+    expect(telaDoErroDoConvite("invite_declined", "Carlos")).toEqual({
+      tela: "expirado",
+      professor: "Carlos",
+    });
+  });
+
+  it("usado, substituído ou desconhecido têm tela própria", () => {
+    expect(telaDoErroDoConvite("invite_used", "Carlos")).toEqual({ tela: "usado" });
+    expect(telaDoErroDoConvite("invite_replaced", "Carlos")).toEqual({ tela: "nao_vale_mais" });
+    expect(telaDoErroDoConvite("invite_invalid", "Carlos")).toEqual({ tela: "nao_vale_mais" });
+  });
+
+  it("os demais erros ficam para o toast", () => {
+    expect(telaDoErroDoConvite("sem_conexao", "Carlos")).toBeNull();
+    expect(telaDoErroDoConvite("teacher_unavailable", "Carlos")).toBeNull();
   });
 });

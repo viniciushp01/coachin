@@ -14,6 +14,8 @@ export type EstadoSessao =
       papel: Papel;
       bloqueado: boolean;
       nome: string;
+      /** E-mail da conta ("Você está entrando como…", regra 97). */
+      email: string;
       /** Só para aluno: tem vínculo ativo com um professor. */
       temProfessor: boolean;
       /** Só para aluno: confirmou o aviso de dados (passo 1 do primeiro acesso). */

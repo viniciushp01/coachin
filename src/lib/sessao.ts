@@ -81,6 +81,7 @@ export async function carregarEstadoSessao(): Promise<EstadoSessao> {
     papel: perfil.data.role,
     bloqueado: perfil.data.status === "blocked",
     nome: perfil.data.full_name,
+    email: session.user.email ?? "",
     temProfessor: false,
     avisoAceito: false,
     perfilConcluido: false,
