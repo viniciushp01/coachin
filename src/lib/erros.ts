@@ -36,6 +36,7 @@ export const MENSAGENS = {
   invite_not_found: "Não encontramos este convite.",
   invite_not_pending: "Este convite não está mais pendente.",
   email_mismatch: "Este convite foi enviado para outro e-mail.",
+  email_has_account: "Este e-mail já tem uma conta. Entre com ela para ativar o acesso.", // Edge Function ativar-professor
   already_linked: "Sua conta já está vinculada a este professor.",
   switch_requires_confirmation: "Confirme a troca de professor.",
   teacher_unavailable: "Este professor não está disponível.",

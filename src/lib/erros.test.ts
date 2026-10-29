@@ -15,10 +15,30 @@ const codigosDoBanco = [
   ),
 ].sort();
 
+// Edge Functions: códigos em `falha("codigo", …)` e `{ error: "codigo" }`.
+const funcoes = import.meta.glob<string>(["/supabase/functions/**/*.ts", "!**/*_test.ts"], {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
+const codigosDasFuncoes = [
+  ...new Set(
+    Object.values(funcoes).flatMap((ts) =>
+      [...ts.matchAll(/(?:falha\(|error: )"([a-z_]+)"/g)].map((m) => m[1]),
+    ),
+  ),
+].sort();
+
 describe("tradução dos códigos de erro do banco", () => {
   it("lê os códigos das migrations", () => {
     expect(Object.keys(migrations).length).toBeGreaterThan(0);
     expect(codigosDoBanco.length).toBeGreaterThan(50);
+  });
+
+  it("tem mensagem em pt-BR para todo código devolvido pelas Edge Functions", () => {
+    expect(codigosDasFuncoes).toContain("email_has_account");
+    const semTraducao = codigosDasFuncoes.filter((c) => !Object.hasOwn(MENSAGENS, c!));
+    expect(semTraducao, "Acrescente estes códigos em src/lib/erros.ts").toEqual([]);
   });
 
   it("tem mensagem em pt-BR para todo código lançado pelo banco", () => {
