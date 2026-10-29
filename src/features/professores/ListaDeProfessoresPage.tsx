@@ -29,7 +29,7 @@ export function ListaDeProfessoresPage({ linhas }: { linhas: LinhaDeProfessor[] 
             <p className="text-body text-text-secondary">{resumoDaLista(linhas, busca)}</p>
           )}
         </div>
-        {/* Proposta: o Figma não mostra como o administrador sai; a folha é a da regra 121. */}
+        {/* Regra 145: o administrador não tem Perfil; sai por aqui, sem o aviso da fila local. */}
         <IconButton icone="logout" rotulo="Sair" onClick={() => setSair(true)} />
       </div>
       {linhas.length === 0 ? (
@@ -76,7 +76,7 @@ export function ListaDeProfessoresPage({ linhas }: { linhas: LinhaDeProfessor[] 
           Convidar professor
         </Button>
       </BarraFixa>
-      <FolhaSair aberta={sair} aoFechar={() => setSair(false)} />
+      <FolhaSair aberta={sair} aoFechar={() => setSair(false)} comFilaLocal={false} />
     </Tela>
   );
 }

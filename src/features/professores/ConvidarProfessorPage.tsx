@@ -9,7 +9,7 @@ import { email } from "@/lib/formularios";
 import { rpc } from "@/lib/rpc";
 import { BackButton, BarraFixa, Button, FormField, Notice, Tela, useToast } from "@/ui";
 
-/** Nome vazio (proposta, no padrão do "Digite o nome do aluno." do cadastro do aluno). */
+/** Nome vazio (regra 145). */
 const NOME_DO_PROFESSOR = "Digite o nome do professor.";
 
 /** Formulário → argumentos de `create_teacher_invite` (regra 92: nome e e-mail obrigatórios). */
@@ -78,10 +78,9 @@ function Convidar({ aoGerar }: { aoGerar: (convite: LinkDoConvite) => void }) {
         <BackButton onClick={() => navegar({ to: "/admin" })} />
         <div className="flex flex-col gap-8">
           <h1 className="text-title-screen">Convidar professor</h1>
-          {/* Regra 144: o Figma diz "ela passa a ser professor"; reescrito sem pronome. */}
           <p className="text-body text-text-secondary">
-            O convite vale só para o e-mail informado. Se a pessoa já tem conta, a conta passa a ser
-            de professor.
+            O convite vale só para o e-mail informado. A pessoa convidada recebe o link para ativar
+            o acesso de professor.
           </p>
         </div>
         <FormField

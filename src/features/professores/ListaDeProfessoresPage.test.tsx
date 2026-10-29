@@ -102,9 +102,21 @@ describe("Lista de professores (regras 92, 102 e 114)", () => {
     expect(navegar).toHaveBeenCalledWith({ to: "/admin/convidar-professor" });
   });
 
-  it("Sair pede confirmação", async () => {
+  it("Sair abre a folha sem o aviso da fila local (regra 145)", async () => {
     const usuario = abrir();
     await usuario.click(screen.getByRole("button", { name: "Sair" }));
-    expect(screen.getByRole("dialog", { name: "Sair do app?" })).toBeInTheDocument();
+    const folha = screen.getByRole("dialog", { name: "Sair do app?" });
+    expect(
+      within(folha).getByText("Você vai precisar entrar de novo com e-mail e senha."),
+    ).toBeInTheDocument();
+    expect(within(folha).queryByText(/aguardam envio/)).not.toBeInTheDocument();
+    expect(within(folha).getByRole("button", { name: "Continuar no app" })).toBeInTheDocument();
+  });
+
+  it("linhas ainda não abrem nada: sem botão nem seta (regra 145)", () => {
+    abrir();
+    expect(
+      within(screen.getAllByRole("listitem")[0] as HTMLElement).queryByRole("button"),
+    ).toBeNull();
   });
 });
