@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { destinoDaSessao, type EstadoSessao } from "./destino";
+import { destinoDaRaiz, destinoDaSessao, type EstadoSessao } from "./destino";
 
 const aluno: Extract<EstadoSessao, { tipo: "logado" }> = {
   tipo: "logado",
@@ -50,5 +50,29 @@ describe("destinoDaSessao", () => {
     const semNada = { temProfessor: false, avisoAceito: false, perfilConcluido: false };
     expect(destinoDaSessao({ ...aluno, ...semNada, papel: "professor" })).toBe("/professor");
     expect(destinoDaSessao({ ...aluno, ...semNada, papel: "admin" })).toBe("/admin");
+  });
+});
+
+describe("destinoDaRaiz (convite guardado no aparelho)", () => {
+  it("sem convite guardado, segue o destino do papel", () => {
+    expect(destinoDaRaiz(aluno, null)).toEqual({ to: "/aluno" });
+    expect(destinoDaRaiz({ tipo: "anonimo" }, null)).toEqual({ to: "/entrar" });
+  });
+
+  it("logado com convite guardado volta ao convite, em qualquer papel (regras 79 e 134)", () => {
+    const semProfessor = { ...aluno, temProfessor: false };
+    expect(destinoDaRaiz(semProfessor, "tok")).toEqual({
+      to: "/convite/$token",
+      params: { token: "tok" },
+    });
+    expect(destinoDaRaiz({ ...aluno, papel: "professor" }, "tok")).toEqual({
+      to: "/convite/$token",
+      params: { token: "tok" },
+    });
+  });
+
+  it("sem sessão ou bloqueado, o convite guardado espera (regras 95 e 119)", () => {
+    expect(destinoDaRaiz({ tipo: "anonimo" }, "tok")).toEqual({ to: "/entrar" });
+    expect(destinoDaRaiz({ ...aluno, bloqueado: true }, "tok")).toEqual({ to: "/bloqueado" });
   });
 });

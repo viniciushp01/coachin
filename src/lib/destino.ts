@@ -47,3 +47,18 @@ export function destinoDaSessao(estado: EstadoSessao): Destino {
   if (!estado.perfilConcluido) return "/primeiro-acesso";
   return "/aluno";
 }
+
+export type DestinoDaRaiz = { to: Destino } | { to: "/convite/$token"; params: { token: string } };
+
+/**
+ * Para onde a raiz do app leva, com o convite guardado no aparelho: quem acabou de entrar volta
+ * ao convite que abriu antes de criar a conta ou fazer login (regras 79 e 97), em qualquer papel
+ * (a tela do convite trata a conta errada, regra 134). Sem sessão ou bloqueado, o convite espera.
+ */
+export function destinoDaRaiz(estado: EstadoSessao, conviteGuardado: string | null): DestinoDaRaiz {
+  const destino = destinoDaSessao(estado);
+  if (conviteGuardado && destino !== "/entrar" && destino !== "/bloqueado") {
+    return { to: "/convite/$token", params: { token: conviteGuardado } };
+  }
+  return { to: destino };
+}
