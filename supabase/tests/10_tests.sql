@@ -577,7 +577,7 @@ begin
     perform t.err(format($q$ select public.accept_student_invite(%L) $q$, r ->> 'token'), 'already_linked');
     perform t.login('s3');
     perform t.ok(not (public.get_invite_preview(r ->> 'token') ->> 'already_linked')::boolean, 'preview: aluno sem vínculo com o professor = not already_linked');
-    perform t.su();
+    perform t.anon();
     perform t.ok(not (public.get_invite_preview(r ->> 'token') ->> 'already_linked')::boolean, 'preview sem login = not already_linked');
     raise exception 'desfaz_segundo_convite';
   exception when others then

@@ -19,7 +19,7 @@ declare
   v public.invites%rowtype;
   v_state text;
   v_inviter text;
-  v_inviter_status public.account_status;
+  v_teacher_status public.account_status;
   v_name text;
   v_teacher uuid;
 begin
@@ -28,16 +28,17 @@ begin
     return jsonb_build_object('state', 'invalid');
   end if;
   v_state := private.invite_state(v.status, v.expires_at);
-  select p.full_name, p.status into v_inviter, v_inviter_status
-    from public.profiles p where p.id = v.inviter_id;
+  select p.full_name into v_inviter from public.profiles p where p.id = v.inviter_id;
   if v.kind = 'student' then
     select s.name, s.teacher_id into v_name, v_teacher from public.students s where s.id = v.student_id;
+    -- O mesmo professor que o accept_student_invite confere (o do cadastro).
+    select p.status into v_teacher_status from public.profiles p where p.id = v_teacher;
   else
     v_name := v.invitee_name;
   end if;
   return jsonb_build_object(
     'state', case when v_state = 'pending' and v.kind = 'student'
-                       and v_inviter_status is distinct from 'active' then 'teacher_unavailable'
+                       and v_teacher_status is distinct from 'active' then 'teacher_unavailable'
                   when v_state = 'pending' then 'valid'
                   when v_state = 'accepted' then 'used'
                   else v_state end,
