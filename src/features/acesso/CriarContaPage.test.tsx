@@ -20,10 +20,10 @@ vi.mock("@/lib/supabase", () => ({
 const contaNova = { data: { user: { id: "u1", identities: [{ id: "i1" }] } }, error: null };
 const contaQueJaExiste = { data: { user: { id: "u0", identities: [] } }, error: null };
 
-function abrirTela() {
+function abrirTela(emailInicial?: string) {
   render(
     <ToastProvider>
-      <CriarContaPage />
+      <CriarContaPage emailInicial={emailInicial} />
     </ToastProvider>,
   );
   return userEvent.setup();
@@ -53,6 +53,15 @@ describe("Criar acesso (regras 47, 78 e 89)", () => {
     expect(screen.getByLabelText("Senha")).toHaveAccessibleDescription(
       "Mínimo de 8 caracteres, com letras e números.",
     );
+  });
+
+  it("vem com o e-mail do convite preenchido e editável (regra 46)", async () => {
+    const usuario = abrirTela("ana@exemplo.com");
+    const campo = screen.getByLabelText("E-mail");
+    expect(campo).toHaveValue("ana@exemplo.com");
+    await usuario.clear(campo);
+    await usuario.type(campo, "outra@exemplo.com");
+    expect(campo).toHaveValue("outra@exemplo.com");
   });
 
   it("senha fraca ou e-mail inválido: erro no campo, sem criar a conta", async () => {

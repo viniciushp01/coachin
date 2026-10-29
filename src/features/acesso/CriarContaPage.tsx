@@ -15,7 +15,7 @@ const esquema = z.object({ email, senha: senhaNova });
  * "Criar acesso" da conta aberta (regras 47, 78, 83 e 89): qualquer pessoa cria a conta; o
  * e-mail precisa ser confirmado antes de entrar. O treino aparece depois do convite.
  */
-export function CriarContaPage() {
+export function CriarContaPage({ emailInicial = "" }: { emailInicial?: string }) {
   const navegar = useNavigate();
   const mostrarToast = useToast();
   const [emailEmUso, setEmailEmUso] = useState<string>();
@@ -24,7 +24,10 @@ export function CriarContaPage() {
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(esquema), defaultValues: { email: "", senha: "" } });
+  } = useForm({
+    resolver: zodResolver(esquema),
+    defaultValues: { email: emailInicial, senha: "" },
+  });
 
   async function criar(dados: z.infer<typeof esquema>) {
     setEmailEmUso(undefined);
