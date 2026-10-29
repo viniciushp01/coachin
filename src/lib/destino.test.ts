@@ -6,6 +6,7 @@ const aluno: Extract<EstadoSessao, { tipo: "logado" }> = {
   papel: "aluno",
   bloqueado: false,
   nome: "Vinicius",
+  email: "vinicius@exemplo.com",
   temProfessor: true,
   avisoAceito: true,
   perfilConcluido: true,
