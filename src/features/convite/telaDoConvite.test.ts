@@ -100,6 +100,14 @@ describe("telaDoConvite · convite de aluno", () => {
     });
   });
 
+  it("logado com professor: Trocar de professor?, com o atual e o novo (regra 98)", () => {
+    expect(telaDoConvite(valido, { ...aluno, temProfessor: true }, "Marina Souza")).toEqual({
+      tela: "trocar",
+      professor: "Carlos Almeida",
+      professorAtual: "Marina Souza",
+    });
+  });
+
   it("expirado, com o nome do professor (regra 48)", () => {
     expect(telaDoConvite({ ...valido, estado: "expirado" }, anonimo)).toEqual({
       tela: "expirado",

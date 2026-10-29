@@ -247,3 +247,62 @@ describe("Vincular ao professor? (regras 79, 84, 97, 102 e 108)", () => {
     expect(navegar).toHaveBeenCalledWith({ to: "/entrar" });
   });
 });
+
+describe("Trocar de professor? (regras 98 e 102)", () => {
+  const tela: TelaDoConvite = {
+    tela: "trocar",
+    professor: "Marina Souza",
+    professorAtual: "Carlos Almeida",
+  };
+
+  it("mostra o professor atual, o novo e o aviso de dados substituídos", () => {
+    abrir(tela);
+    expect(screen.getByRole("heading", { name: "Trocar de professor?" })).toBeVisible();
+    expect(
+      screen.getByText(
+        "Você já treina com o Prof. Carlos Almeida. No app, cada aluno tem um professor por vez.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByText("Novo professor")).toBeVisible();
+    expect(screen.getByText("Prof. Marina Souza")).toBeVisible();
+    expect(screen.getByText("Seus dados de treino serão substituídos")).toBeVisible();
+    expect(
+      screen.getByText(
+        "Se você trocar, os dados de treino do Prof. Carlos Almeida são substituídos pelos do novo professor. Você não pode ter dois professores ao mesmo tempo.",
+      ),
+    ).toBeVisible();
+  });
+
+  it('"Continuar com meu professor" recusa o convite e volta ao início (regra 102)', async () => {
+    rpc.mockResolvedValue(null);
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Continuar com meu professor" }));
+    expect(rpc).toHaveBeenCalledWith("decline_invite", { p_token: "tok-1" });
+    expect(navegar).toHaveBeenCalledWith({ to: "/", replace: true });
+  });
+
+  it('"Trocar de professor" confirma a troca e mostra "Professor trocado"', async () => {
+    rpc.mockResolvedValue({ switched: true, needs_first_access: false });
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Trocar de professor" }));
+    expect(rpc).toHaveBeenCalledWith("accept_student_invite", {
+      p_token: "tok-1",
+      p_confirm_switch: true,
+    });
+    expect(await screen.findByRole("heading", { name: "Professor trocado" })).toBeVisible();
+    expect(
+      screen.getByText(
+        "Agora você treina com o Prof. Marina Souza. O seu treino aparece quando o professor montar.",
+      ),
+    ).toBeVisible();
+    await usuario.click(screen.getByRole("button", { name: "Ir para o início" }));
+    expect(navegar).toHaveBeenCalledWith({ to: "/", replace: true });
+  });
+
+  it("convite que venceu no meio do caminho: a tela do convite expirado", async () => {
+    rpc.mockRejectedValue(new ErroApp("invite_expired"));
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Trocar de professor" }));
+    expect(await screen.findByRole("heading", { name: "Este convite expirou" })).toBeVisible();
+  });
+});
