@@ -36,7 +36,7 @@ Arquivo: Coach In (`IDP8M2IKanbn60dyqmzjh1`).
 | | ↳ Fluxo · Professor · Acompanhar | Fluxo · Professor · Acompanhar |
 | | Professor · Treino | Professor · Treino (seções 5 e 6, 22ª e 23ª rodadas) |
 | | ↳ Fluxo · Professor · Treino | Fluxo · Professor · Treino |
-| 🛠️ ADMIN | Admin · Professores | (nova) lista de professores, convidar, convites, bloquear |
+| 🛠️ ADMIN | Admin · Professores | (nova) lista de professores, convidar, convites, bloquear; **4 · Lista: vazia, busca, nome vazio e sair** (29ª rodada, regra 145) |
 | | ↳ Fluxo · Admin · Professores | (nova) |
 | 🔗 COMPARTILHADO | ↳ Fluxo · Conta e privacidade | Fluxo · Conta e privacidade |
 | 🗄️ ARQUIVO | [Backup] Aluno · Home | [Backup] Home do aluno |
