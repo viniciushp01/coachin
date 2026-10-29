@@ -124,6 +124,12 @@ describe("Passo 2 · Seu perfil (regras 49, 85, 108 e 109)", () => {
     ).toBeVisible();
   });
 
+  it("a data de nascimento ganha as barras enquanto a pessoa digita (regra 141)", async () => {
+    const usuario = abrir(true);
+    await usuario.type(screen.getByLabelText("Data de nascimento"), "15031995");
+    expect(screen.getByLabelText("Data de nascimento")).toHaveValue("15/03/1995");
+  });
+
   it("sem telefone no cadastro, o campo vem vazio com +55", () => {
     abrir(true, { ...vinculo, telefone: null });
     expect(screen.getByLabelText("Telefone (WhatsApp)")).toHaveValue("");

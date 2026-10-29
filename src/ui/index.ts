@@ -4,7 +4,7 @@ export { CheckboxRow } from "./CheckboxRow";
 export { Chip, type TomChip } from "./Chip";
 export { EmptyState } from "./EmptyState";
 export { CODIGOS_PAIS } from "./codigosPais";
-export { FormField, PhoneField, TextAreaField } from "./FormField";
+export { DataField, FormField, PhoneField, TextAreaField } from "./FormField";
 export { Icon, type NomeIcone } from "./Icon";
 export { BackButton, IconButton } from "./IconButton";
 export { Logo } from "./Logo";
