@@ -28,6 +28,7 @@ function servicos(trocas: Partial<Servicos> = {}) {
       chamadas.push(`apagar ${id}`);
       return Promise.resolve();
     },
+    virouProfessor: () => Promise.resolve(false),
     ...trocas,
   };
   return { s, chamadas };
@@ -154,4 +155,37 @@ Deno.test("falha ao ler o convite é erro_desconhecido, sem criar conta", async 
   const r = await ativarProfessor(ENTRADA, s);
   assertEquals(r, { status: 500, corpo: { error: "erro_desconhecido" } });
   assertEquals(chamadas, []);
+});
+
+Deno.test("aceite gravado com a resposta perdida: não apaga a conta e é sucesso", async () => {
+  const { s, chamadas } = servicos({
+    aceitarConvite: () => Promise.reject(new Error("timeout")),
+    virouProfessor: (id) => {
+      chamadas.push(`conferir ${id}`);
+      return Promise.resolve(true);
+    },
+  });
+  const r = await ativarProfessor(ENTRADA, s);
+  assertEquals(r, { status: 200, corpo: { ok: true, email: "carlos@email.com" } });
+  assertEquals(chamadas.at(-1), "conferir u-1");
+});
+
+Deno.test("código curto do banco não precisa conferir: o aceite não gravou", async () => {
+  const { s, chamadas } = servicos({
+    aceitarConvite: () => Promise.resolve({ erro: "invite_replaced" }),
+    virouProfessor: () => Promise.reject(new Error("não devia chamar")),
+  });
+  const r = await ativarProfessor(ENTRADA, s);
+  assertEquals(r, { status: 409, corpo: { error: "invite_replaced" } });
+  assertEquals(chamadas.at(-1), "apagar u-1");
+});
+
+Deno.test("falha ao conferir o aceite: não apaga (pode ter gravado)", async () => {
+  const { s, chamadas } = servicos({
+    aceitarConvite: () => Promise.reject(new Error("timeout")),
+    virouProfessor: () => Promise.reject(new Error("fora do ar")),
+  });
+  const r = await ativarProfessor(ENTRADA, s);
+  assertEquals(r, { status: 500, corpo: { error: "erro_desconhecido" } });
+  assertEquals(chamadas.includes("apagar u-1"), false);
 });

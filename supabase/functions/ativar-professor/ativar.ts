@@ -15,6 +15,8 @@ export type Servicos = {
   /** Entra com a conta nova e chama `accept_teacher_invite`; `erro` é o código do banco. */
   aceitarConvite(email: string, senha: string, token: string): Promise<{ erro: string } | null>;
   apagarUsuario(id: string): Promise<void>;
+  /** A conta já é professor? Confere um aceite cuja resposta se perdeu (ex.: timeout). */
+  virouProfessor(id: string): Promise<boolean>;
 };
 
 export type Resultado = {
@@ -87,6 +89,17 @@ export async function ativarProfessor(entrada: unknown, s: Servicos): Promise<Re
     console.error("aceite falhou", erro);
     erroDoAceite = "";
   }
+  // Código curto é o banco recusando (nada gravou). Fora isso, o aceite pode ter gravado sem a
+  // resposta chegar: apagar a conta deixaria o convite usado e a pessoa sem acesso.
+  const codigoDoBanco = /^[a-z_]+$/.test(erroDoAceite);
+  if (!codigoDoBanco) {
+    try {
+      if (await s.virouProfessor(criado.id)) return { status: 200, corpo: { ok: true, email } };
+    } catch (erro) {
+      console.error(`não deu para conferir a conta ${criado.id}; ela fica`, erro);
+      return falha("erro_desconhecido", 500);
+    }
+  }
   try {
     await s.apagarUsuario(criado.id);
   } catch (erro) {
@@ -94,7 +107,5 @@ export async function ativarProfessor(entrada: unknown, s: Servicos): Promise<Re
     console.error(`não deu para apagar a conta ${criado.id}`, erro);
   }
   // Códigos curtos do banco (ex.: `invite_used`) seguem para o app; o resto é genérico.
-  return /^[a-z_]+$/.test(erroDoAceite)
-    ? falha(erroDoAceite, 409)
-    : falha("erro_desconhecido", 500);
+  return codigoDoBanco ? falha(erroDoAceite, 409) : falha("erro_desconhecido", 500);
 }

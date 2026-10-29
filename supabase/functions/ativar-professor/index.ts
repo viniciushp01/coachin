@@ -59,6 +59,12 @@ Deno.serve(
         const { error } = await admin.auth.admin.deleteUser(id);
         if (error) throw error;
       },
+
+      async virouProfessor(id) {
+        const { data, error } = await admin.from("profiles").select("role").eq("id", id).single();
+        if (error) throw error;
+        return data.role === "professor";
+      },
     }),
   ),
 );
