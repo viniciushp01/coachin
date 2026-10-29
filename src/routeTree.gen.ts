@@ -25,6 +25,7 @@ import { Route as ProfessorRouteImport } from './routes/professor'
 import { Route as SemProfessorRouteImport } from './routes/sem-professor'
 import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
 import { Route as DevComponentesRouteImport } from './routes/dev.componentes'
+import { Route as ProfessorCadastrarAlunoRouteImport } from './routes/professor_.cadastrar-aluno'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -106,6 +107,11 @@ const DevComponentesRoute = DevComponentesRouteImport.update({
   path: '/dev/componentes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfessorCadastrarAlunoRoute = ProfessorCadastrarAlunoRouteImport.update({
+  id: '/professor_/cadastrar-aluno',
+  path: '/professor/cadastrar-aluno',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/sem-professor': typeof SemProfessorRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/dev/componentes': typeof DevComponentesRoute
+  '/professor/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/sem-professor': typeof SemProfessorRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/dev/componentes': typeof DevComponentesRoute
+  '/professor/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/sem-professor': typeof SemProfessorRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/dev/componentes': typeof DevComponentesRoute
+  '/professor_/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -181,6 +190,7 @@ export interface FileRouteTypes {
     | '/sem-professor'
     | '/convite/$token'
     | '/dev/componentes'
+    | '/professor/cadastrar-aluno'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/sem-professor'
     | '/convite/$token'
     | '/dev/componentes'
+    | '/professor/cadastrar-aluno'
   id:
     | '__root__'
     | '/'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/sem-professor'
     | '/convite/$token'
     | '/dev/componentes'
+    | '/professor_/cadastrar-aluno'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -236,6 +248,7 @@ export interface RootRouteChildren {
   SemProfessorRoute: typeof SemProfessorRoute
   ConviteTokenRoute: typeof ConviteTokenRoute
   DevComponentesRoute: typeof DevComponentesRoute
+  ProfessorCadastrarAlunoRoute: typeof ProfessorCadastrarAlunoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -352,6 +365,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevComponentesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/professor_/cadastrar-aluno': {
+      id: '/professor_/cadastrar-aluno'
+      path: '/professor/cadastrar-aluno'
+      fullPath: '/professor/cadastrar-aluno'
+      preLoaderRoute: typeof ProfessorCadastrarAlunoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -372,6 +392,7 @@ const rootRouteChildren: RootRouteChildren = {
   SemProfessorRoute: SemProfessorRoute,
   ConviteTokenRoute: ConviteTokenRoute,
   DevComponentesRoute: DevComponentesRoute,
+  ProfessorCadastrarAlunoRoute: ProfessorCadastrarAlunoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
