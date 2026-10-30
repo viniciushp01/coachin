@@ -22,6 +22,10 @@ vi.mock("@/lib/sessao", () => ({
 }));
 const rpc = vi.fn();
 vi.mock("@/lib/rpc", () => ({ rpc: (...args: unknown[]) => rpc(...args) }));
+const ativarAcesso = vi.fn();
+vi.mock("./ativarAcesso", () => ({
+  ativarAcessoDeProfessor: (...args: unknown[]) => ativarAcesso(...args),
+}));
 
 function abrir(tela: TelaDoConvite, token = "tok-1") {
   render(
@@ -38,6 +42,7 @@ beforeEach(() => {
   navegar.mockReset();
   sair.mockReset();
   rpc.mockReset();
+  ativarAcesso.mockReset();
 });
 afterEach(() => {
   cleanup();
@@ -465,6 +470,109 @@ describe("Link de ativação que não vale mais (Figma Professor · Entrada, 5)"
     ).toBeVisible();
     expect(screen.queryByRole("button")).toBeNull();
     expect(lerConviteGuardado()).toBeNull();
+  });
+});
+
+describe("Ative seu acesso (regras 78 e 93; Figma Professor · Entrada, 1)", () => {
+  const tela: TelaDoConvite = { tela: "ative_seu_acesso", email: "carlos@email.com" };
+
+  async function ativarCom(senha: string) {
+    const usuario = abrir(tela);
+    await usuario.type(screen.getByLabelText("Senha"), senha);
+    await usuario.click(screen.getByRole("button", { name: "Ativar acesso" }));
+  }
+
+  it("mostra o e-mail do convite sem edição, a senha com mostrar/ocultar e a dica", () => {
+    abrir(tela);
+    expect(screen.getByRole("heading", { name: "Ative seu acesso" })).toBeVisible();
+    expect(
+      screen.getByText(
+        "Seu e-mail foi autorizado como professor no Coach In. Crie uma senha para entrar.",
+      ),
+    ).toBeVisible();
+    const email = screen.getByLabelText("E-mail");
+    expect(email).toHaveValue("carlos@email.com");
+    expect(email).toHaveAttribute("readonly");
+    expect(screen.getByLabelText("Senha")).toHaveAttribute("placeholder", "Crie uma senha");
+    expect(screen.getByRole("button", { name: "Mostrar senha" })).toBeVisible();
+    expect(screen.getByText("Mínimo de 8 caracteres, com letras e números.")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Ativar acesso" })).toBeVisible();
+  });
+
+  it("não apaga o convite guardado: a pessoa ainda não ativou", () => {
+    guardarConvite("tok-1");
+    abrir(tela);
+    expect(lerConviteGuardado()).toBe("tok-1");
+  });
+
+  it("senha fraca: erro no campo, sem chamar o servidor (regra 78)", async () => {
+    await ativarCom("abc");
+    expect(
+      await screen.findByText("A senha precisa ter pelo menos 8 caracteres, com letras e números."),
+    ).toBeVisible();
+    expect(ativarAcesso).not.toHaveBeenCalled();
+  });
+
+  it('ativa, mostra "Acesso ativado" e vai à lista de alunos com a sessão relida', async () => {
+    ativarAcesso.mockResolvedValue(undefined);
+    const cliente = new QueryClient();
+    cliente.setQueryData(["sessao"], { tipo: "anonimo" });
+    render(
+      <QueryClientProvider client={cliente}>
+        <ToastProvider>
+          <ConvitePage tela={tela} token="tok-1" />
+        </ToastProvider>
+      </QueryClientProvider>,
+    );
+    const usuario = userEvent.setup();
+    await usuario.type(screen.getByLabelText("Senha"), "senha123");
+    await usuario.click(screen.getByRole("button", { name: "Ativar acesso" }));
+    expect(ativarAcesso).toHaveBeenCalledWith("tok-1", "carlos@email.com", "senha123");
+    expect(await screen.findByRole("heading", { name: "Acesso ativado" })).toBeVisible();
+    expect(
+      screen.getByText(
+        "Nas próximas vezes, entre com seu e-mail e senha. Você vai direto para a lista de alunos.",
+      ),
+    ).toBeVisible();
+    expect(cliente.getQueryData(["sessao"])).toBeUndefined();
+    await usuario.click(screen.getByRole("button", { name: "Ir para a lista de alunos" }));
+    expect(navegar).toHaveBeenCalledWith({ to: "/professor", replace: true });
+  });
+
+  it("e-mail que ganhou conta no caminho: Você já tem uma conta", async () => {
+    ativarAcesso.mockImplementation(async () => {
+      throw new ErroApp("email_has_account");
+    });
+    await ativarCom("senha123");
+    expect(await screen.findByRole("heading", { name: "Você já tem uma conta" })).toBeVisible();
+  });
+
+  it("convite que mudou no caminho: Este link não vale mais", async () => {
+    ativarAcesso.mockImplementation(async () => {
+      throw new ErroApp("invite_used");
+    });
+    await ativarCom("senha123");
+    expect(await screen.findByRole("heading", { name: "Este link não vale mais" })).toBeVisible();
+  });
+
+  it("senha recusada pelo servidor: erro no campo", async () => {
+    ativarAcesso.mockImplementation(async () => {
+      throw new ErroApp("weak_password");
+    });
+    await ativarCom("senha123");
+    expect(
+      await screen.findByText("A senha precisa ter pelo menos 8 caracteres, com letras e números."),
+    ).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Ative seu acesso" })).toBeVisible();
+  });
+
+  it("outros erros viram toast e a tela fica", async () => {
+    ativarAcesso.mockImplementation(async () => {
+      throw new ErroApp("sem_conexao");
+    });
+    await ativarCom("senha123");
+    expect(await screen.findByText("Sem conexão. Tente de novo.")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Ative seu acesso" })).toBeVisible();
   });
 });
 

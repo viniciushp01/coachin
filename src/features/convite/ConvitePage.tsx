@@ -1,20 +1,25 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { AreaProvisoria } from "@/features/acesso/AreaProvisoria";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { ErroApp, MENSAGENS, erroDaResposta } from "@/lib/erros";
+import { DICA_SENHA_NOVA, senhaNova } from "@/lib/formularios";
 import { rpc } from "@/lib/rpc";
 import { estadoSessaoQuery, sair } from "@/lib/sessao";
 import {
   BarraFixa,
   Button,
   EmptyState,
+  FormField,
   Notice,
   Tela,
   TextButton,
   useToast,
   type NomeIcone,
 } from "@/ui";
+import { ativarAcessoDeProfessor } from "./ativarAcesso";
 import { apagarConviteGuardado, guardarConvite } from "./conviteGuardado";
 import {
   telaDoErroDoConvite,
@@ -25,9 +30,10 @@ import {
 type ConvitePageProps = { tela: TelaDoConvite; token: string };
 
 /**
- * Link do convite (regras 46, 48, 79, 82, 93, 97, 102, 133 e 134; Figma "Aluno · Entrada", seções 1,
- * 2, 8, 10 e 13, e "Professor · Entrada"). Sem navegação inferior. Ao sair para criar a conta ou entrar, o convite fica guardado no
- * aparelho para o app voltar a ele depois do login; convite que não vale mais apaga o guardado.
+ * Link do convite (regras 46, 48, 78, 79, 82, 93, 97, 102, 133 e 134; Figma "Aluno · Entrada",
+ * seções 1, 2, 8, 10 e 13, e "Professor · Entrada"). Sem navegação inferior. Ao sair para criar
+ * a conta ou entrar, o convite fica guardado no aparelho para o app voltar a ele depois do login;
+ * convite que não vale mais apaga o guardado.
  */
 export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
   const navegar = useNavigate();
@@ -37,7 +43,9 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
   // convite mudou no caminho. Fica no estado da tela: se o loader rodar de novo (ex.: SIGNED_IN
   // ao voltar ao app), o convite já aparece como usado, e o sucesso não pode virar "já foi usado".
   const [tela, setTela] = useState<
-    TelaDoConvite | { tela: "vinculada" | "trocado"; professor: string }
+    | TelaDoConvite
+    | { tela: "vinculada" | "trocado"; professor: string }
+    | { tela: "acesso_ativado" }
   >(telaInicial);
   const [enviando, setEnviando] = useState(false);
 
@@ -315,10 +323,106 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
       );
     case "ja_vinculado":
       return null;
-    // Provisório: "Ative seu acesso" (e-mail sem conta) vem no #51.
     case "ative_seu_acesso":
-      return <AreaProvisoria nome="convite de professor" area="convidado" />;
+      return (
+        <AtiveSeuAcesso
+          token={token}
+          email={tela.email ?? ""}
+          aoAtivar={() => {
+            // A conta nasceu professor e já entrou: a sessão é lida de novo.
+            queryClient.removeQueries({ queryKey: estadoSessaoQuery.queryKey });
+            setTela({ tela: "acesso_ativado" });
+          }}
+          aoMudarDeTela={setTela}
+        />
+      );
+    case "acesso_ativado":
+      return (
+        <ConviteSemValor
+          icone="check_circle"
+          titulo="Acesso ativado"
+          botao={{
+            texto: "Ir para a lista de alunos",
+            aoTocar: () => navegar({ to: "/professor", replace: true }),
+          }}
+        >
+          Nas próximas vezes, entre com seu e-mail e senha. Você vai direto para a lista de alunos.
+        </ConviteSemValor>
+      );
   }
+}
+
+const esquemaDaSenha = z.object({ senha: senhaNova });
+
+type AtiveSeuAcessoProps = {
+  token: string;
+  email: string;
+  aoAtivar: () => void;
+  aoMudarDeTela: (tela: TelaDoConvite) => void;
+};
+
+/**
+ * "Ative seu acesso" (regras 78 e 93; Figma "Professor · Entrada", tela 1): e-mail do convite
+ * sem edição e a senha nova. O e-mail que vale é o do convite, conferido no servidor.
+ */
+function AtiveSeuAcesso({ token, email, aoAtivar, aoMudarDeTela }: AtiveSeuAcessoProps) {
+  const mostrarToast = useToast();
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm({ resolver: zodResolver(esquemaDaSenha), defaultValues: { senha: "" } });
+
+  async function ativar({ senha }: z.infer<typeof esquemaDaSenha>) {
+    try {
+      await ativarAcessoDeProfessor(token, email, senha);
+    } catch (causa) {
+      const erro = causa instanceof ErroApp ? causa : erroDaResposta(causa);
+      if (erro.codigo === "weak_password") {
+        setError("senha", { message: erro.message }, { shouldFocus: true });
+      } else if (erro.codigo === "email_has_account") {
+        aoMudarDeTela({ tela: "professor_ja_tem_conta", email });
+      } else {
+        const outraTela = telaDoErroDoConviteDeProfessor(erro.codigo);
+        if (outraTela) aoMudarDeTela(outraTela);
+        else mostrarToast("error", erro.message);
+      }
+      return;
+    }
+    aoAtivar();
+  }
+
+  return (
+    <Tela barra="um">
+      <form
+        id="ative-seu-acesso"
+        onSubmit={handleSubmit(ativar)}
+        className="flex flex-col gap-16 pt-40"
+        noValidate
+      >
+        <h1 className="text-title-lg text-text-primary">Ative seu acesso</h1>
+        <p className="text-body text-text-secondary">
+          Seu e-mail foi autorizado como professor no Coach In. Crie uma senha para entrar.
+        </p>
+        <FormField rotulo="E-mail" tipo="email" value={email} readOnly autoComplete="username" />
+        <FormField
+          rotulo="Senha"
+          tipo="password"
+          autoComplete="new-password"
+          placeholder="Crie uma senha"
+          dica={DICA_SENHA_NOVA}
+          erro={errors.senha?.message}
+          {...register("senha")}
+        />
+      </form>
+      <BarraFixa>
+        <Button type="submit" form="ative-seu-acesso" disabled={isSubmitting}>
+          Ativar acesso
+        </Button>
+      </BarraFixa>
+    </Tela>
+  );
 }
 
 type ConviteComProfessorProps = {
