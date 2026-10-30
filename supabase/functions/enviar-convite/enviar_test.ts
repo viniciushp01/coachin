@@ -28,7 +28,12 @@ function servicos(trocas: Partial<Servicos> = {}) {
 /** Roda `fn` guardando tudo o que foi para o console. */
 async function comLog<T>(fn: () => Promise<T>): Promise<{ r: T; log: string }> {
   const linhas: string[] = [];
-  const originais = { log: console.log, error: console.error, warn: console.warn, info: console.info };
+  const originais = {
+    log: console.log,
+    error: console.error,
+    warn: console.warn,
+    info: console.info,
+  };
   const guardar = (...a: unknown[]) => linhas.push(a.map((x) => Deno.inspect(x)).join(" "));
   Object.assign(console, { log: guardar, error: guardar, warn: guardar, info: guardar });
   try {
@@ -71,7 +76,12 @@ Deno.test("professor: assunto, corpo e botão da regra 136, sem 'Prof.' (regra 1
 Deno.test("URL e e-mail enviados pelo app são ignorados (regras 138 e 140)", async () => {
   const { s, enviadas } = servicos();
   await enviarConvite(
-    { token: TOKEN, url: "https://golpe.example/x", link: "https://golpe.example", email: "x@golpe.example" },
+    {
+      token: TOKEN,
+      url: "https://golpe.example/x",
+      link: "https://golpe.example",
+      email: "x@golpe.example",
+    },
     s,
     APP_URL,
   );
@@ -104,24 +114,27 @@ Deno.test("entrada sem token é invalid_arguments, sem chamar nada", async () =>
   }
 });
 
-Deno.test("banco recusa (outra pessoa, não pendente, 60 s): repassa o código e não envia", async () => {
-  const casos: [string, number][] = [
-    ["forbidden", 403],
-    ["invite_not_found", 404],
-    ["invite_used", 409],
-    ["invite_replaced", 409],
-    ["invite_expired", 409],
-    ["invite_declined", 409],
-    ["invite_no_email", 409],
-    ["too_many_emails", 429],
-  ];
-  for (const [codigo, status] of casos) {
-    const { s, enviadas } = servicos({ reservar: () => Promise.reject(new Error(codigo)) });
-    const r = await enviarConvite({ token: TOKEN }, s, APP_URL);
-    assertEquals(r, { status, corpo: { error: codigo } }, codigo);
-    assertEquals(enviadas, []);
-  }
-});
+Deno.test(
+  "banco recusa (outra pessoa, não pendente, 60 s): repassa o código e não envia",
+  async () => {
+    const casos: [string, number][] = [
+      ["forbidden", 403],
+      ["invite_not_found", 404],
+      ["invite_used", 409],
+      ["invite_replaced", 409],
+      ["invite_expired", 409],
+      ["invite_declined", 409],
+      ["invite_no_email", 409],
+      ["too_many_emails", 429],
+    ];
+    for (const [codigo, status] of casos) {
+      const { s, enviadas } = servicos({ reservar: () => Promise.reject(new Error(codigo)) });
+      const r = await enviarConvite({ token: TOKEN }, s, APP_URL);
+      assertEquals(r, { status, corpo: { error: codigo } }, codigo);
+      assertEquals(enviadas, []);
+    }
+  },
+);
 
 Deno.test("erro inesperado do banco é erro_desconhecido", async () => {
   const { s } = servicos({ reservar: () => Promise.reject(new Error("connection reset by peer")) });
@@ -152,4 +165,22 @@ Deno.test("o token não aparece em log, nem quando o SMTP ou o banco falham", as
     const { log } = await comLog(() => enviarConvite({ token: TOKEN }, s, APP_URL));
     assert(!log.includes(TOKEN), log);
   }
+});
+
+Deno.test("nome de quem convidou vai numa linha só, com até 60 caracteres", async () => {
+  const longo = `Carlos\n\tAlmeida ${"x".repeat(100)}`;
+  const { s, enviadas } = servicos({
+    reservar: () => Promise.resolve({ ...RESERVA_ALUNO, inviter_name: longo }),
+  });
+  await enviarConvite({ token: TOKEN }, s, APP_URL);
+  const nome = enviadas[0].assunto.replace(" convidou você para o Coach In", "");
+  assert(nome.startsWith("Carlos Almeida x"));
+  assertEquals(nome.length, 60);
+});
+
+Deno.test("sem APP_URL: erro sem reservar o envio (o intervalo não é gasto)", async () => {
+  const { s, reservas, enviadas } = servicos();
+  const { r } = await comLog(() => enviarConvite({ token: TOKEN }, s, ""));
+  assertEquals(r, { status: 500, corpo: { error: "erro_desconhecido" } });
+  assertEquals([reservas, enviadas], [[], []]);
 });

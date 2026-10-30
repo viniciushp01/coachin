@@ -11,7 +11,7 @@ import { postJson } from "../_shared/http.ts";
 import { enviarConvite } from "./enviar.ts";
 
 const URL_SUPABASE = Deno.env.get("SUPABASE_URL")!;
-const APP_URL = Deno.env.get("APP_URL")!;
+const APP_URL = Deno.env.get("APP_URL") ?? "";
 
 /** Chaves novas (`SUPABASE_*_KEYS`, JSON por nome) com as antigas como reserva. */
 function chave(novas: string, antiga: string): string {

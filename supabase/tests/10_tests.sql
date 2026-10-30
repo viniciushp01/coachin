@@ -866,14 +866,16 @@ begin
   perform t.ok((select email_sent_at from public.invites where student_id = v_st and status = 'pending') is not null, 'e-mail: professor lê quando o convite foi enviado');
   perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_tok), 'too_many_emails');
 
-  -- reenviar cria convite novo, mas é o mesmo aluno: segue no intervalo
-  r := public.reissue_invite((select id from public.invites where student_id = v_st and status = 'pending'));
-  v_tok2 := r ->> 'token';
-  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_tok2), 'too_many_emails');
+  -- reenviar dentro dos 60 s é recusado antes de trocar o link (o enviado segue valendo)
+  perform t.err(format($q$ select public.reissue_invite(%L) $q$, (select id from public.invites where student_id = v_st and status = 'pending')), 'too_many_emails');
+  perform t.ok((select count(*) from public.invites where student_id = v_st and status = 'pending') = 1, 'e-mail: reenvio recusado não troca o link');
   perform t.su();
   update public.invites set email_sent_at = now() - interval '61 seconds' where student_id = v_st and email_sent_at is not null;
   perform t.login('t1');
-  perform t.ok(public.claim_invite_email(v_tok2) ->> 'email' = 'eva@x.com', 'e-mail: passados 60 s, envia de novo');
+  r := public.reissue_invite((select id from public.invites where student_id = v_st and status = 'pending'));
+  v_tok2 := r ->> 'token';
+  perform t.ok(public.claim_invite_email(v_tok2) ->> 'email' = 'eva@x.com', 'e-mail: passados 60 s, reenvia com o link novo');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_tok2), 'too_many_emails');
   perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_tok), 'invite_replaced');
   -- corrigir o e-mail não espera o intervalo do endereço anterior
   r := public.reissue_invite((select id from public.invites where student_id = v_st and status = 'pending'), 'eva2@x.com');
@@ -892,6 +894,12 @@ begin
   update public.invites set expires_at = now() - interval '1 second' where student_id = (r ->> 'student_id')::uuid;
   perform t.login('t1');
   perform t.err(format($q$ select public.claim_invite_email(%L) $q$, r ->> 'token'), 'invite_expired');
+  -- aluno que já não está como convidado não recebe
+  r := public.create_student_with_invite('Já Ativa', 'jaativa@x.com');
+  perform t.su();
+  update public.students set status = 'active', user_id = t.uid('s6'), linked_at = now() where id = (r ->> 'student_id')::uuid;
+  perform t.login('t1');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, r ->> 'token'), 'student_already_linked');
 
   -- convite de professor: o administrador envia; professor não
   perform t.login('admin');

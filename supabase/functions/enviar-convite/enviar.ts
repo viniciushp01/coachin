@@ -36,6 +36,13 @@ const STATUS_DO_BANCO: Record<string, number> = {
 /** Limite do provedor de e-mail: o mesmo toast do intervalo (regras 130 e 136). */
 const LIMITE_DO_SMTP = /rate limit|too many/i;
 
+/**
+ * O nome vem de profiles.full_name, que o professor edita: numa linha só e com até 60
+ * caracteres, para não virar uma mensagem própria dentro do e-mail com remetente "Coach In".
+ */
+const nomeCurto = (nome: string | null) =>
+  (nome ?? "").replace(/\s+/g, " ").trim().slice(0, 60).trim();
+
 export async function enviarConvite(
   entrada: unknown,
   s: Servicos,
@@ -44,6 +51,11 @@ export async function enviarConvite(
   const token = (entrada as { token?: unknown } | null)?.token;
   if (typeof token !== "string" || token === "") return falha("invalid_arguments", 400);
   const semToken = (erro: unknown) => String(erro).replaceAll(token, "[token]");
+  // Configuração antes da reserva: reservar marca o envio e gastaria o intervalo de 60 s.
+  if (!appUrl) {
+    console.error("APP_URL ausente");
+    return falha("erro_desconhecido", 500);
+  }
 
   let reserva: Reserva;
   try {
@@ -57,7 +69,7 @@ export async function enviarConvite(
 
   const tipo: Tipo = reserva.kind === "teacher" ? "teacher" : "student";
   const link = `${appUrl.replace(/\/+$/, "")}/convite/${encodeURIComponent(token)}`;
-  const email = montarEmail(tipo, reserva.inviter_name?.trim() || "Seu professor", link);
+  const email = montarEmail(tipo, nomeCurto(reserva.inviter_name) || "Seu professor", link);
 
   try {
     await s.enviar({ para: reserva.email, ...email });
