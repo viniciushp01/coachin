@@ -125,6 +125,7 @@ Deno.test(
       ["invite_expired", 409],
       ["invite_declined", 409],
       ["invite_no_email", 409],
+    ["student_already_linked", 409],
       ["too_many_emails", 429],
     ];
     for (const [codigo, status] of casos) {

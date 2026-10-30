@@ -13,7 +13,7 @@ Arquivos (em `supabase/`):
 | `migrations/20261027192908_advisor_fixes.sql` | Correções do Advisor: `search_path` fixo, `(select auth.uid())` nas políticas, índices nas FKs (sem mudança de regra) |
 | `migrations/20261028094329_workout_before_link.sql` | 0006 · Regra 122: professor cria e edita treino para convite pendente, expirado ou recusado (`save_workout` e leitura de treinos) |
 | `migrations/20261029213932_invite_preview_teacher_unavailable.sql` | 0008 · Regras 133, 134 e 137: `get_invite_preview` devolve `state = 'teacher_unavailable'` (convite de aluno válido de professor bloqueado) e `already_linked` (a conta logada já é aluno ativo desse professor) |
-| `migrations/20261030120000_invite_email_claim.sql` | 0009 · Regras 139 e 140 (#52): coluna `invites.email_sent_at` `claim_invite_email(token)` e `reissue_invite` recusando reenvio dentro de 60 s; confere o convite e o intervalo de 60 s antes da Edge Function `enviar-convite` enviar |
+| `migrations/20261030093359_invite_email_claim.sql` | 0009 · Regras 139 e 140 (#52): coluna `invites.email_sent_at` `claim_invite_email(token)` e `reissue_invite` recusando reenvio dentro de 60 s; confere o convite e o intervalo de 60 s antes da Edge Function `enviar-convite` enviar |
 | `tests/` | Simulação do Supabase, 247 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
 
 ## 1. Como o banco funciona (5 ideias)
@@ -142,3 +142,12 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 - **Aplicação:** registrada como versão `20261029213932` (arquivo local renomeado para essa versão; texto idêntico por md5). Conferido: `get_invite_preview('lixo')` devolve `invalid`; `EXECUTE` para `anon` e `authenticated`; `search_path=public, extensions`.
 - **Advisor:** sem alerta novo do SQL. Segurança: funções RPC `security definer` (1 para `anon`, `get_invite_preview`; 23 para `authenticated`), `auth_leaked_password_protection` e `auth_otp_long_expiry` (configuração do Auth no painel, validade do link de e-mail acima de 1 hora; não vem desta migration). Desempenho: `multiple_permissive_policies` (9) e `unused_index` (10).
 - **Tipos:** sem diferença (`get_invite_preview` devolve `Json`); `database.types.ts` mantido.
+
+### Resultado da aplicação da 0009 (30/10/2026, issue #52)
+
+- **O que muda:** coluna `invites.email_sent_at`; `private.invite_email_recent` (sem execute direto); `claim_invite_email` (nova, `security definer`, `search_path=public, extensions`, `EXECUTE` só para `authenticated`); `reissue_invite` (`create or replace`, mesma assinatura e grants) passa a recusar com `too_many_emails` antes de trocar o link.
+- **Testes (PGlite, Postgres 17.5):** os testes novos falham sem ela. Com a 0009, **266 verificações**.
+- **Aplicação:** registrada como versão `20261030093359` (arquivo local renomeado para essa versão). Conferido: `anon` sem `EXECUTE` em `claim_invite_email`; helper privado sem `EXECUTE` para `anon`/`authenticated`.
+- **Advisor:** sem alerta novo além do padrão já aceito (`claim_invite_email` entra na lista de RPCs `security definer` para `authenticated`, agora 24).
+- **Tipos:** regerados; `email_sent_at` e `claim_invite_email` em `database.types.ts`.
+- **Edge Function:** `enviar-convite` publicada (versão 1, `verify_jwt = true`).
