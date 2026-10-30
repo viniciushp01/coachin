@@ -15,6 +15,10 @@ vi.mock("@tanstack/react-router", async (original) => ({
 }));
 const rpc = vi.fn();
 vi.mock("@/lib/rpc", () => ({ rpc: (...args: unknown[]) => rpc(...args) }));
+const chamarFuncao = vi.fn();
+vi.mock("@/lib/funcoes", () => ({
+  chamarFuncao: (...args: unknown[]) => chamarFuncao(...args),
+}));
 
 const agora = new Date("2026-10-29T12:00:00Z");
 const pendente: AlunoComConvite = {
@@ -25,6 +29,7 @@ const pendente: AlunoComConvite = {
     expires_at: "2026-11-03T12:00:00Z",
     created_at: "2026-10-27T12:00:00Z",
     declined_at: null,
+    email_sent_at: null,
   },
 };
 const novoLink = { invite_id: "i2", token: "tok-novo", expires_at: "2026-11-05T12:00:00Z" };
@@ -41,6 +46,7 @@ function abrir(dados: AlunoComConvite = pendente) {
 beforeEach(() => {
   navegar.mockReset();
   rpc.mockReset();
+  chamarFuncao.mockReset().mockResolvedValue({ ok: true });
 });
 afterEach(cleanup);
 
@@ -54,13 +60,41 @@ describe("Convite pendente (regras 55 e 58)", () => {
     expect(screen.getByText("Enviado em 27/10. O aluno ainda não criou o acesso.")).toBeVisible();
   });
 
-  it('"Reenviar convite" gera um link novo e mostra "Convite gerado" com o toast', async () => {
+  it('"Reenviar convite" gera o link novo e só depois envia por e-mail (regra 140)', async () => {
     rpc.mockResolvedValue(novoLink);
     const usuario = abrir();
     await usuario.click(screen.getByRole("button", { name: "Reenviar convite" }));
     expect(rpc).toHaveBeenCalledWith("reissue_invite", { p_invite_id: "i1" });
-    expect(await screen.findByRole("heading", { name: "Convite gerado" })).toBeVisible();
-    expect(screen.getByText("Convite reenviado.")).toBeVisible();
+    expect(await screen.findByText("Convite enviado por e-mail.")).toBeVisible();
+    expect(chamarFuncao).toHaveBeenCalledWith("enviar-convite", { token: "tok-novo" });
+    expect(screen.getByRole("heading", { name: "Convite gerado" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Reenviar em 60 s" })).toBeDisabled();
+  });
+
+  it("reenvio com falha no e-mail: toast da regra 136 e o link novo segue para copiar", async () => {
+    rpc.mockResolvedValue(novoLink);
+    chamarFuncao.mockImplementation(() => Promise.reject(new ErroApp("email_send_failed")));
+    const usuario = abrir();
+    const copiar = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: copiar },
+      configurable: true,
+    });
+    await usuario.click(screen.getByRole("button", { name: "Reenviar convite" }));
+    expect(
+      await screen.findByText(
+        "Não foi possível enviar o e-mail. Copie o link e envie por outro app.",
+      ),
+    ).toBeVisible();
+    await usuario.click(screen.getByRole("button", { name: "Copiar link" }));
+    expect(copiar).toHaveBeenCalledWith(`${window.location.origin}/convite/tok-novo`);
+  });
+
+  it('enviado há 18 s: "Reenviar em 42 s" desabilitado (regra 139, tela 4)', () => {
+    const enviadoEm = new Date(Date.now() - 18_000).toISOString();
+    abrir({ ...pendente, convite: { ...pendente.convite, email_sent_at: enviadoEm } });
+    expect(screen.getByRole("button", { name: "Reenviar em 42 s" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Corrigir e-mail" })).toBeEnabled();
   });
 
   it('sem "Copiar link": o texto de apoio aponta para Reenviar convite (regra 142)', () => {
@@ -84,6 +118,8 @@ describe("Convite pendente (regras 55 e 58)", () => {
     const usuario = abrir({ ...pendente, aluno: { ...pendente.aluno, email: null } });
     await usuario.click(screen.getByRole("button", { name: "Reenviar convite" }));
     expect(await screen.findByRole("heading", { name: "Convite gerado" })).toBeVisible();
+    expect(screen.getByText("Convite reenviado.")).toBeVisible();
+    expect(chamarFuncao).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Copiar link" })).toBeVisible();
     expect(screen.getByText(/Copie e envie por WhatsApp ou outro app\./)).toBeVisible();
   });
@@ -113,7 +149,8 @@ describe("Corrigir e-mail (regra 58)", () => {
       p_invite_id: "i1",
       p_new_email: "rafael@exemplo.com.br",
     });
-    expect(await screen.findByRole("heading", { name: "Convite gerado" })).toBeVisible();
+    expect(await screen.findByText("Convite enviado por e-mail.")).toBeVisible();
+    expect(chamarFuncao).toHaveBeenCalledWith("enviar-convite", { token: "tok-novo" });
   });
 
   it("voltar sai da correção sem reenviar", async () => {

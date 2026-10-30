@@ -14,6 +14,10 @@ vi.mock("@tanstack/react-router", async (original) => ({
 }));
 const rpc = vi.fn();
 vi.mock("@/lib/rpc", () => ({ rpc: (...args: unknown[]) => rpc(...args) }));
+const chamarFuncao = vi.fn();
+vi.mock("@/lib/funcoes", () => ({
+  chamarFuncao: (...args: unknown[]) => chamarFuncao(...args),
+}));
 
 const conviteCriado = { invite_id: "i1", token: "tok-prof", expires_at: "2026-10-30T12:00:00Z" };
 
@@ -107,7 +111,7 @@ describe("Convite gerado do professor (regra 92)", () => {
   const copiar = vi.fn();
   beforeEach(() => copiar.mockReset().mockResolvedValue(undefined));
 
-  it("vale por 1 dia, copia o link do convite e volta à lista", async () => {
+  it('vale por 1 dia; "Enviar por e-mail" é o principal e "Copiar link" copia o link', async () => {
     rpc.mockResolvedValue(conviteCriado);
     const usuario = abrir();
     Object.defineProperty(navigator, "clipboard", {
@@ -124,7 +128,16 @@ describe("Convite gerado do professor (regra 92)", () => {
     await usuario.click(screen.getByRole("button", { name: "Copiar link" }));
     expect(copiar).toHaveBeenCalledWith(`${window.location.origin}/convite/tok-prof`);
     expect(await screen.findByText("Link copiado.")).toBeVisible();
-    await usuario.click(screen.getByRole("button", { name: "Voltar à lista" }));
-    expect(navegar).toHaveBeenCalledWith({ to: "/admin" });
+    expect(screen.getAllByRole("button").at(-2)).toHaveTextContent("Enviar por e-mail");
+  });
+
+  it("Enviar por e-mail manda só o token à função", async () => {
+    rpc.mockResolvedValue(conviteCriado);
+    chamarFuncao.mockReset().mockResolvedValue({ ok: true });
+    const usuario = abrir();
+    await preencher(usuario, "Fernanda Lopes", "fernanda@exemplo.com");
+    await usuario.click(await screen.findByRole("button", { name: "Enviar por e-mail" }));
+    expect(chamarFuncao).toHaveBeenCalledWith("enviar-convite", { token: "tok-prof" });
+    expect(await screen.findByText("Convite enviado por e-mail.")).toBeVisible();
   });
 });

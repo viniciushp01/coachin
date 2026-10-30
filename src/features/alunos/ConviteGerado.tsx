@@ -1,6 +1,8 @@
 import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
 import { urlDoApp } from "@/features/acesso/urlDoApp";
 import { BackButton, BarraFixa, Button, EmptyState, Tela, useToast } from "@/ui";
+import { textoDaEspera, useEnvioPorEmail } from "./envioPorEmail";
 
 const LINK_COPIADO = "Link copiado."; // proposta: sem texto no Figma nem nas regras
 const COPIA_FALHOU = "Não foi possível copiar o link."; // proposta
@@ -12,24 +14,43 @@ export type LinkDoConvite = { nome: string; comEmail: boolean; token: string };
 type Papel = "aluno" | "professor";
 
 function texto(papel: Papel, { nome, comEmail }: Omit<LinkDoConvite, "token">) {
+  const primeiroNome = nome.trim().split(/\s+/)[0] || nome;
   if (papel === "professor") {
-    const primeiroNome = nome.trim().split(/\s+/)[0] || nome;
     return `O link de ${nome} é de uso único e vale por 1 dia. Envie agora para ${primeiroNome} ativar o acesso de professor.`;
   }
   return `O link de ${nome} é de uso único e vale por 7 dias. ${
-    comEmail ? "Envie agora para criar o acesso." : "Copie e envie por WhatsApp ou outro app."
+    comEmail
+      ? `Envie agora para ${primeiroNome} criar o acesso.`
+      : "Copie e envie por WhatsApp ou outro app."
   }`;
 }
 
 /**
  * "Convite gerado" (regras 57 e 92; Figma "Professor · Alunos", seção 3, e "Admin ·
  * Professores", seção 1), depois de cadastrar o aluno, de convidar o professor ou de reenviar o
- * convite. "Enviar por e-mail" vira o principal no #52; até lá, "Copiar link".
+ * convite. Com e-mail, "Enviar por e-mail" é o principal e "Copiar link" fica ao lado; enviado,
+ * o toast vem sobre esta mesma tela (Figma "Convite · 3 Enviado (aviso)"). Sem e-mail, "Copiar
+ * link" e "Voltar à lista". `enviarAoAbrir`: o reenvio gera o link e já envia (regra 140); se o
+ * envio falhar, o link novo segue aqui para copiar.
  */
-export function ConviteGerado({ papel = "aluno", ...link }: LinkDoConvite & { papel?: Papel }) {
+export function ConviteGerado({
+  papel = "aluno",
+  enviarAoAbrir = false,
+  ...link
+}: LinkDoConvite & { papel?: Papel; enviarAoAbrir?: boolean }) {
   const navegar = useNavigate();
   const mostrarToast = useToast();
+  const { enviar, enviando, restante } = useEnvioPorEmail();
   const voltar = () => navegar({ to: papel === "professor" ? "/admin" : "/professor" });
+
+  // Uma vez só, mesmo com o efeito rodando duas vezes no StrictMode.
+  const jaEnviou = useRef(false);
+  useEffect(() => {
+    if (!enviarAoAbrir || !link.comEmail || jaEnviou.current) return;
+    jaEnviou.current = true;
+    void enviar(link.token);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao abrir
+  }, []);
 
   async function copiar() {
     try {
@@ -47,10 +68,23 @@ export function ConviteGerado({ papel = "aluno", ...link }: LinkDoConvite & { pa
         {texto(papel, link)}
       </EmptyState>
       <BarraFixa>
-        <Button onClick={() => void copiar()}>Copiar link</Button>
-        <Button variante="secondary" onClick={voltar}>
-          Voltar à lista
-        </Button>
+        {link.comEmail ? (
+          <>
+            <Button onClick={() => void enviar(link.token)} disabled={enviando || restante > 0}>
+              {textoDaEspera(restante, "Enviar por e-mail")}
+            </Button>
+            <Button variante="secondary" onClick={() => void copiar()}>
+              Copiar link
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button onClick={() => void copiar()}>Copiar link</Button>
+            <Button variante="secondary" onClick={voltar}>
+              Voltar à lista
+            </Button>
+          </>
+        )}
       </BarraFixa>
     </Tela>
   );
