@@ -852,4 +852,58 @@ begin
   perform t.err(format($q$ select public.save_workout(%L, null, %L::jsonb) $q$, (t.get('st_s1'))::uuid, v_ok::text), 'student_not_found');
 end $$;
 
+-- e-mail do convite (regras 139 e 140): claim_invite_email confere quem chama, o estado e o
+-- intervalo de 60 s antes da Edge Function enviar
+do $$
+declare
+  r jsonb; v_st uuid; v_tok text; v_tok2 text; v_prof text;
+begin
+  perform t.login('t1');
+  r := public.create_student_with_invite('Eva Email', 'eva@x.com');
+  v_st := (r ->> 'student_id')::uuid; v_tok := r ->> 'token';
+  r := public.claim_invite_email(v_tok);
+  perform t.ok(r ->> 'kind' = 'student' and r ->> 'email' = 'eva@x.com' and r ->> 'inviter_name' = 'Prof Um', 'e-mail: quem convidou recebe o destinatário do convite');
+  perform t.ok((select email_sent_at from public.invites where student_id = v_st and status = 'pending') is not null, 'e-mail: professor lê quando o convite foi enviado');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_tok), 'too_many_emails');
+
+  -- reenviar cria convite novo, mas é o mesmo aluno: segue no intervalo
+  r := public.reissue_invite((select id from public.invites where student_id = v_st and status = 'pending'));
+  v_tok2 := r ->> 'token';
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_tok2), 'too_many_emails');
+  perform t.su();
+  update public.invites set email_sent_at = now() - interval '61 seconds' where student_id = v_st and email_sent_at is not null;
+  perform t.login('t1');
+  perform t.ok(public.claim_invite_email(v_tok2) ->> 'email' = 'eva@x.com', 'e-mail: passados 60 s, envia de novo');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_tok), 'invite_replaced');
+  -- corrigir o e-mail não espera o intervalo do endereço anterior
+  r := public.reissue_invite((select id from public.invites where student_id = v_st and status = 'pending'), 'eva2@x.com');
+  perform t.ok(public.claim_invite_email(r ->> 'token') ->> 'email' = 'eva2@x.com', 'e-mail: corrigido, envia ao novo endereço sem esperar');
+
+  perform t.login('t2');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_tok2), 'forbidden');
+
+  perform t.login('t1');
+  perform t.err($q$ select public.claim_invite_email('nao-existe') $q$, 'invite_not_found');
+  perform t.err($q$ select public.claim_invite_email(null) $q$, 'invalid_arguments');
+  r := public.create_student_with_invite('Sem Email');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, r ->> 'token'), 'invite_no_email');
+  r := public.create_student_with_invite('Vencida', 'vencida@x.com');
+  perform t.su();
+  update public.invites set expires_at = now() - interval '1 second' where student_id = (r ->> 'student_id')::uuid;
+  perform t.login('t1');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, r ->> 'token'), 'invite_expired');
+
+  -- convite de professor: o administrador envia; professor não
+  perform t.login('admin');
+  r := public.create_teacher_invite('Nova Pessoa', 'novaprof@x.com');
+  v_prof := r ->> 'token';
+  r := public.claim_invite_email(v_prof);
+  perform t.ok(r ->> 'kind' = 'teacher' and r ->> 'email' = 'novaprof@x.com', 'e-mail: administrador envia o convite de professor');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_prof), 'too_many_emails');
+  perform t.login('t1');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_prof), 'forbidden');
+  perform t.anon();
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_prof), 'permission denied');
+end $$;
+
 select 'FIM: todos os testes passaram' as resultado;

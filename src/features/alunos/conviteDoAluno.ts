@@ -2,10 +2,10 @@ import type { Database } from "@db/database.types";
 import type { TomChip } from "@/ui";
 
 /** As colunas do convite que a visão do professor usa (leitura com a RLS dele). */
-export const COLUNAS_DO_CONVITE = "id, status, expires_at, created_at, declined_at";
+export const COLUNAS_DO_CONVITE = "id, status, expires_at, created_at, declined_at, email_sent_at";
 export type ConviteDoAluno = Pick<
   Database["public"]["Tables"]["invites"]["Row"],
-  "id" | "status" | "expires_at" | "created_at" | "declined_at"
+  "id" | "status" | "expires_at" | "created_at" | "declined_at" | "email_sent_at"
 >;
 
 /** Aluno que ainda não ativou o acesso, com o convite mais recente dele. */
@@ -22,7 +22,10 @@ export type EstadoVisivel = "pendente" | "expirado" | "recusado";
  * Estado do convite do aluno na visão do professor (regras 55, 58 e 102). Como no banco
  * (`private.invite_state`), "expirado" é derivado: pendente com a validade vencida.
  */
-export function estadoDoConvite(convite: ConviteDoAluno, agora = new Date()): EstadoDoConvite {
+export function estadoDoConvite(
+  convite: Pick<ConviteDoAluno, "status" | "expires_at">,
+  agora = new Date(),
+): EstadoDoConvite {
   switch (convite.status) {
     case "pending":
       return new Date(convite.expires_at) <= agora ? "expirado" : "pendente";

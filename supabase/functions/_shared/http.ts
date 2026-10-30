@@ -22,7 +22,7 @@ export function json(corpo: unknown, status = 200): Response {
  * métodos e corpo ilegível, e nunca deixa uma exceção virar resposta sem CORS.
  */
 export function postJson(
-  tratar: (corpo: unknown) => Promise<{ status: number; corpo: unknown }>,
+  tratar: (corpo: unknown, req: Request) => Promise<{ status: number; corpo: unknown }>,
 ): (req: Request) => Promise<Response> {
   return async (req) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
@@ -34,7 +34,7 @@ export function postJson(
       return json({ error: "invalid_arguments" }, 400);
     }
     try {
-      const r = await tratar(corpo);
+      const r = await tratar(corpo, req);
       return json(r.corpo, r.status);
     } catch (erro) {
       console.error(erro);

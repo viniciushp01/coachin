@@ -27,6 +27,7 @@ import {
   type EstadoVisivel,
 } from "./conviteDoAluno";
 import { ConviteGerado, type LinkDoConvite } from "./ConviteGerado";
+import { textoDaEspera, useEnvioPorEmail } from "./envioPorEmail";
 
 /** Texto de apoio do pendente (regra 142). */
 const SEM_COPIAR_LINK =
@@ -58,7 +59,9 @@ const POR_PAPEL = {
 /**
  * Aluno com convite, na visão do professor (regras 55, 58 e 102; Figma "Professor · Alunos",
  * seções 4 e 6): pendente, corrigir e-mail, expirado e recusado. Toda ação gera um link novo
- * (`reissue_invite`, o anterior deixa de valer) e abre "Convite gerado".
+ * (`reissue_invite`, o anterior deixa de valer) e abre "Convite gerado"; "Reenviar convite" e
+ * "Corrigir e reenviar", com e-mail, já enviam o link novo (regra 140). Enviado há menos de 60 s,
+ * "Reenviar convite" espera com contagem (regra 139; Figma seção 4, tela 4).
  * Pendente não tem "Copiar link": o banco só guarda o hash do token (regra 142). Não há estado
  * "já tem conta": o aluno com conta aparece como convite pendente (regra 143).
  */
@@ -73,7 +76,8 @@ export function AlunoComConvitePage({
   const mostrarToast = useToast();
   const [corrigindo, setCorrigindo] = useState(false);
   const [enviando, setEnviando] = useState(false);
-  const [gerado, setGerado] = useState<LinkDoConvite & { reenviado: boolean; papel: Papel }>();
+  const [gerado, setGerado] = useState<Gerado>();
+  const { restante } = useEnvioPorEmail(convite.email_sent_at);
   // A rota só abre esta tela com um estado visível (lerAlunoComConvite).
   const estado = estadoDoConvite(convite, agora) as EstadoVisivel;
   const voltar = () => navegar({ to: textos.volta });
@@ -86,12 +90,14 @@ export function AlunoComConvitePage({
         p_invite_id: convite.id,
         ...(novoEmail ? { p_new_email: novoEmail } : {}),
       })) as { token: string };
+      const comEmail = Boolean(novoEmail ?? aluno.email);
       setGerado({
         nome: aluno.nome,
-        comEmail: Boolean(novoEmail ?? aluno.email),
+        comEmail,
         token: resposta.token,
         papel,
         reenviado: estado === "pendente",
+        enviarAoAbrir: estado === "pendente" && comEmail,
       });
     } catch (causa) {
       const erro = causa instanceof ErroApp ? causa : erroDaResposta(causa);
@@ -139,7 +145,11 @@ export function AlunoComConvitePage({
       nome={aluno.nome}
       chip={CHIP_DO_ESTADO[estado]}
       aoVoltar={voltar}
-      botao={{ texto: conteudo.botao, aoTocar: () => void reemitir(), enviando }}
+      botao={{
+        texto: estado === "pendente" ? textoDaEspera(restante, conteudo.botao) : conteudo.botao,
+        aoTocar: () => void reemitir(),
+        desabilitado: enviando || (estado === "pendente" && restante > 0),
+      }}
     >
       <div className="flex flex-col items-start">
         <p className="text-body text-text-secondary">{aluno.email ?? "Sem e-mail no cadastro"}</p>
@@ -161,7 +171,7 @@ type CabecalhoProps = {
   nome: string;
   chip: { tom: TomChip; texto: string };
   aoVoltar: () => void;
-  botao: { texto: string; aoTocar: () => void; enviando: boolean };
+  botao: { texto: string; aoTocar: () => void; desabilitado: boolean };
   children: ReactNode;
 };
 
@@ -176,7 +186,7 @@ function Cabecalho({ nome, chip, aoVoltar, botao, children }: CabecalhoProps) {
       </div>
       {children}
       <BarraFixa>
-        <Button onClick={botao.aoTocar} disabled={botao.enviando}>
+        <Button onClick={botao.aoTocar} disabled={botao.desabilitado}>
           {botao.texto}
         </Button>
       </BarraFixa>
@@ -224,7 +234,7 @@ function CorrigirEmail({
       botao={{
         texto: "Corrigir e reenviar",
         aoTocar: () => void handleSubmit(corrigir)(),
-        enviando,
+        desabilitado: enviando,
       }}
     >
       <FormField
@@ -242,15 +252,17 @@ function CorrigirEmail({
   );
 }
 
-/** "Convite gerado" com o toast "Convite reenviado." quando era um reenvio do pendente. */
-function ConviteReemitido({
-  reenviado,
-  papel,
-  ...link
-}: LinkDoConvite & { reenviado: boolean; papel: Papel }) {
+type Gerado = LinkDoConvite & { reenviado: boolean; papel: Papel; enviarAoAbrir: boolean };
+
+/**
+ * "Convite gerado" depois do reenvio. Com e-mail, já envia e o toast é o do envio; sem e-mail,
+ * toast "Convite reenviado." quando era um reenvio do pendente.
+ */
+function ConviteReemitido({ reenviado, ...link }: Gerado) {
   const mostrarToast = useToast();
+  const avisar = reenviado && !link.enviarAoAbrir;
   useEffect(() => {
-    if (reenviado) mostrarToast("success", "Convite reenviado.");
-  }, [reenviado, mostrarToast]);
-  return <ConviteGerado papel={papel} {...link} />;
+    if (avisar) mostrarToast("success", "Convite reenviado.");
+  }, [avisar, mostrarToast]);
+  return <ConviteGerado {...link} />;
 }

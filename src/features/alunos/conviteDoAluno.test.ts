@@ -8,6 +8,7 @@ const base = {
   expires_at: "2026-11-03T12:00:00Z",
   created_at: "2026-10-27T12:00:00Z",
   declined_at: null,
+  email_sent_at: null,
 };
 
 describe("estadoDoConvite (regras 55, 58 e 102)", () => {

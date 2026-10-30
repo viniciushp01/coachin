@@ -135,7 +135,7 @@ describe("Convite gerado (regras 46 e 57)", () => {
     expect(navegar).toHaveBeenCalledWith({ to: "/professor" });
   });
 
-  it("com e-mail: o texto pede para enviar agora; até o envio por e-mail (#52), Copiar link é o principal", async () => {
+  it('com e-mail: o texto pede para enviar agora; "Enviar por e-mail" é o principal', async () => {
     rpc.mockResolvedValue(conviteCriado);
     const usuario = abrirComAreaDeTransferencia();
     await usuario.type(screen.getByLabelText("Nome"), "Rafael Torres");
@@ -143,11 +143,11 @@ describe("Convite gerado (regras 46 e 57)", () => {
     await usuario.click(gerar());
     expect(
       await screen.findByText(
-        "O link de Rafael Torres é de uso único e vale por 7 dias. Envie agora para criar o acesso.",
+        "O link de Rafael Torres é de uso único e vale por 7 dias. Envie agora para Rafael criar o acesso.",
       ),
     ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Enviar por e-mail" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Copiar link" })).toBeVisible();
-    expect(screen.queryByRole("button", { name: "Enviar por e-mail" })).toBeNull();
   });
 
   it("sem acesso à área de transferência: toast de erro, o convite continua na tela", async () => {

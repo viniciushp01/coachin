@@ -14,6 +14,10 @@ vi.mock("@tanstack/react-router", async (original) => ({
 }));
 const rpc = vi.fn();
 vi.mock("@/lib/rpc", () => ({ rpc: (...args: unknown[]) => rpc(...args) }));
+const chamarFuncao = vi.fn();
+vi.mock("@/lib/funcoes", () => ({
+  chamarFuncao: (...args: unknown[]) => chamarFuncao(...args),
+}));
 
 const agora = new Date("2026-10-29T12:00:00Z");
 const pendente: ProfessorComConvite = {
@@ -24,6 +28,7 @@ const pendente: ProfessorComConvite = {
     expires_at: "2026-10-30T12:00:00Z",
     created_at: "2026-10-29T08:00:00Z",
     declined_at: null,
+    email_sent_at: null,
   },
 };
 const novoLink = { invite_id: "i2", token: "tok-novo", expires_at: "2026-10-30T12:00:00Z" };
@@ -59,14 +64,16 @@ describe("Convite de professor pendente (regras 92, 93 e 142)", () => {
     ).toBeVisible();
   });
 
-  it('"Reenviar convite" gera o link novo de 1 dia, com o toast', async () => {
+  it('"Reenviar convite" gera o link novo de 1 dia e já envia por e-mail', async () => {
     rpc.mockResolvedValue(novoLink);
+    chamarFuncao.mockReset().mockResolvedValue({ ok: true });
     const usuario = abrir();
     await usuario.click(screen.getByRole("button", { name: "Reenviar convite" }));
     expect(rpc).toHaveBeenCalledWith("reissue_invite", { p_invite_id: "i1" });
     expect(await screen.findByRole("heading", { name: "Convite gerado" })).toBeVisible();
     expect(screen.getByText(/vale por 1 dia/)).toBeVisible();
-    expect(screen.getByText("Convite reenviado.")).toBeVisible();
+    expect(await screen.findByText("Convite enviado por e-mail.")).toBeVisible();
+    expect(chamarFuncao).toHaveBeenCalledWith("enviar-convite", { token: novoLink.token });
     expect(screen.getByRole("button", { name: "Copiar link" })).toBeVisible();
   });
 
