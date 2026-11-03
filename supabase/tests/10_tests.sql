@@ -358,6 +358,7 @@ begin
   perform t.su();
   update public.workouts set start_date = start_date - 10 where id = v_w;
   select removed_at into v_removed from public.workout_days where id = dB;
+  perform t.ok((select last_done_on is null and last_done_letter is null from public.teacher_student_list where student_id = v_s), 'lista: sem marcação, sem data nem ficha do último treino');
 
   perform t.login('s1');
   perform public.mark_done(dA, t.today() - 5, a1);
@@ -399,7 +400,6 @@ begin
   perform t.login('s1');
   perform public.undo_done((t.get('dayC'))::uuid, t.today() - 2);
   perform t.login('t1');
-  perform t.ok(not exists (select 1 from public.teacher_student_list where (last_done_on is null) <> (last_done_letter is null)), 'lista: sem marcação, sem ficha do último treino');
 
   -- Cargas (última edição por HORA DA AÇÃO, não do envio)
   perform t.login('s1');
