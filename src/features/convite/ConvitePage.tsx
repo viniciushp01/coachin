@@ -22,6 +22,8 @@ import {
 import { ativarAcessoDeProfessor } from "./ativarAcesso";
 import { apagarConviteGuardado, guardarConvite } from "./conviteGuardado";
 import {
+  lerPrevia,
+  telaDoConviteQueMudou,
   telaDoErroDoConvite,
   telaDoErroDoConviteDeProfessor,
   type TelaDoConvite,
@@ -76,7 +78,7 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
   /** Chama o banco; erro com tela própria troca a tela, os demais viram toast. */
   async function enviar(
     chamada: () => Promise<unknown>,
-    telaDoErro: (codigo: string) => TelaDoConvite | null,
+    telaDoErro: (codigo: string) => TelaDoConvite | null | Promise<TelaDoConvite | null>,
   ) {
     setEnviando(true);
     try {
@@ -84,7 +86,7 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
       return true;
     } catch (causa) {
       const erro = causa instanceof ErroApp ? causa : erroDaResposta(causa);
-      const outraTela = telaDoErro(erro.codigo);
+      const outraTela = await telaDoErro(erro.codigo);
       if (outraTela) setTela(outraTela);
       else mostrarToast("error", erro.message);
       setEnviando(false);
@@ -110,7 +112,19 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
 
   /** "Agora não" e "Continuar com meu professor": convite recusado, volta ao destino (102). */
   async function recusar(telaDoErro: (codigo: string) => TelaDoConvite | null) {
-    if (await enviar(() => rpc("decline_invite", { p_token: token }), telaDoErro)) {
+    // `decline_invite` só diz `invite_not_pending`: a tela do estado vem da prévia (regra 146).
+    const telaAtual = async (codigo: string) => {
+      if (codigo !== "invite_not_pending") return telaDoErro(codigo);
+      try {
+        const atual = telaDoConviteQueMudou(
+          lerPrevia(await rpc("get_invite_preview", { p_token: token })),
+        );
+        return atual ?? telaDoErro(codigo);
+      } catch {
+        return telaDoErro(codigo);
+      }
+    };
+    if (await enviar(() => rpc("decline_invite", { p_token: token }), telaAtual)) {
       await navegar({ to: "/", replace: true });
     }
   }

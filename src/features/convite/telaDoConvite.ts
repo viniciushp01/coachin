@@ -124,6 +124,16 @@ function telaDoConviteDeProfessor(
 }
 
 /**
+ * A tela do estado atual quando o convite mudou antes de a pessoa agir (regra 146): "Agora não"
+ * só recebe `invite_not_pending` do banco, então a prévia é lida de novo. Convite ainda válido ou
+ * professor bloqueado (regra 133) não tem tela de "mudou": fica o toast.
+ */
+export function telaDoConviteQueMudou(previa: PreviaDoConvite): TelaDoConvite | null {
+  if (previa.estado === "valido" || previa.estado === "indisponivel") return null;
+  return telaDoConvite(previa, { tipo: "anonimo" });
+}
+
+/**
  * Erros de `accept_teacher_invite` e `decline_invite` no convite de professor com tela própria:
  * todo convite que mudou é "Este link não vale mais". `decline_invite` responde só
  * `invite_not_pending`; `already_teacher` é o convite já ativado (ex.: em outra aba), porque o
