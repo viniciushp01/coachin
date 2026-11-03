@@ -358,6 +358,7 @@ begin
   perform t.su();
   update public.workouts set start_date = start_date - 10 where id = v_w;
   select removed_at into v_removed from public.workout_days where id = dB;
+  perform t.ok((select last_done_on is null and last_done_letter is null from public.teacher_student_list where student_id = v_s), 'lista: sem marcação, sem data nem ficha do último treino');
 
   perform t.login('s1');
   perform public.mark_done(dA, t.today() - 5, a1);
@@ -383,6 +384,22 @@ begin
   perform t.err($q$ delete from public.completions $q$, 'permission denied');
   perform t.login('t2');
   perform t.ok((select count(*) from public.completions) = 0, 'outro professor não lê marcações');
+
+  -- regra 147 (1): ficha do último treino na lista (migration 0010)
+  perform t.login('t1');
+  perform t.ok((select last_done_on = t.today() - 2 and last_done_letter = 'B' from public.teacher_student_list where student_id = v_s), 'lista: ficha do último treino');
+  perform t.login('s1');
+  perform public.mark_done((t.get('dayC'))::uuid, t.today() - 2, gen_random_uuid(), v_removed - interval '2 hours');
+  perform t.login('t1');
+  perform t.ok((select last_done_letter from public.teacher_student_list where student_id = v_s) = 'B', 'lista: duas fichas no mesmo dia, vale a marcada por último (B)');
+  perform t.login('s1');
+  perform public.undo_done((t.get('dayC'))::uuid, t.today() - 2);
+  perform public.mark_done((t.get('dayC'))::uuid, t.today() - 2, gen_random_uuid(), v_removed - interval '30 minutes');
+  perform t.login('t1');
+  perform t.ok((select last_done_letter from public.teacher_student_list where student_id = v_s) = 'C', 'lista: duas fichas no mesmo dia, vale a marcada por último (C)');
+  perform t.login('s1');
+  perform public.undo_done((t.get('dayC'))::uuid, t.today() - 2);
+  perform t.login('t1');
 
   -- Cargas (última edição por HORA DA AÇÃO, não do envio)
   perform t.login('s1');

@@ -758,6 +758,7 @@ export type Database = {
           invite_expires_at: string | null
           invite_id: string | null
           invite_state: string | null
+          last_done_letter: string | null
           last_done_on: string | null
           link_status: Database["public"]["Enums"]["link_status"] | null
           list_status: string | null

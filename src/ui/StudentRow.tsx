@@ -5,7 +5,9 @@ import { Icon } from "./Icon";
 type StudentRowProps = {
   nome: string;
   status: { tom: TomChip; texto: string };
-  /** Sem detalhe, a linha mostra só nome e chip (aluno vinculado até #77). */
+  /** Segundo chip, ao lado do status (camada `Solicitação` do Figma, ex.: "Pediu treino"). */
+  solicitacao?: { tom: TomChip; texto: string };
+  /** Sem detalhe, a linha mostra só nome e chip. */
   detalhe?: string;
   /** Sem ação, a linha não é botão e não mostra a seta. */
   onClick?: () => void;
@@ -13,14 +15,18 @@ type StudentRowProps = {
 
 /**
  * Linha de pessoa na lista (Figma `StudentRow`; também a de professores do administrador):
- * nome e detalhe truncam em 1 linha (regra 114), chip de status, seta quando abre a pessoa.
+ * nome e detalhe truncam em 1 linha (regra 114), chip de status (e o da solicitação, na mesma
+ * linha, sem quebrar), seta quando abre a pessoa.
  */
-export function StudentRow({ nome, status, detalhe, onClick }: StudentRowProps) {
+export function StudentRow({ nome, status, solicitacao, detalhe, onClick }: StudentRowProps) {
   const conteudo = (
     <>
       <span className="flex min-w-0 flex-1 flex-col items-start gap-8">
         <span className="w-full truncate text-body-strong text-text-primary">{nome}</span>
-        <Chip tom={status.tom}>{status.texto}</Chip>
+        <span className="flex max-w-full flex-nowrap gap-8 overflow-hidden">
+          <Chip tom={status.tom}>{status.texto}</Chip>
+          {solicitacao && <Chip tom={solicitacao.tom}>{solicitacao.texto}</Chip>}
+        </span>
         {detalhe && (
           <span className="w-full truncate text-caption text-text-secondary">{detalhe}</span>
         )}
