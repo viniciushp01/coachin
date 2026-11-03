@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  buscarPorNome,
   montarLista,
   resumoDaLista,
   type ConviteDeProfessor,
@@ -104,26 +103,6 @@ describe("montarLista (regras 92 e 102)", () => {
   it("convite sem nome mostra o e-mail", () => {
     const [linha] = montarLista([], [convite({ id: "c1", email: "x@exemplo.com" })], agora);
     expect(linha?.nome).toBe("x@exemplo.com");
-  });
-});
-
-describe("buscarPorNome", () => {
-  const linhas = montarLista(
-    [
-      perfil({ id: "p1", full_name: "Carlos Almeida" }),
-      perfil({ id: "p2", full_name: "Márcia Lopes" }),
-    ],
-    [],
-    agora,
-  );
-
-  it("ignora maiúsculas, acentos e espaços nas pontas", () => {
-    expect(buscarPorNome(linhas, " marcia ").map((l) => l.nome)).toEqual(["Márcia Lopes"]);
-    expect(buscarPorNome(linhas, "ALM").map((l) => l.nome)).toEqual(["Carlos Almeida"]);
-  });
-
-  it("busca vazia devolve todos", () => {
-    expect(buscarPorNome(linhas, "  ")).toHaveLength(2);
   });
 });
 

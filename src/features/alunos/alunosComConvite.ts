@@ -1,11 +1,9 @@
 import { erroDaResposta } from "@/lib/erros";
 import { supabase } from "@/lib/supabase";
 import {
-  CHIP_DO_ESTADO,
   COLUNAS_DO_CONVITE,
   estadoDoConvite,
   estadoVisivel,
-  textoDaRecusa,
   type AlunoComConvite,
 } from "./conviteDoAluno";
 
@@ -38,34 +36,4 @@ export async function lerAlunoComConvite(
     aluno: { id: aluno.data.id, nome: aluno.data.name, email: aluno.data.email },
     convite: convite.data,
   };
-}
-
-export type LinhaProvisoria = { id: string; nome: string; detalhe: string };
-
-/**
- * Lista provisória dos alunos com convite, em ordem alfabética, até a Lista de alunos da fatia 3
- * (regras 55, 59 e 102). Serve para chegar à tela do aluno com convite.
- */
-export async function lerAlunosComConvite(agora = new Date()): Promise<LinhaProvisoria[]> {
-  const [alunos, convites] = await Promise.all([
-    supabase.from("students").select("id, name").eq("status", "invited").order("name"),
-    supabase
-      .from("invites")
-      .select(`student_id, ${COLUNAS_DO_CONVITE}`)
-      .eq("kind", "student")
-      .order("created_at", { ascending: false }),
-  ]);
-  if (alunos.error) throw erroDaResposta(alunos.error);
-  if (convites.error) throw erroDaResposta(convites.error);
-  const maisRecente = new Map<string, (typeof convites.data)[number]>();
-  for (const c of convites.data) {
-    if (c.student_id && !maisRecente.has(c.student_id)) maisRecente.set(c.student_id, c);
-  }
-  return alunos.data.flatMap((a) => {
-    const convite = maisRecente.get(a.id);
-    const estado = convite && estadoDoConvite(convite, agora);
-    if (!convite || !estado || !estadoVisivel(estado)) return [];
-    const detalhe = estado === "recusado" ? textoDaRecusa(convite) : CHIP_DO_ESTADO[estado].texto;
-    return [{ id: a.id, nome: a.name, detalhe }];
-  });
 }

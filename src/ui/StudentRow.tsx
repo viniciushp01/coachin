@@ -5,7 +5,8 @@ import { Icon } from "./Icon";
 type StudentRowProps = {
   nome: string;
   status: { tom: TomChip; texto: string };
-  detalhe: string;
+  /** Sem detalhe, a linha mostra só nome e chip (aluno vinculado até #77). */
+  detalhe?: string;
   /** Sem ação, a linha não é botão e não mostra a seta. */
   onClick?: () => void;
 };
@@ -20,7 +21,9 @@ export function StudentRow({ nome, status, detalhe, onClick }: StudentRowProps) 
       <span className="flex min-w-0 flex-1 flex-col items-start gap-8">
         <span className="w-full truncate text-body-strong text-text-primary">{nome}</span>
         <Chip tom={status.tom}>{status.texto}</Chip>
-        <span className="w-full truncate text-caption text-text-secondary">{detalhe}</span>
+        {detalhe && (
+          <span className="w-full truncate text-caption text-text-secondary">{detalhe}</span>
+        )}
       </span>
       {onClick && (
         <span className="shrink-0 text-text-secondary">

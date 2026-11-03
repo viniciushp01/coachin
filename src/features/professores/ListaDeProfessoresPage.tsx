@@ -1,9 +1,9 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { FolhaSair } from "@/features/acesso/FolhaSair";
+import { buscarPorNome } from "@/lib/listas";
 import { BarraFixa, Button, EmptyState, IconButton, SearchField, StudentRow, Tela } from "@/ui";
 import {
-  buscarPorNome,
   CHIP_DO_PROFESSOR,
   resumoDaLista,
   type EstadoDoProfessor,
