@@ -90,6 +90,60 @@ export type Database = {
           },
         ]
       }
+      equipment: {
+        Row: {
+          category: string
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          category: string
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Update: {
+          category?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      exercise_equipment: {
+        Row: {
+          equipment_slug: string
+          exercise_id: string
+          position: number
+        }
+        Insert: {
+          equipment_slug: string
+          exercise_id: string
+          position: number
+        }
+        Update: {
+          equipment_slug?: string
+          exercise_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_equipment_equipment_slug_fkey"
+            columns: ["equipment_slug"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "exercise_equipment_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercise_hidden: {
         Row: {
           exercise_id: string
@@ -125,30 +179,55 @@ export type Database = {
       }
       exercises: {
         Row: {
+          aliases: string[]
+          aliases_normalized: string
+          catalog_version: number | null
           created_at: string
           id: string
+          load_mode: string
+          measure: string
           muscle_group: string | null
           name: string
           name_normalized: string
           owner_id: string | null
+          slug: string | null
         }
         Insert: {
+          aliases?: string[]
+          aliases_normalized?: string
+          catalog_version?: number | null
           created_at?: string
           id?: string
+          load_mode?: string
+          measure?: string
           muscle_group?: string | null
           name: string
           name_normalized: string
           owner_id?: string | null
+          slug?: string | null
         }
         Update: {
+          aliases?: string[]
+          aliases_normalized?: string
+          catalog_version?: number | null
           created_at?: string
           id?: string
+          load_mode?: string
+          measure?: string
           muscle_group?: string | null
           name?: string
           name_normalized?: string
           owner_id?: string | null
+          slug?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "exercises_muscle_group_fkey"
+            columns: ["muscle_group"]
+            isOneToOne: false
+            referencedRelation: "muscle_groups"
+            referencedColumns: ["name"]
+          },
           {
             foreignKeyName: "exercises_owner_id_fkey"
             columns: ["owner_id"]
@@ -288,6 +367,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      muscle_groups: {
+        Row: {
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          name: string
+          sort_order: number
+        }
+        Update: {
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -815,14 +909,25 @@ export type Database = {
       cancel_training_request: { Args: never; Returns: undefined }
       claim_invite_email: { Args: { p_token: string }; Returns: Json }
       create_exercise: {
-        Args: { p_muscle_group?: string; p_name: string }
+        Args: {
+          p_load_mode?: string
+          p_measure?: string
+          p_muscle_group?: string
+          p_name: string
+        }
         Returns: {
+          aliases: string[]
+          aliases_normalized: string
+          catalog_version: number | null
           created_at: string
           id: string
+          load_mode: string
+          measure: string
           muscle_group: string | null
           name: string
           name_normalized: string
           owner_id: string | null
+          slug: string | null
         }
         SetofOptions: {
           from: "*"
@@ -875,12 +980,18 @@ export type Database = {
       search_exercises: {
         Args: { p_hidden_only?: boolean; p_limit?: number; p_query?: string }
         Returns: {
+          aliases: string[]
+          aliases_normalized: string
+          catalog_version: number | null
           created_at: string
           id: string
+          load_mode: string
+          measure: string
           muscle_group: string | null
           name: string
           name_normalized: string
           owner_id: string | null
+          slug: string | null
         }[]
         SetofOptions: {
           from: "*"
@@ -912,12 +1023,18 @@ export type Database = {
       similar_exercises: {
         Args: { p_name: string }
         Returns: {
+          aliases: string[]
+          aliases_normalized: string
+          catalog_version: number | null
           created_at: string
           id: string
+          load_mode: string
+          measure: string
           muscle_group: string | null
           name: string
           name_normalized: string
           owner_id: string | null
+          slug: string | null
         }[]
         SetofOptions: {
           from: "*"

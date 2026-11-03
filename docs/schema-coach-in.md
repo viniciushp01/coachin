@@ -1,6 +1,6 @@
 # Coach In · Desenho do banco de dados (para revisão)
 
-Estado: **aplicado no Supabase** (0001 a 0005 em 27/10/2026, 0006 em 28/10/2026, 0008 em 29/10/2026, 0009 em 30/10/2026, 0010 em 03/11/2026; a 0007, do catálogo, está no PR #4 e não foi aplicada; ver "Resultado da aplicação" no fim). As migrations foram testadas num Postgres 17 (PGlite) com a camada de autenticação do Supabase simulada (247 verificações, todas passando). Base de regras: `contexto-produto.md` (regras 1 a 122) e as decisões de 27/10 (arquivar na troca de professor, exercícios e cargas seguem o aluno).
+Estado: **aplicado no Supabase** (0001 a 0005 em 27/10/2026, 0006 em 28/10/2026, 0008 em 29/10/2026, 0009 em 30/10/2026, 0010 e 0007 em 03/11/2026; a 0007 entrou depois da 0010; ver "Resultado da aplicação" no fim). As migrations foram testadas num Postgres 17 (PGlite) com a camada de autenticação do Supabase simulada (247 verificações, todas passando). Base de regras: `contexto-produto.md` (regras 1 a 122) e as decisões de 27/10 (arquivar na troca de professor, exercícios e cargas seguem o aluno).
 
 Arquivos (em `supabase/`):
 
@@ -15,7 +15,7 @@ Arquivos (em `supabase/`):
 | `migrations/20261029213932_invite_preview_teacher_unavailable.sql` | 0008 · Regras 133, 134 e 137: `get_invite_preview` devolve `state = 'teacher_unavailable'` (convite de aluno válido de professor bloqueado) e `already_linked` (a conta logada já é aluno ativo desse professor) |
 | `migrations/20261030093359_invite_email_claim.sql` | 0009 · Regras 139 e 140 (#52): coluna `invites.email_sent_at` `claim_invite_email(token)` e `reissue_invite` recusando reenvio dentro de 60 s; confere o convite e o intervalo de 60 s antes da Edge Function `enviar-convite` enviar |
 | `migrations/20261103174813_teacher_list_last_done_letter.sql` | 0010 · Regra 147 (1) (#79, feita no #77): coluna `last_done_letter` no fim da view `teacher_student_list`, a letra da ficha da marcação mais recente (empate no mesmo dia: `marked_at` mais recente) |
-| `migrations/20261103190000_exercise_catalog.sql` | 0007 · Catálogo de exercícios (**pronta e testada, ainda não aplicada**): 249 pré-definidos (os 149 da 0004 renomeados no lugar, mesmo id), grupos musculares, equipamentos, apelidos, carga e medida; busca por apelido |
+| `migrations/20261103190000_exercise_catalog.sql` | 0007 · Catálogo de exercícios: 249 pré-definidos (os 149 da 0004 renomeados no lugar, mesmo id), grupos musculares, equipamentos, apelidos, carga e medida; busca por apelido |
 | `tests/` | Simulação do Supabase, 305 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
 
 ## 1. Como o banco funciona (5 ideias)
@@ -115,7 +115,7 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 2. Rodar o **Security Advisor** do Supabase depois (alertas de RLS ou de função sem `search_path`).
 3. Criar o administrador conforme o comentário no fim da migration 0001.
 
-**Ordem de aplicação:** os arquivos de `supabase/migrations/`, em ordem numérica (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link, 0008 invite_preview_teacher_unavailable, 0009 invite_email_claim, 0010 teacher_list_last_done_letter, 0007 exercise_catalog — esta ainda não aplicada; roda depois da 0010, com o arquivo renomeado para a versão real ao aplicar), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
+**Ordem de aplicação:** os arquivos de `supabase/migrations/`, em ordem numérica (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link, 0008 invite_preview_teacher_unavailable, 0009 invite_email_claim, 0010 teacher_list_last_done_letter, 0007 exercise_catalog, que roda depois da 0010), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
 
 **Rodar os testes:** `supabase/tests/run.sh` (precisa de Postgres 16 instalado e Linux/WSL/macOS; sobe e derruba um banco descartável) ou, sem Postgres (Windows), `npm --prefix supabase/tests/pglite install` e `node supabase/tests/pglite/run.mjs` (Postgres 17.5 em WebAssembly, PGlite 0.4.6, banco em memória, um comando por transação como o `psql -f`; `--sem-pgcrypto` troca `digest` e `gen_random_bytes` por equivalentes nativos só no harness). Os dois devem terminar com "TODOS OS TESTES PASSARAM".
 
@@ -165,10 +165,14 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 - **Advisor:** sem alerta novo (as mesmas 24 RPCs `security definer` para `authenticated`, `get_invite_preview` para `anon` e os dois avisos do Auth).
 - **Tipos:** regerados; sem diferença em relação ao `last_done_letter` já acrescentado em `database.types.ts`.
 
-### 0007 · Catálogo de exercícios (pronta, ainda não aplicada)
+### Resultado da aplicação da 0007 (03/11/2026, issue #3)
 
 - **Especificação e dados:** `docs/contexto/catalogo-exercicios.md` e `docs/contexto/exercicios.catalogo.json`.
 - **Testes:** 305 verificações no PGlite, com a 0007 rodando depois da 0010 (ordem real de aplicação) (35 novas na seção 6b; dois testes antigos passaram a usar os nomes novos "Puxada alta aberta" e "Tríceps na polia com corda").
-- **Antes de aplicar:** item 6 da Fase 0 verde; issue com o número 0007 reservado; um agente por vez. A migration para com erro se um dos 149 pré-definidos não for achado pelo nome da 0004, e avisa (NOTICE) se um professor já tiver exercício com nome igual ao de um do catálogo.
-- **Depois de aplicar:** gerar tipos (`create_exercise` muda de assinatura; `exercises` ganha colunas; 3 tabelas novas), rodar o Security Advisor, conferir 249 pré-definidos, 15 grupos e 55 equipamentos, e registrar o resultado aqui.
+- **Travas:** a migration para com erro se um dos 149 pré-definidos não for achado pelo nome da 0004, e avisa (NOTICE) se um professor já tiver exercício com nome igual ao de um do catálogo.
+- **Aplicação manual:** o `apply_migration` do MCP voltou "declined" três vezes, sem mostrar tela de aprovação (um teste com `update` e `drop table` em transação desfeita também foi recusado, e um sem eles passou; causa provável: comando destrutivo pede uma confirmação que o app não mostra). Por decisão do usuário, a migration rodou no SQL Editor do painel com **"Run without RLS"**: a opção "Run with RLS" deu `relation "_catalog" does not exist`, provavelmente por mexer nas tabelas temporárias, e não deixou nada no banco. A própria migration liga o RLS nas 3 tabelas novas.
+- **Registro:** versão `20261103190000` (nome do arquivo), inserida à mão em `supabase_migrations.schema_migrations`, sem o texto em `statements`.
+- **Conferido no banco:** 249 pré-definidos com slug, 15 grupos, 55 equipamentos, 305 ligações exercício-equipamento, nenhum exercício sem equipamento; carga 195 `required`, 16 `optional` e 38 `none`; 5 por tempo; RLS ligado e 3 políticas; `SELECT` só para `authenticated`; `create_exercise` de 4 parâmetros, sem `anon`; nenhuma tabela temporária sobrando.
+- **Advisor:** sem alerta novo (as mesmas 24 RPCs `security definer` para `authenticated`, `get_invite_preview` para `anon` e os dois avisos do Auth).
+- **Tipos:** regerados; `exercises` com as colunas novas, `equipment`, `exercise_equipment`, `muscle_groups` e `create_exercise` novo em `database.types.ts`.
 - **Efeito visível:** 61 exercícios mudam de nome e 11 de grupo (ids iguais). Não há fichas reais ainda.

@@ -2,7 +2,7 @@
 
 28/10/2026 · Vini
 
-**Estado (28/10/2026):** a migração `20261103190000_exercise_catalog.sql` e os testes estão prontos no branch `fatia-4/catalogo-exercicios` (274 verificações passando no PGlite). **Ainda não foi aplicada** no Supabase: isso espera o item 6 da Fase 0 e o Claude Code.
+**Estado (03/11/2026):** a migração `20261103190000_exercise_catalog.sql` (0007) foi aplicada no Supabase e está na `main` (PR #4). Resultado em `docs/schema-coach-in.md`.
 
 ## 1. Resumo para revisão
 
