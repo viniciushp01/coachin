@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { EstadoSessao } from "@/lib/destino";
 import {
   lerPrevia,
+  telaDoConviteQueMudou,
   telaDoConvite,
   telaDoErroDoConvite,
   telaDoErroDoConviteDeProfessor,
@@ -308,5 +309,38 @@ describe("telaDoErroDoConviteDeProfessor", () => {
     // Os casos do convite de aluno não viram "Este link não vale mais" no de professor.
     expect(telaDoErroDoConviteDeProfessor("role_not_allowed")).toBeNull();
     expect(telaDoErroDoConviteDeProfessor("already_linked")).toBeNull();
+  });
+});
+
+describe("telaDoConviteQueMudou (Agora não num convite que já não está pendente, regra 146)", () => {
+  const base = { professor: "Carlos", email: null, temConta: null, jaVinculado: false } as const;
+  type Estado = "valido" | "expirado" | "usado" | "substituido" | "recusado" | "indisponivel";
+  const aluno = (estado: Estado) => ({ ...base, estado, tipo: "aluno" }) as PreviaDoConvite;
+  const professor = (estado: Estado) => ({ ...base, estado, tipo: "professor" }) as PreviaDoConvite;
+
+  it("convite de aluno: a tela do estado, na ordem da regra 137", () => {
+    expect(telaDoConviteQueMudou(aluno("usado"))).toEqual({ tela: "usado" });
+    expect(telaDoConviteQueMudou(aluno("substituido"))).toEqual({ tela: "nao_vale_mais" });
+    expect(telaDoConviteQueMudou(aluno("expirado"))).toEqual({
+      tela: "expirado",
+      professor: "Carlos",
+    });
+    expect(telaDoConviteQueMudou(aluno("recusado"))).toEqual({
+      tela: "expirado",
+      professor: "Carlos",
+    });
+    expect(telaDoConviteQueMudou({ estado: "invalido" })).toEqual({ tela: "nao_vale_mais" });
+  });
+
+  it("convite de professor que mudou: Este link não vale mais", () => {
+    for (const estado of ["usado", "substituido", "expirado", "recusado"] as const) {
+      expect(telaDoConviteQueMudou(professor(estado))).toEqual({ tela: "professor_nao_vale_mais" });
+    }
+  });
+
+  it("ainda válido ou professor bloqueado: sem tela, fica o toast (regra 133)", () => {
+    expect(telaDoConviteQueMudou(aluno("valido"))).toBeNull();
+    expect(telaDoConviteQueMudou(professor("valido"))).toBeNull();
+    expect(telaDoConviteQueMudou(aluno("indisponivel"))).toBeNull();
   });
 });

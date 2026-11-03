@@ -64,3 +64,11 @@ export function destinoDaRaiz(estado: EstadoSessao, conviteGuardado: string | nu
   }
   return { to: destino };
 }
+
+/**
+ * Quem abre o link do convite já logado e bloqueado vai para o bloqueio, antes de qualquer
+ * estado do convite (regra 137, passo 0; regras 95 e 119). Deslogado, o app ainda não sabe da conta.
+ */
+export function destinoDoConvite(estado: EstadoSessao): "/bloqueado" | null {
+  return estado.tipo === "logado" && estado.bloqueado ? "/bloqueado" : null;
+}

@@ -245,6 +245,47 @@ describe("Vincular ao professor? (regras 79, 84, 97, 102 e 108)", () => {
     expect(navegar).toHaveBeenCalledWith({ to: "/", replace: true });
   });
 
+  it.each([
+    ["used", "Este convite já foi usado"],
+    ["replaced", "Este link não vale mais"],
+    ["expired", "Este convite expirou"],
+    ["declined", "Este convite expirou"],
+  ])(
+    '"Agora não" com convite que mudou (%s): tela do estado, sem toast (regra 146)',
+    async (state, titulo) => {
+      rpc.mockImplementation(async (nome: string) => {
+        if (nome === "get_invite_preview")
+          return { state, kind: "student", inviter_name: "Carlos" };
+        throw new ErroApp("invite_not_pending");
+      });
+      const usuario = abrir(tela);
+      await usuario.click(screen.getByRole("button", { name: "Agora não" }));
+      expect(await screen.findByRole("heading", { name: titulo })).toBeVisible();
+      expect(rpc).toHaveBeenCalledWith("get_invite_preview", { p_token: "tok-1" });
+      expect(navegar).not.toHaveBeenCalled();
+    },
+  );
+
+  it('"Agora não" com professor bloqueado depois de abrir o link: toast (regra 133)', async () => {
+    rpc.mockImplementation(async () => {
+      throw new ErroApp("teacher_unavailable");
+    });
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Agora não" }));
+    expect(await screen.findByText("Este professor não está disponível.")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Vincular ao professor?" })).toBeVisible();
+  });
+
+  it('"Agora não" sem conexão ao reler o convite: toast e a tela fica', async () => {
+    rpc.mockImplementation(async (nome: string) => {
+      throw new ErroApp(nome === "decline_invite" ? "invite_not_pending" : "sem_conexao");
+    });
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Agora não" }));
+    expect(await screen.findByText("Este convite não está mais pendente.")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Vincular ao professor?" })).toBeVisible();
+  });
+
   it('"Usar outra conta" sai deste aparelho e vai ao Login guardando o convite (regra 97)', async () => {
     sair.mockResolvedValue(undefined);
     const usuario = abrir(tela);
@@ -392,6 +433,19 @@ describe("Ativar acesso de professor? (regras 93, 97 e 102)", () => {
     expect(navegar).toHaveBeenCalledWith({ to: "/", replace: true });
   });
 
+  it('"Agora não" com convite de professor que mudou: Este link não vale mais (regra 146)', async () => {
+    rpc.mockImplementation(async (nome: string) => {
+      if (nome === "get_invite_preview") {
+        return { state: "used", kind: "teacher", inviter_name: "Admin" };
+      }
+      throw new ErroApp("invite_not_pending");
+    });
+    const usuario = abrir(tela);
+    await usuario.click(screen.getByRole("button", { name: "Agora não" }));
+    expect(await screen.findByRole("heading", { name: "Este link não vale mais" })).toBeVisible();
+    expect(navegar).not.toHaveBeenCalled();
+  });
+
   it("convite que mudou no meio do caminho: Este link não vale mais (do professor)", async () => {
     rpc.mockImplementation(async () => {
       throw new ErroApp("invite_expired");
@@ -404,16 +458,6 @@ describe("Ativar acesso de professor? (regras 93, 97 e 102)", () => {
         "Ele expirou, já foi usado ou foi substituído por outro. Peça um novo link de ativação a quem administra o Coach In.",
       ),
     ).toBeVisible();
-    expect(navegar).not.toHaveBeenCalled();
-  });
-
-  it('"Agora não" com convite que já não está pendente: Este link não vale mais', async () => {
-    rpc.mockImplementation(async () => {
-      throw new ErroApp("invite_not_pending");
-    });
-    const usuario = abrir(tela);
-    await usuario.click(screen.getByRole("button", { name: "Agora não" }));
-    expect(await screen.findByRole("heading", { name: "Este link não vale mais" })).toBeVisible();
     expect(navegar).not.toHaveBeenCalled();
   });
 
