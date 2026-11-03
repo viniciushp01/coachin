@@ -1,6 +1,6 @@
 # Coach In · Desenho do banco de dados (para revisão)
 
-Estado: **aplicado no Supabase** (0001 a 0005 em 27/10/2026, 0006 em 28/10/2026, 0008 em 29/10/2026, 0009 em 30/10/2026; a 0010, da lista de alunos, está no PR do #77 e ainda não foi aplicada; a 0007, do catálogo, está no PR #4 e não foi aplicada; ver "Resultado da aplicação" no fim). As migrations foram testadas num Postgres 17 (PGlite) com a camada de autenticação do Supabase simulada (247 verificações, todas passando). Base de regras: `contexto-produto.md` (regras 1 a 122) e as decisões de 27/10 (arquivar na troca de professor, exercícios e cargas seguem o aluno).
+Estado: **aplicado no Supabase** (0001 a 0005 em 27/10/2026, 0006 em 28/10/2026, 0008 em 29/10/2026, 0009 em 30/10/2026, 0010 em 03/11/2026; a 0007, do catálogo, está no PR #4 e não foi aplicada; ver "Resultado da aplicação" no fim). As migrations foram testadas num Postgres 17 (PGlite) com a camada de autenticação do Supabase simulada (247 verificações, todas passando). Base de regras: `contexto-produto.md` (regras 1 a 122) e as decisões de 27/10 (arquivar na troca de professor, exercícios e cargas seguem o aluno).
 
 Arquivos (em `supabase/`):
 
@@ -14,7 +14,7 @@ Arquivos (em `supabase/`):
 | `migrations/20261028094329_workout_before_link.sql` | 0006 · Regra 122: professor cria e edita treino para convite pendente, expirado ou recusado (`save_workout` e leitura de treinos) |
 | `migrations/20261029213932_invite_preview_teacher_unavailable.sql` | 0008 · Regras 133, 134 e 137: `get_invite_preview` devolve `state = 'teacher_unavailable'` (convite de aluno válido de professor bloqueado) e `already_linked` (a conta logada já é aluno ativo desse professor) |
 | `migrations/20261030093359_invite_email_claim.sql` | 0009 · Regras 139 e 140 (#52): coluna `invites.email_sent_at` `claim_invite_email(token)` e `reissue_invite` recusando reenvio dentro de 60 s; confere o convite e o intervalo de 60 s antes da Edge Function `enviar-convite` enviar |
-| `migrations/20261103120000_teacher_list_last_done_letter.sql` | 0010 · Regra 147 (1) (#79, feita no #77): coluna `last_done_letter` no fim da view `teacher_student_list`, a letra da ficha da marcação mais recente (empate no mesmo dia: `marked_at` mais recente) |
+| `migrations/20261103174813_teacher_list_last_done_letter.sql` | 0010 · Regra 147 (1) (#79, feita no #77): coluna `last_done_letter` no fim da view `teacher_student_list`, a letra da ficha da marcação mais recente (empate no mesmo dia: `marked_at` mais recente) |
 | `tests/` | Simulação do Supabase, 247 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
 
 ## 1. Como o banco funciona (5 ideias)
@@ -153,8 +153,10 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 - **Tipos:** regerados; `email_sent_at` e `claim_invite_email` em `database.types.ts`.
 - **Edge Function:** `enviar-convite` publicada (versão 1, `verify_jwt = true`).
 
-### 0010 (pendente de aplicação, issues #77 e #79)
+### Resultado da aplicação da 0010 (03/11/2026, issues #77 e #79)
 
 - **O que muda:** só a view `teacher_student_list` (`create or replace view`, `security_invoker` e grants mantidos). Coluna nova `last_done_letter` no fim; o `lateral` do último treino passa a pegar a marcação mais recente (`done_on` e depois `marked_at`, desc) com a letra de `workout_days`. `last_done_on` não muda de valor.
 - **Testes (PGlite, Postgres 17.5):** os testes novos (seção 8) falham sem ela. Com a 0010, **270 verificações**.
-- **Tipos:** `last_done_letter: string | null` acrescentado à mão em `database.types.ts` (a view no projeto real ainda não tem a coluna); regerar depois de aplicar.
+- **Aplicação:** registrada como versão `20261103174813` (arquivo local renomeado para essa versão). Conferido: colunas na mesma ordem, `last_done_letter` no fim, `security_invoker=true`, `SELECT` só para `authenticated`.
+- **Advisor:** sem alerta novo (as mesmas 24 RPCs `security definer` para `authenticated`, `get_invite_preview` para `anon` e os dois avisos do Auth).
+- **Tipos:** regerados; sem diferença em relação ao `last_done_letter` já acrescentado em `database.types.ts`.
