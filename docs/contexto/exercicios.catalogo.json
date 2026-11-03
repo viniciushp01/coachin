@@ -1,0 +1,3498 @@
+{
+  "versao": 1,
+  "grupos_musculares": [
+    {
+      "slug": "peito",
+      "nome": "Peito",
+      "ordem": 1
+    },
+    {
+      "slug": "costas",
+      "nome": "Costas",
+      "ordem": 2
+    },
+    {
+      "slug": "ombros",
+      "nome": "Ombros",
+      "ordem": 3
+    },
+    {
+      "slug": "biceps",
+      "nome": "Bíceps",
+      "ordem": 4
+    },
+    {
+      "slug": "triceps",
+      "nome": "Tríceps",
+      "ordem": 5
+    },
+    {
+      "slug": "antebraco",
+      "nome": "Antebraço",
+      "ordem": 6
+    },
+    {
+      "slug": "abdomen",
+      "nome": "Abdômen",
+      "ordem": 7
+    },
+    {
+      "slug": "lombar",
+      "nome": "Lombar",
+      "ordem": 8
+    },
+    {
+      "slug": "gluteos",
+      "nome": "Glúteos",
+      "ordem": 9
+    },
+    {
+      "slug": "quadriceps",
+      "nome": "Quadríceps",
+      "ordem": 10
+    },
+    {
+      "slug": "posteriores",
+      "nome": "Posterior de coxa",
+      "ordem": 11
+    },
+    {
+      "slug": "adutores",
+      "nome": "Adutores",
+      "ordem": 12
+    },
+    {
+      "slug": "abdutores",
+      "nome": "Abdutores",
+      "ordem": 13
+    },
+    {
+      "slug": "panturrilhas",
+      "nome": "Panturrilha",
+      "ordem": 14
+    },
+    {
+      "slug": "trapezio",
+      "nome": "Trapézio",
+      "ordem": 15
+    }
+  ],
+  "equipamentos": [
+    {
+      "slug": "barra_reta",
+      "nome": "Barra reta",
+      "categoria": "Peso livre",
+      "ordem": 1
+    },
+    {
+      "slug": "barra_w",
+      "nome": "Barra W",
+      "categoria": "Peso livre",
+      "ordem": 2
+    },
+    {
+      "slug": "barra_hexagonal",
+      "nome": "Barra hexagonal",
+      "categoria": "Peso livre",
+      "ordem": 3
+    },
+    {
+      "slug": "halteres",
+      "nome": "Halteres",
+      "categoria": "Peso livre",
+      "ordem": 4
+    },
+    {
+      "slug": "kettlebell",
+      "nome": "Kettlebell",
+      "categoria": "Peso livre",
+      "ordem": 5
+    },
+    {
+      "slug": "anilha",
+      "nome": "Anilha",
+      "categoria": "Peso livre",
+      "ordem": 6
+    },
+    {
+      "slug": "caneleira",
+      "nome": "Caneleira",
+      "categoria": "Peso livre",
+      "ordem": 7
+    },
+    {
+      "slug": "banco_reto",
+      "nome": "Banco reto",
+      "categoria": "Bancos e estruturas",
+      "ordem": 8
+    },
+    {
+      "slug": "banco_ajustavel",
+      "nome": "Banco ajustável",
+      "categoria": "Bancos e estruturas",
+      "ordem": 9
+    },
+    {
+      "slug": "banco_declinado",
+      "nome": "Banco declinado",
+      "categoria": "Bancos e estruturas",
+      "ordem": 10
+    },
+    {
+      "slug": "banco_scott",
+      "nome": "Banco Scott",
+      "categoria": "Bancos e estruturas",
+      "ordem": 11
+    },
+    {
+      "slug": "banco_hiperextensao",
+      "nome": "Banco de hiperextensão",
+      "categoria": "Bancos e estruturas",
+      "ordem": 12
+    },
+    {
+      "slug": "cadeira_romana",
+      "nome": "Cadeira romana",
+      "categoria": "Bancos e estruturas",
+      "ordem": 13
+    },
+    {
+      "slug": "rack_agachamento",
+      "nome": "Rack de agachamento",
+      "categoria": "Bancos e estruturas",
+      "ordem": 14
+    },
+    {
+      "slug": "smith",
+      "nome": "Smith",
+      "categoria": "Bancos e estruturas",
+      "ordem": 15
+    },
+    {
+      "slug": "paralelas",
+      "nome": "Paralelas",
+      "categoria": "Bancos e estruturas",
+      "ordem": 16
+    },
+    {
+      "slug": "barra_fixa",
+      "nome": "Barra fixa",
+      "categoria": "Bancos e estruturas",
+      "ordem": 17
+    },
+    {
+      "slug": "step_caixa",
+      "nome": "Step ou caixa",
+      "categoria": "Bancos e estruturas",
+      "ordem": 18
+    },
+    {
+      "slug": "landmine",
+      "nome": "Landmine",
+      "categoria": "Bancos e estruturas",
+      "ordem": 19
+    },
+    {
+      "slug": "polia",
+      "nome": "Polia (cabos)",
+      "categoria": "Polia",
+      "ordem": 20
+    },
+    {
+      "slug": "supino_maquina",
+      "nome": "Supino (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 21
+    },
+    {
+      "slug": "supino_inclinado_maquina",
+      "nome": "Supino inclinado (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 22
+    },
+    {
+      "slug": "voador",
+      "nome": "Voador",
+      "categoria": "Máquinas",
+      "ordem": 23
+    },
+    {
+      "slug": "puxada_maquina",
+      "nome": "Puxada (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 24
+    },
+    {
+      "slug": "remada_maquina",
+      "nome": "Remada (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 25
+    },
+    {
+      "slug": "remada_cavalinho",
+      "nome": "Remada cavalinho",
+      "categoria": "Máquinas",
+      "ordem": 26
+    },
+    {
+      "slug": "pullover_maquina",
+      "nome": "Pullover (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 27
+    },
+    {
+      "slug": "graviton",
+      "nome": "Barra assistida (Graviton)",
+      "categoria": "Máquinas",
+      "ordem": 28
+    },
+    {
+      "slug": "desenvolvimento_maquina",
+      "nome": "Desenvolvimento (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 29
+    },
+    {
+      "slug": "elevacao_lateral_maquina",
+      "nome": "Elevação lateral (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 30
+    },
+    {
+      "slug": "rosca_maquina",
+      "nome": "Rosca (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 31
+    },
+    {
+      "slug": "triceps_maquina",
+      "nome": "Tríceps (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 32
+    },
+    {
+      "slug": "abdominal_maquina",
+      "nome": "Abdominal (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 33
+    },
+    {
+      "slug": "rotacao_maquina",
+      "nome": "Rotação de tronco (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 34
+    },
+    {
+      "slug": "lombar_maquina",
+      "nome": "Lombar (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 35
+    },
+    {
+      "slug": "leg_press_45",
+      "nome": "Leg press 45°",
+      "categoria": "Máquinas",
+      "ordem": 36
+    },
+    {
+      "slug": "leg_press_horizontal",
+      "nome": "Leg press horizontal",
+      "categoria": "Máquinas",
+      "ordem": 37
+    },
+    {
+      "slug": "hack",
+      "nome": "Hack",
+      "categoria": "Máquinas",
+      "ordem": 38
+    },
+    {
+      "slug": "pendulo",
+      "nome": "Pêndulo",
+      "categoria": "Máquinas",
+      "ordem": 39
+    },
+    {
+      "slug": "extensora",
+      "nome": "Cadeira extensora",
+      "categoria": "Máquinas",
+      "ordem": 40
+    },
+    {
+      "slug": "mesa_flexora",
+      "nome": "Mesa flexora",
+      "categoria": "Máquinas",
+      "ordem": 41
+    },
+    {
+      "slug": "cadeira_flexora",
+      "nome": "Cadeira flexora",
+      "categoria": "Máquinas",
+      "ordem": 42
+    },
+    {
+      "slug": "flexora_em_pe",
+      "nome": "Flexora em pé",
+      "categoria": "Máquinas",
+      "ordem": 43
+    },
+    {
+      "slug": "cadeira_adutora",
+      "nome": "Cadeira adutora",
+      "categoria": "Máquinas",
+      "ordem": 44
+    },
+    {
+      "slug": "cadeira_abdutora",
+      "nome": "Cadeira abdutora",
+      "categoria": "Máquinas",
+      "ordem": 45
+    },
+    {
+      "slug": "gluteo_maquina",
+      "nome": "Glúteo (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 46
+    },
+    {
+      "slug": "hip_thrust_maquina",
+      "nome": "Elevação pélvica (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 47
+    },
+    {
+      "slug": "panturrilha_em_pe",
+      "nome": "Panturrilha em pé (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 48
+    },
+    {
+      "slug": "panturrilha_sentado",
+      "nome": "Panturrilha sentado (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 49
+    },
+    {
+      "slug": "encolhimento_maquina",
+      "nome": "Encolhimento (máquina)",
+      "categoria": "Máquinas",
+      "ordem": 50
+    },
+    {
+      "slug": "elastico",
+      "nome": "Elástico",
+      "categoria": "Acessórios",
+      "ordem": 51
+    },
+    {
+      "slug": "bola_suica",
+      "nome": "Bola suíça",
+      "categoria": "Acessórios",
+      "ordem": 52
+    },
+    {
+      "slug": "suspensao",
+      "nome": "Suspensão (TRX)",
+      "categoria": "Acessórios",
+      "ordem": 53
+    },
+    {
+      "slug": "roda_abdominal",
+      "nome": "Roda abdominal",
+      "categoria": "Acessórios",
+      "ordem": 54
+    },
+    {
+      "slug": "peso_corporal",
+      "nome": "Peso corporal",
+      "categoria": "Sem equipamento",
+      "ordem": 55
+    }
+  ],
+  "exercicios": [
+    {
+      "slug": "supino-reto-com-barra",
+      "nome": "Supino reto com barra",
+      "grupo": "peito",
+      "equipamentos": [
+        "barra_reta",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Supino",
+        "Supino reto",
+        "Bench press"
+      ]
+    },
+    {
+      "slug": "supino-inclinado-com-barra",
+      "nome": "Supino inclinado com barra",
+      "grupo": "peito",
+      "equipamentos": [
+        "barra_reta",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Supino inclinado"
+      ]
+    },
+    {
+      "slug": "supino-declinado-com-barra",
+      "nome": "Supino declinado com barra",
+      "grupo": "peito",
+      "equipamentos": [
+        "barra_reta",
+        "banco_declinado"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Supino declinado"
+      ]
+    },
+    {
+      "slug": "supino-reto-com-halteres",
+      "nome": "Supino reto com halteres",
+      "grupo": "peito",
+      "equipamentos": [
+        "halteres",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Supino com halteres"
+      ]
+    },
+    {
+      "slug": "supino-inclinado-com-halteres",
+      "nome": "Supino inclinado com halteres",
+      "grupo": "peito",
+      "equipamentos": [
+        "halteres",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "supino-declinado-com-halteres",
+      "nome": "Supino declinado com halteres",
+      "grupo": "peito",
+      "equipamentos": [
+        "halteres",
+        "banco_declinado"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "supino-reto-com-halteres-pegada-neutra",
+      "nome": "Supino reto com halteres, pegada neutra",
+      "grupo": "peito",
+      "equipamentos": [
+        "halteres",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "supino-reto-no-smith",
+      "nome": "Supino reto no Smith",
+      "grupo": "peito",
+      "equipamentos": [
+        "smith",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "supino-inclinado-no-smith",
+      "nome": "Supino inclinado no Smith",
+      "grupo": "peito",
+      "equipamentos": [
+        "smith",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "supino-reto-na-maquina",
+      "nome": "Supino reto na máquina",
+      "grupo": "peito",
+      "equipamentos": [
+        "supino_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Chest press",
+        "Supino articulado"
+      ]
+    },
+    {
+      "slug": "supino-inclinado-na-maquina",
+      "nome": "Supino inclinado na máquina",
+      "grupo": "peito",
+      "equipamentos": [
+        "supino_inclinado_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "supino-na-polia-em-pe",
+      "nome": "Supino na polia em pé",
+      "grupo": "peito",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "supino-no-chao-com-halteres",
+      "nome": "Supino no chão com halteres",
+      "grupo": "peito",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Floor press"
+      ]
+    },
+    {
+      "slug": "crucifixo-reto-com-halteres",
+      "nome": "Crucifixo reto com halteres",
+      "grupo": "peito",
+      "equipamentos": [
+        "halteres",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Crucifixo"
+      ]
+    },
+    {
+      "slug": "crucifixo-inclinado-com-halteres",
+      "nome": "Crucifixo inclinado com halteres",
+      "grupo": "peito",
+      "equipamentos": [
+        "halteres",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "crucifixo-declinado-com-halteres",
+      "nome": "Crucifixo declinado com halteres",
+      "grupo": "peito",
+      "equipamentos": [
+        "halteres",
+        "banco_declinado"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "crucifixo-na-maquina",
+      "nome": "Crucifixo na máquina",
+      "grupo": "peito",
+      "equipamentos": [
+        "voador"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Voador",
+        "Peck deck",
+        "Peitoral na máquina"
+      ]
+    },
+    {
+      "slug": "crucifixo-reto-na-polia",
+      "nome": "Crucifixo reto na polia",
+      "grupo": "peito",
+      "equipamentos": [
+        "polia",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "crucifixo-inclinado-na-polia",
+      "nome": "Crucifixo inclinado na polia",
+      "grupo": "peito",
+      "equipamentos": [
+        "polia",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "crossover-na-polia-alta",
+      "nome": "Crossover na polia alta",
+      "grupo": "peito",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Cross over",
+        "Cabo cruzado"
+      ]
+    },
+    {
+      "slug": "crossover-na-polia-media",
+      "nome": "Crossover na polia média",
+      "grupo": "peito",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "crossover-na-polia-baixa",
+      "nome": "Crossover na polia baixa",
+      "grupo": "peito",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "crossover-unilateral-na-polia",
+      "nome": "Crossover unilateral na polia",
+      "grupo": "peito",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "crucifixo-com-elastico",
+      "nome": "Crucifixo com elástico",
+      "grupo": "peito",
+      "equipamentos": [
+        "elastico"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "pullover-com-halter",
+      "nome": "Pullover com halter",
+      "grupo": "peito",
+      "equipamentos": [
+        "halteres",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Pull-over"
+      ]
+    },
+    {
+      "slug": "svend-press",
+      "nome": "Svend press",
+      "grupo": "peito",
+      "equipamentos": [
+        "anilha"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Press com anilha"
+      ]
+    },
+    {
+      "slug": "flexao-de-bracos",
+      "nome": "Flexão de braços",
+      "grupo": "peito",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Flexão",
+        "Flexão no chão"
+      ]
+    },
+    {
+      "slug": "flexao-de-bracos-com-joelhos-apoiados",
+      "nome": "Flexão de braços com joelhos apoiados",
+      "grupo": "peito",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "flexao-de-bracos-inclinada-maos-elevadas",
+      "nome": "Flexão de braços inclinada, mãos elevadas",
+      "grupo": "peito",
+      "equipamentos": [
+        "peso_corporal",
+        "banco_reto"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "flexao-de-bracos-declinada-pes-elevados",
+      "nome": "Flexão de braços declinada, pés elevados",
+      "grupo": "peito",
+      "equipamentos": [
+        "peso_corporal",
+        "banco_reto"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "flexao-de-bracos-no-trx",
+      "nome": "Flexão de braços no TRX",
+      "grupo": "peito",
+      "equipamentos": [
+        "suspensao"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "mergulho-nas-paralelas-foco-no-peito",
+      "nome": "Mergulho nas paralelas, foco no peito",
+      "grupo": "peito",
+      "equipamentos": [
+        "paralelas"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Paralelas",
+        "Dips"
+      ]
+    },
+    {
+      "slug": "puxada-alta-aberta",
+      "nome": "Puxada alta aberta",
+      "grupo": "costas",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Pulley",
+        "Puxador frente",
+        "Puxada frontal",
+        "Pulldown",
+        "Lat pulldown"
+      ]
+    },
+    {
+      "slug": "puxada-alta-supinada",
+      "nome": "Puxada alta supinada",
+      "grupo": "costas",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Puxada fechada supinada"
+      ]
+    },
+    {
+      "slug": "puxada-alta-com-triangulo",
+      "nome": "Puxada alta com triângulo",
+      "grupo": "costas",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Puxada neutra",
+        "Puxada fechada"
+      ]
+    },
+    {
+      "slug": "puxada-alta-atras-da-nuca",
+      "nome": "Puxada alta atrás da nuca",
+      "grupo": "costas",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Pulley atrás"
+      ]
+    },
+    {
+      "slug": "puxada-alta-unilateral",
+      "nome": "Puxada alta unilateral",
+      "grupo": "costas",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "puxada-na-maquina",
+      "nome": "Puxada na máquina",
+      "grupo": "costas",
+      "equipamentos": [
+        "puxada_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Puxada articulada"
+      ]
+    },
+    {
+      "slug": "pulldown-com-bracos-estendidos",
+      "nome": "Pulldown com braços estendidos",
+      "grupo": "costas",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Pullover na polia"
+      ]
+    },
+    {
+      "slug": "barra-fixa-pronada",
+      "nome": "Barra fixa pronada",
+      "grupo": "costas",
+      "equipamentos": [
+        "barra_fixa"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Barra fixa",
+        "Pull-up"
+      ]
+    },
+    {
+      "slug": "barra-fixa-supinada",
+      "nome": "Barra fixa supinada",
+      "grupo": "costas",
+      "equipamentos": [
+        "barra_fixa"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Chin-up"
+      ]
+    },
+    {
+      "slug": "barra-fixa-com-pegada-neutra",
+      "nome": "Barra fixa com pegada neutra",
+      "grupo": "costas",
+      "equipamentos": [
+        "barra_fixa"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "barra-fixa-assistida-na-maquina",
+      "nome": "Barra fixa assistida na máquina",
+      "grupo": "costas",
+      "equipamentos": [
+        "graviton"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Graviton"
+      ]
+    },
+    {
+      "slug": "barra-fixa-com-elastico",
+      "nome": "Barra fixa com elástico",
+      "grupo": "costas",
+      "equipamentos": [
+        "barra_fixa",
+        "elastico"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "remada-curvada-com-barra",
+      "nome": "Remada curvada com barra",
+      "grupo": "costas",
+      "equipamentos": [
+        "barra_reta"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Remada curvada"
+      ]
+    },
+    {
+      "slug": "remada-curvada-supinada-com-barra",
+      "nome": "Remada curvada supinada com barra",
+      "grupo": "costas",
+      "equipamentos": [
+        "barra_reta"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "remada-pendlay",
+      "nome": "Remada Pendlay",
+      "grupo": "costas",
+      "equipamentos": [
+        "barra_reta"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "remada-curvada-com-halteres",
+      "nome": "Remada curvada com halteres",
+      "grupo": "costas",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "remada-unilateral-com-halter",
+      "nome": "Remada unilateral com halter",
+      "grupo": "costas",
+      "equipamentos": [
+        "halteres",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Serrote",
+        "Remada serrote"
+      ]
+    },
+    {
+      "slug": "remada-com-apoio-no-banco-inclinado",
+      "nome": "Remada com apoio no banco inclinado",
+      "grupo": "costas",
+      "equipamentos": [
+        "halteres",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Remada com peito apoiado"
+      ]
+    },
+    {
+      "slug": "remada-cavalinho",
+      "nome": "Remada cavalinho",
+      "grupo": "costas",
+      "equipamentos": [
+        "remada_cavalinho"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Remada T",
+        "T-bar"
+      ]
+    },
+    {
+      "slug": "remada-com-landmine",
+      "nome": "Remada com landmine",
+      "grupo": "costas",
+      "equipamentos": [
+        "landmine"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "remada-baixa-com-triangulo",
+      "nome": "Remada baixa com triângulo",
+      "grupo": "costas",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Remada sentada",
+        "Remada baixa"
+      ]
+    },
+    {
+      "slug": "remada-baixa-com-barra-reta",
+      "nome": "Remada baixa com barra reta",
+      "grupo": "costas",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "remada-baixa-com-pegada-aberta",
+      "nome": "Remada baixa com pegada aberta",
+      "grupo": "costas",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "remada-unilateral-na-polia",
+      "nome": "Remada unilateral na polia",
+      "grupo": "costas",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "remada-sentada-na-maquina",
+      "nome": "Remada sentada na máquina",
+      "grupo": "costas",
+      "equipamentos": [
+        "remada_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Remada articulada"
+      ]
+    },
+    {
+      "slug": "remada-no-smith",
+      "nome": "Remada no Smith",
+      "grupo": "costas",
+      "equipamentos": [
+        "smith"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "remada-invertida-no-smith",
+      "nome": "Remada invertida no Smith",
+      "grupo": "costas",
+      "equipamentos": [
+        "smith"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Remada invertida",
+        "Remada australiana"
+      ]
+    },
+    {
+      "slug": "remada-invertida-no-trx",
+      "nome": "Remada invertida no TRX",
+      "grupo": "costas",
+      "equipamentos": [
+        "suspensao"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "pullover-na-maquina",
+      "nome": "Pullover na máquina",
+      "grupo": "costas",
+      "equipamentos": [
+        "pullover_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "remada-articulada-na-maquina",
+      "nome": "Remada articulada na máquina",
+      "grupo": "costas",
+      "equipamentos": [
+        "remada_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "desenvolvimento-militar-com-barra",
+      "nome": "Desenvolvimento militar com barra",
+      "grupo": "ombros",
+      "equipamentos": [
+        "barra_reta"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Desenvolvimento em pé",
+        "Military press"
+      ]
+    },
+    {
+      "slug": "desenvolvimento-com-barra-sentado",
+      "nome": "Desenvolvimento com barra sentado",
+      "grupo": "ombros",
+      "equipamentos": [
+        "barra_reta",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "desenvolvimento-com-halteres-sentado",
+      "nome": "Desenvolvimento com halteres sentado",
+      "grupo": "ombros",
+      "equipamentos": [
+        "halteres",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "desenvolvimento-com-halteres-em-pe",
+      "nome": "Desenvolvimento com halteres em pé",
+      "grupo": "ombros",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "desenvolvimento-arnold",
+      "nome": "Desenvolvimento Arnold",
+      "grupo": "ombros",
+      "equipamentos": [
+        "halteres",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Arnold press"
+      ]
+    },
+    {
+      "slug": "desenvolvimento-no-smith",
+      "nome": "Desenvolvimento no Smith",
+      "grupo": "ombros",
+      "equipamentos": [
+        "smith",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "desenvolvimento-na-maquina",
+      "nome": "Desenvolvimento na máquina",
+      "grupo": "ombros",
+      "equipamentos": [
+        "desenvolvimento_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Desenvolvimento articulado"
+      ]
+    },
+    {
+      "slug": "desenvolvimento-unilateral-com-landmine",
+      "nome": "Desenvolvimento unilateral com landmine",
+      "grupo": "ombros",
+      "equipamentos": [
+        "landmine"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "desenvolvimento-com-kettlebell",
+      "nome": "Desenvolvimento com kettlebell",
+      "grupo": "ombros",
+      "equipamentos": [
+        "kettlebell"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "flexao-pike",
+      "nome": "Flexão pike",
+      "grupo": "ombros",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "elevacao-lateral-com-halteres",
+      "nome": "Elevação lateral com halteres",
+      "grupo": "ombros",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Elevação lateral"
+      ]
+    },
+    {
+      "slug": "elevacao-lateral-sentado-com-halteres",
+      "nome": "Elevação lateral sentado com halteres",
+      "grupo": "ombros",
+      "equipamentos": [
+        "halteres",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "elevacao-lateral-na-polia",
+      "nome": "Elevação lateral na polia",
+      "grupo": "ombros",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "elevacao-lateral-na-maquina",
+      "nome": "Elevação lateral na máquina",
+      "grupo": "ombros",
+      "equipamentos": [
+        "elevacao_lateral_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "elevacao-lateral-com-elastico",
+      "nome": "Elevação lateral com elástico",
+      "grupo": "ombros",
+      "equipamentos": [
+        "elastico"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "elevacao-frontal-com-halteres",
+      "nome": "Elevação frontal com halteres",
+      "grupo": "ombros",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Elevação frontal"
+      ]
+    },
+    {
+      "slug": "elevacao-frontal-com-barra",
+      "nome": "Elevação frontal com barra",
+      "grupo": "ombros",
+      "equipamentos": [
+        "barra_reta"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "elevacao-frontal-com-anilha",
+      "nome": "Elevação frontal com anilha",
+      "grupo": "ombros",
+      "equipamentos": [
+        "anilha"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "elevacao-frontal-na-polia",
+      "nome": "Elevação frontal na polia",
+      "grupo": "ombros",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "crucifixo-invertido-com-halteres",
+      "nome": "Crucifixo invertido com halteres",
+      "grupo": "ombros",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Posterior de ombro"
+      ]
+    },
+    {
+      "slug": "crucifixo-invertido-no-banco-inclinado",
+      "nome": "Crucifixo invertido no banco inclinado",
+      "grupo": "ombros",
+      "equipamentos": [
+        "halteres",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "crucifixo-invertido-na-maquina",
+      "nome": "Crucifixo invertido na máquina",
+      "grupo": "ombros",
+      "equipamentos": [
+        "voador"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Voador invertido"
+      ]
+    },
+    {
+      "slug": "crucifixo-invertido-na-polia",
+      "nome": "Crucifixo invertido na polia",
+      "grupo": "ombros",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "face-pull",
+      "nome": "Face pull",
+      "grupo": "ombros",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Puxada para o rosto"
+      ]
+    },
+    {
+      "slug": "remada-alta-com-barra",
+      "nome": "Remada alta com barra",
+      "grupo": "ombros",
+      "equipamentos": [
+        "barra_reta"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Remada alta"
+      ]
+    },
+    {
+      "slug": "remada-alta-com-halteres",
+      "nome": "Remada alta com halteres",
+      "grupo": "ombros",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "remada-alta-na-polia",
+      "nome": "Remada alta na polia",
+      "grupo": "ombros",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rotacao-externa-na-polia",
+      "nome": "Rotação externa na polia",
+      "grupo": "ombros",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Manguito rotador"
+      ]
+    },
+    {
+      "slug": "rotacao-externa-com-halter-deitado-de-lado",
+      "nome": "Rotação externa com halter deitado de lado",
+      "grupo": "ombros",
+      "equipamentos": [
+        "halteres",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Manguito rotador"
+      ]
+    },
+    {
+      "slug": "elevacao-em-y-no-banco-inclinado",
+      "nome": "Elevação em Y no banco inclinado",
+      "grupo": "ombros",
+      "equipamentos": [
+        "halteres",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rosca-direta-com-barra-reta",
+      "nome": "Rosca direta com barra reta",
+      "grupo": "biceps",
+      "equipamentos": [
+        "barra_reta"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Rosca direta"
+      ]
+    },
+    {
+      "slug": "rosca-direta-com-barra-w",
+      "nome": "Rosca direta com barra W",
+      "grupo": "biceps",
+      "equipamentos": [
+        "barra_w"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Rosca W"
+      ]
+    },
+    {
+      "slug": "rosca-direta-na-polia-baixa",
+      "nome": "Rosca direta na polia baixa",
+      "grupo": "biceps",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rosca-alternada-com-halteres",
+      "nome": "Rosca alternada com halteres",
+      "grupo": "biceps",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Rosca alternada"
+      ]
+    },
+    {
+      "slug": "rosca-simultanea-com-halteres",
+      "nome": "Rosca simultânea com halteres",
+      "grupo": "biceps",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rosca-martelo-com-halteres",
+      "nome": "Rosca martelo com halteres",
+      "grupo": "biceps",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Rosca martelo"
+      ]
+    },
+    {
+      "slug": "rosca-martelo-cruzada",
+      "nome": "Rosca martelo cruzada",
+      "grupo": "biceps",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Rosca cross body"
+      ]
+    },
+    {
+      "slug": "rosca-martelo-na-polia-com-corda",
+      "nome": "Rosca martelo na polia com corda",
+      "grupo": "biceps",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rosca-concentrada",
+      "nome": "Rosca concentrada",
+      "grupo": "biceps",
+      "equipamentos": [
+        "halteres",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rosca-scott-com-barra-w",
+      "nome": "Rosca Scott com barra W",
+      "grupo": "biceps",
+      "equipamentos": [
+        "barra_w",
+        "banco_scott"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Rosca Scott"
+      ]
+    },
+    {
+      "slug": "rosca-scott-com-halter-unilateral",
+      "nome": "Rosca Scott com halter unilateral",
+      "grupo": "biceps",
+      "equipamentos": [
+        "halteres",
+        "banco_scott"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rosca-scott-na-maquina",
+      "nome": "Rosca Scott na máquina",
+      "grupo": "biceps",
+      "equipamentos": [
+        "rosca_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rosca-inclinada-com-halteres",
+      "nome": "Rosca inclinada com halteres",
+      "grupo": "biceps",
+      "equipamentos": [
+        "halteres",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rosca-spider",
+      "nome": "Rosca Spider",
+      "grupo": "biceps",
+      "equipamentos": [
+        "barra_w",
+        "banco_ajustavel"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rosca-na-polia-alta",
+      "nome": "Rosca na polia alta",
+      "grupo": "biceps",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Rosca duplo bíceps"
+      ]
+    },
+    {
+      "slug": "rosca-unilateral-na-polia",
+      "nome": "Rosca unilateral na polia",
+      "grupo": "biceps",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rosca-zottman",
+      "nome": "Rosca Zottman",
+      "grupo": "biceps",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rosca-com-elastico",
+      "nome": "Rosca com elástico",
+      "grupo": "biceps",
+      "equipamentos": [
+        "elastico"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rosca-21",
+      "nome": "Rosca 21",
+      "grupo": "biceps",
+      "equipamentos": [
+        "barra_reta"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "triceps-na-polia-com-barra-reta",
+      "nome": "Tríceps na polia com barra reta",
+      "grupo": "triceps",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Tríceps pulley",
+        "Pushdown"
+      ]
+    },
+    {
+      "slug": "triceps-na-polia-com-corda",
+      "nome": "Tríceps na polia com corda",
+      "grupo": "triceps",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Tríceps corda"
+      ]
+    },
+    {
+      "slug": "triceps-na-polia-com-barra-v",
+      "nome": "Tríceps na polia com barra V",
+      "grupo": "triceps",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "triceps-unilateral-na-polia",
+      "nome": "Tríceps unilateral na polia",
+      "grupo": "triceps",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "triceps-testa-com-barra-w",
+      "nome": "Tríceps testa com barra W",
+      "grupo": "triceps",
+      "equipamentos": [
+        "barra_w",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Tríceps testa",
+        "Skullcrusher"
+      ]
+    },
+    {
+      "slug": "triceps-testa-com-halteres",
+      "nome": "Tríceps testa com halteres",
+      "grupo": "triceps",
+      "equipamentos": [
+        "halteres",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "triceps-testa-na-polia",
+      "nome": "Tríceps testa na polia",
+      "grupo": "triceps",
+      "equipamentos": [
+        "polia",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "triceps-frances-com-halter",
+      "nome": "Tríceps francês com halter",
+      "grupo": "triceps",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Tríceps francês"
+      ]
+    },
+    {
+      "slug": "triceps-frances-unilateral-com-halter",
+      "nome": "Tríceps francês unilateral com halter",
+      "grupo": "triceps",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "triceps-frances-na-polia",
+      "nome": "Tríceps francês na polia",
+      "grupo": "triceps",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Tríceps corda atrás da cabeça"
+      ]
+    },
+    {
+      "slug": "triceps-coice-com-halter",
+      "nome": "Tríceps coice com halter",
+      "grupo": "triceps",
+      "equipamentos": [
+        "halteres",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Tríceps coice",
+        "Kickback"
+      ]
+    },
+    {
+      "slug": "triceps-coice-na-polia",
+      "nome": "Tríceps coice na polia",
+      "grupo": "triceps",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "triceps-na-maquina",
+      "nome": "Tríceps na máquina",
+      "grupo": "triceps",
+      "equipamentos": [
+        "triceps_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Mergulho na máquina"
+      ]
+    },
+    {
+      "slug": "supino-fechado-com-barra",
+      "nome": "Supino fechado com barra",
+      "grupo": "triceps",
+      "equipamentos": [
+        "barra_reta",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Supino pegada fechada"
+      ]
+    },
+    {
+      "slug": "supino-fechado-no-smith",
+      "nome": "Supino fechado no Smith",
+      "grupo": "triceps",
+      "equipamentos": [
+        "smith",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "mergulho-no-banco",
+      "nome": "Mergulho no banco",
+      "grupo": "triceps",
+      "equipamentos": [
+        "banco_reto"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Tríceps banco"
+      ]
+    },
+    {
+      "slug": "mergulho-nas-paralelas-foco-no-triceps",
+      "nome": "Mergulho nas paralelas, foco no tríceps",
+      "grupo": "triceps",
+      "equipamentos": [
+        "paralelas"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Paralelas",
+        "Dips"
+      ]
+    },
+    {
+      "slug": "flexao-diamante",
+      "nome": "Flexão diamante",
+      "grupo": "triceps",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Flexão fechada"
+      ]
+    },
+    {
+      "slug": "triceps-com-elastico",
+      "nome": "Tríceps com elástico",
+      "grupo": "triceps",
+      "equipamentos": [
+        "elastico"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "triceps-na-polia-com-pegada-supinada",
+      "nome": "Tríceps na polia com pegada supinada",
+      "grupo": "triceps",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Tríceps pulley invertido"
+      ]
+    },
+    {
+      "slug": "rosca-de-punho-com-barra",
+      "nome": "Rosca de punho com barra",
+      "grupo": "antebraco",
+      "equipamentos": [
+        "barra_reta",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Rosca punho"
+      ]
+    },
+    {
+      "slug": "rosca-de-punho-com-halteres",
+      "nome": "Rosca de punho com halteres",
+      "grupo": "antebraco",
+      "equipamentos": [
+        "halteres",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rosca-de-punho-inversa-com-barra",
+      "nome": "Rosca de punho inversa com barra",
+      "grupo": "antebraco",
+      "equipamentos": [
+        "barra_reta",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Extensão de punho"
+      ]
+    },
+    {
+      "slug": "rosca-inversa-com-barra-w",
+      "nome": "Rosca inversa com barra W",
+      "grupo": "antebraco",
+      "equipamentos": [
+        "barra_w"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "rosca-inversa-na-polia",
+      "nome": "Rosca inversa na polia",
+      "grupo": "antebraco",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "pronacao-e-supinacao-com-halter",
+      "nome": "Pronação e supinação com halter",
+      "grupo": "antebraco",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "pendurado-na-barra-fixa",
+      "nome": "Pendurado na barra fixa",
+      "grupo": "antebraco",
+      "equipamentos": [
+        "barra_fixa"
+      ],
+      "usa_carga": "nao",
+      "medida": "tempo",
+      "apelidos": [
+        "Dead hang",
+        "Pegada na barra"
+      ]
+    },
+    {
+      "slug": "rosca-de-punho-inversa-com-halteres",
+      "nome": "Rosca de punho inversa com halteres",
+      "grupo": "antebraco",
+      "equipamentos": [
+        "halteres",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Extensão de punho"
+      ]
+    },
+    {
+      "slug": "abdominal-reto-no-solo",
+      "nome": "Abdominal reto no solo",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Abdominal",
+        "Abdominal supra",
+        "Crunch"
+      ]
+    },
+    {
+      "slug": "abdominal-com-anilha",
+      "nome": "Abdominal com anilha",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "anilha"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "abdominal-na-maquina",
+      "nome": "Abdominal na máquina",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "abdominal_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "abdominal-na-polia",
+      "nome": "Abdominal na polia",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Abdominal corda",
+        "Crunch na polia"
+      ]
+    },
+    {
+      "slug": "abdominal-declinado",
+      "nome": "Abdominal declinado",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "banco_declinado"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "abdominal-na-bola-suica",
+      "nome": "Abdominal na bola suíça",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "bola_suica"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "abdominal-infra-no-solo",
+      "nome": "Abdominal infra no solo",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Elevação de pernas deitado"
+      ]
+    },
+    {
+      "slug": "elevacao-de-pernas-na-barra-fixa",
+      "nome": "Elevação de pernas na barra fixa",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "barra_fixa"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "elevacao-de-joelhos-na-barra-fixa",
+      "nome": "Elevação de joelhos na barra fixa",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "barra_fixa"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "elevacao-de-pernas-na-cadeira-romana",
+      "nome": "Elevação de pernas na cadeira romana",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "cadeira_romana"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Cadeira capitão"
+      ]
+    },
+    {
+      "slug": "elevacao-de-joelhos-na-cadeira-romana",
+      "nome": "Elevação de joelhos na cadeira romana",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "cadeira_romana"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Cadeira capitão"
+      ]
+    },
+    {
+      "slug": "abdominal-remador",
+      "nome": "Abdominal remador",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Canivete"
+      ]
+    },
+    {
+      "slug": "abdominal-bicicleta",
+      "nome": "Abdominal bicicleta",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "abdominal-obliquo-no-solo",
+      "nome": "Abdominal oblíquo no solo",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Crunch lateral"
+      ]
+    },
+    {
+      "slug": "lenhador-na-polia",
+      "nome": "Lenhador na polia",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Woodchopper",
+        "Rotação na polia"
+      ]
+    },
+    {
+      "slug": "rotacao-russa",
+      "nome": "Rotação russa",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Russian twist"
+      ]
+    },
+    {
+      "slug": "rotacao-de-tronco-na-maquina",
+      "nome": "Rotação de tronco na máquina",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "rotacao_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "pallof-press",
+      "nome": "Pallof press",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Antirrotação"
+      ]
+    },
+    {
+      "slug": "flexao-lateral-de-tronco-com-halter",
+      "nome": "Flexão lateral de tronco com halter",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Inclinação lateral"
+      ]
+    },
+    {
+      "slug": "abdominal-com-roda",
+      "nome": "Abdominal com roda",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "roda_abdominal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Roda abdominal"
+      ]
+    },
+    {
+      "slug": "prancha-frontal",
+      "nome": "Prancha frontal",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "tempo",
+      "apelidos": [
+        "Prancha"
+      ]
+    },
+    {
+      "slug": "prancha-lateral",
+      "nome": "Prancha lateral",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "tempo",
+      "apelidos": []
+    },
+    {
+      "slug": "hollow-hold",
+      "nome": "Hollow hold",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "tempo",
+      "apelidos": [
+        "Barquinho"
+      ]
+    },
+    {
+      "slug": "dead-bug",
+      "nome": "Dead bug",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "elevacao-de-pernas-no-banco",
+      "nome": "Elevação de pernas no banco",
+      "grupo": "abdomen",
+      "equipamentos": [
+        "banco_reto"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "hiperextensao-lombar",
+      "nome": "Hiperextensão lombar",
+      "grupo": "lombar",
+      "equipamentos": [
+        "banco_hiperextensao"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Extensão lombar",
+        "Banco romano"
+      ]
+    },
+    {
+      "slug": "extensao-lombar-na-maquina",
+      "nome": "Extensão lombar na máquina",
+      "grupo": "lombar",
+      "equipamentos": [
+        "lombar_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Cadeira lombar"
+      ]
+    },
+    {
+      "slug": "extensao-lombar-na-bola-suica",
+      "nome": "Extensão lombar na bola suíça",
+      "grupo": "lombar",
+      "equipamentos": [
+        "bola_suica"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "superman",
+      "nome": "Superman",
+      "grupo": "lombar",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "bird-dog",
+      "nome": "Bird dog",
+      "grupo": "lombar",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Cachorro e pássaro"
+      ]
+    },
+    {
+      "slug": "bom-dia-com-barra",
+      "nome": "Bom dia com barra",
+      "grupo": "lombar",
+      "equipamentos": [
+        "barra_reta",
+        "rack_agachamento"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Good morning"
+      ]
+    },
+    {
+      "slug": "elevacao-pelvica-com-barra",
+      "nome": "Elevação pélvica com barra",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "barra_reta",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Hip thrust"
+      ]
+    },
+    {
+      "slug": "elevacao-pelvica-no-smith",
+      "nome": "Elevação pélvica no Smith",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "smith",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Hip thrust no Smith"
+      ]
+    },
+    {
+      "slug": "elevacao-pelvica-na-maquina",
+      "nome": "Elevação pélvica na máquina",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "hip_thrust_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "elevacao-pelvica-com-halter",
+      "nome": "Elevação pélvica com halter",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "halteres",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "elevacao-pelvica-unilateral",
+      "nome": "Elevação pélvica unilateral",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "peso_corporal",
+        "banco_reto"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "ponte-de-gluteos",
+      "nome": "Ponte de glúteos",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Glute bridge"
+      ]
+    },
+    {
+      "slug": "ponte-de-gluteos-unilateral",
+      "nome": "Ponte de glúteos unilateral",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "coice-na-polia",
+      "nome": "Coice na polia",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Glúteo na polia",
+        "Kickback na polia"
+      ]
+    },
+    {
+      "slug": "coice-na-maquina",
+      "nome": "Coice na máquina",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "gluteo_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Glúteo na máquina"
+      ]
+    },
+    {
+      "slug": "coice-com-caneleira",
+      "nome": "Coice com caneleira",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "caneleira"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Quatro apoios"
+      ]
+    },
+    {
+      "slug": "coice-no-smith",
+      "nome": "Coice no Smith",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "smith"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "extensao-de-quadril-em-pe-na-polia",
+      "nome": "Extensão de quadril em pé na polia",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "agachamento-sumo-com-halter",
+      "nome": "Agachamento sumô com halter",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Sumô"
+      ]
+    },
+    {
+      "slug": "subida-no-banco-com-halteres",
+      "nome": "Subida no banco com halteres",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "halteres",
+        "step_caixa"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Step-up"
+      ]
+    },
+    {
+      "slug": "extensao-de-quadril-no-banco-45",
+      "nome": "Extensão de quadril no banco 45°",
+      "grupo": "gluteos",
+      "equipamentos": [
+        "banco_hiperextensao"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "agachamento-livre-com-barra",
+      "nome": "Agachamento livre com barra",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "barra_reta",
+        "rack_agachamento"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Agachamento",
+        "Agachamento livre",
+        "Back squat"
+      ]
+    },
+    {
+      "slug": "agachamento-frontal-com-barra",
+      "nome": "Agachamento frontal com barra",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "barra_reta",
+        "rack_agachamento"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Front squat"
+      ]
+    },
+    {
+      "slug": "agachamento-no-smith",
+      "nome": "Agachamento no Smith",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "smith"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Agachamento guiado"
+      ]
+    },
+    {
+      "slug": "agachamento-hack",
+      "nome": "Agachamento hack",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "hack"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Hack"
+      ]
+    },
+    {
+      "slug": "agachamento-pendulo",
+      "nome": "Agachamento pêndulo",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "pendulo"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Pêndulo"
+      ]
+    },
+    {
+      "slug": "leg-press-45",
+      "nome": "Leg press 45°",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "leg_press_45"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Leg press",
+        "Leg 45"
+      ]
+    },
+    {
+      "slug": "leg-press-horizontal",
+      "nome": "Leg press horizontal",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "leg_press_horizontal"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "leg-press-unilateral",
+      "nome": "Leg press unilateral",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "leg_press_45"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "cadeira-extensora",
+      "nome": "Cadeira extensora",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "extensora"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Extensora"
+      ]
+    },
+    {
+      "slug": "cadeira-extensora-unilateral",
+      "nome": "Cadeira extensora unilateral",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "extensora"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "agachamento-goblet",
+      "nome": "Agachamento goblet",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "kettlebell"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Goblet squat"
+      ]
+    },
+    {
+      "slug": "agachamento-com-halteres",
+      "nome": "Agachamento com halteres",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "agachamento-bulgaro-com-halteres",
+      "nome": "Agachamento búlgaro com halteres",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "halteres",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Búlgaro"
+      ]
+    },
+    {
+      "slug": "agachamento-bulgaro-no-smith",
+      "nome": "Agachamento búlgaro no Smith",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "smith",
+        "banco_reto"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "afundo-estatico-com-halteres",
+      "nome": "Afundo estático com halteres",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Agachamento afundo",
+        "Split squat"
+      ]
+    },
+    {
+      "slug": "avanco-com-halteres",
+      "nome": "Avanço com halteres",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Passada",
+        "Avanço"
+      ]
+    },
+    {
+      "slug": "avanco-com-barra",
+      "nome": "Avanço com barra",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "barra_reta"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "avanco-no-smith",
+      "nome": "Avanço no Smith",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "smith"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "avanco-caminhando",
+      "nome": "Avanço caminhando",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Passada caminhando"
+      ]
+    },
+    {
+      "slug": "avanco-reverso",
+      "nome": "Avanço reverso",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Passada para trás",
+        "Recuo"
+      ]
+    },
+    {
+      "slug": "avanco-lateral",
+      "nome": "Avanço lateral",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "agachamento-livre-com-peso-corporal",
+      "nome": "Agachamento livre com peso corporal",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Agachamento sem peso"
+      ]
+    },
+    {
+      "slug": "agachamento-sissy",
+      "nome": "Agachamento sissy",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "agachamento-pistola",
+      "nome": "Agachamento pistola",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Pistol squat"
+      ]
+    },
+    {
+      "slug": "agachamento-isometrico-na-parede",
+      "nome": "Agachamento isométrico na parede",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "tempo",
+      "apelidos": [
+        "Cadeirinha"
+      ]
+    },
+    {
+      "slug": "agachamento-na-maquina",
+      "nome": "Agachamento na máquina",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "hack"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "avanco-com-peso-corporal",
+      "nome": "Avanço com peso corporal",
+      "grupo": "quadriceps",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Avanço"
+      ]
+    },
+    {
+      "slug": "mesa-flexora",
+      "nome": "Mesa flexora",
+      "grupo": "posteriores",
+      "equipamentos": [
+        "mesa_flexora"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Flexora deitada",
+        "Flexora"
+      ]
+    },
+    {
+      "slug": "cadeira-flexora",
+      "nome": "Cadeira flexora",
+      "grupo": "posteriores",
+      "equipamentos": [
+        "cadeira_flexora"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Flexora sentada"
+      ]
+    },
+    {
+      "slug": "flexora-em-pe",
+      "nome": "Flexora em pé",
+      "grupo": "posteriores",
+      "equipamentos": [
+        "flexora_em_pe"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Flexora unilateral em pé"
+      ]
+    },
+    {
+      "slug": "flexora-na-polia",
+      "nome": "Flexora na polia",
+      "grupo": "posteriores",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "flexora-com-bola-suica",
+      "nome": "Flexora com bola suíça",
+      "grupo": "posteriores",
+      "equipamentos": [
+        "bola_suica"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "flexao-nordica",
+      "nome": "Flexão nórdica",
+      "grupo": "posteriores",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Nordic curl"
+      ]
+    },
+    {
+      "slug": "stiff-com-barra",
+      "nome": "Stiff com barra",
+      "grupo": "posteriores",
+      "equipamentos": [
+        "barra_reta"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Stiff"
+      ]
+    },
+    {
+      "slug": "stiff-com-halteres",
+      "nome": "Stiff com halteres",
+      "grupo": "posteriores",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "stiff-no-smith",
+      "nome": "Stiff no Smith",
+      "grupo": "posteriores",
+      "equipamentos": [
+        "smith"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "stiff-unilateral-com-halter",
+      "nome": "Stiff unilateral com halter",
+      "grupo": "posteriores",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "levantamento-terra-romeno",
+      "nome": "Levantamento terra romeno",
+      "grupo": "posteriores",
+      "equipamentos": [
+        "barra_reta"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "RDL",
+        "Terra romeno"
+      ]
+    },
+    {
+      "slug": "levantamento-terra-convencional",
+      "nome": "Levantamento terra convencional",
+      "grupo": "posteriores",
+      "equipamentos": [
+        "barra_reta"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Levantamento terra",
+        "Terra",
+        "Deadlift"
+      ]
+    },
+    {
+      "slug": "levantamento-terra-sumo",
+      "nome": "Levantamento terra sumô",
+      "grupo": "posteriores",
+      "equipamentos": [
+        "barra_reta"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Terra sumô"
+      ]
+    },
+    {
+      "slug": "levantamento-terra-com-barra-hexagonal",
+      "nome": "Levantamento terra com barra hexagonal",
+      "grupo": "posteriores",
+      "equipamentos": [
+        "barra_hexagonal"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Terra com barra hex"
+      ]
+    },
+    {
+      "slug": "cadeira-adutora",
+      "nome": "Cadeira adutora",
+      "grupo": "adutores",
+      "equipamentos": [
+        "cadeira_adutora"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Adutora"
+      ]
+    },
+    {
+      "slug": "aducao-na-polia",
+      "nome": "Adução na polia",
+      "grupo": "adutores",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "aducao-deitado-de-lado",
+      "nome": "Adução deitado de lado",
+      "grupo": "adutores",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "aducao-com-bola-entre-os-joelhos",
+      "nome": "Adução com bola entre os joelhos",
+      "grupo": "adutores",
+      "equipamentos": [
+        "bola_suica"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "cadeira-abdutora",
+      "nome": "Cadeira abdutora",
+      "grupo": "abdutores",
+      "equipamentos": [
+        "cadeira_abdutora"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Abdutora"
+      ]
+    },
+    {
+      "slug": "abducao-na-polia",
+      "nome": "Abdução na polia",
+      "grupo": "abdutores",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "abducao-deitado-de-lado-com-caneleira",
+      "nome": "Abdução deitado de lado com caneleira",
+      "grupo": "abdutores",
+      "equipamentos": [
+        "caneleira"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "abducao-em-pe-com-elastico",
+      "nome": "Abdução em pé com elástico",
+      "grupo": "abdutores",
+      "equipamentos": [
+        "elastico"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "caminhada-lateral-com-elastico",
+      "nome": "Caminhada lateral com elástico",
+      "grupo": "abdutores",
+      "equipamentos": [
+        "elastico"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Monster walk"
+      ]
+    },
+    {
+      "slug": "concha-com-elastico",
+      "nome": "Concha com elástico",
+      "grupo": "abdutores",
+      "equipamentos": [
+        "elastico"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Clamshell"
+      ]
+    },
+    {
+      "slug": "panturrilha-em-pe-na-maquina",
+      "nome": "Panturrilha em pé na máquina",
+      "grupo": "panturrilhas",
+      "equipamentos": [
+        "panturrilha_em_pe"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Gêmeos em pé"
+      ]
+    },
+    {
+      "slug": "panturrilha-sentado-na-maquina",
+      "nome": "Panturrilha sentado na máquina",
+      "grupo": "panturrilhas",
+      "equipamentos": [
+        "panturrilha_sentado"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Gêmeos sentado",
+        "Sóleo"
+      ]
+    },
+    {
+      "slug": "panturrilha-no-leg-press",
+      "nome": "Panturrilha no leg press",
+      "grupo": "panturrilhas",
+      "equipamentos": [
+        "leg_press_45"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "panturrilha-no-smith",
+      "nome": "Panturrilha no Smith",
+      "grupo": "panturrilhas",
+      "equipamentos": [
+        "smith",
+        "step_caixa"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "panturrilha-unilateral-com-halter",
+      "nome": "Panturrilha unilateral com halter",
+      "grupo": "panturrilhas",
+      "equipamentos": [
+        "halteres",
+        "step_caixa"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "panturrilha-em-pe-com-peso-corporal",
+      "nome": "Panturrilha em pé com peso corporal",
+      "grupo": "panturrilhas",
+      "equipamentos": [
+        "peso_corporal",
+        "step_caixa"
+      ],
+      "usa_carga": "opcional",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "elevacao-de-pontas-dos-pes",
+      "nome": "Elevação de pontas dos pés",
+      "grupo": "panturrilhas",
+      "equipamentos": [
+        "peso_corporal"
+      ],
+      "usa_carga": "nao",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Tibial anterior",
+        "Tibial"
+      ]
+    },
+    {
+      "slug": "encolhimento-com-barra",
+      "nome": "Encolhimento com barra",
+      "grupo": "trapezio",
+      "equipamentos": [
+        "barra_reta"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": [
+        "Encolhimento",
+        "Shrug"
+      ]
+    },
+    {
+      "slug": "encolhimento-com-halteres",
+      "nome": "Encolhimento com halteres",
+      "grupo": "trapezio",
+      "equipamentos": [
+        "halteres"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "encolhimento-no-smith",
+      "nome": "Encolhimento no Smith",
+      "grupo": "trapezio",
+      "equipamentos": [
+        "smith"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "encolhimento-com-barra-hexagonal",
+      "nome": "Encolhimento com barra hexagonal",
+      "grupo": "trapezio",
+      "equipamentos": [
+        "barra_hexagonal"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "encolhimento-na-polia",
+      "nome": "Encolhimento na polia",
+      "grupo": "trapezio",
+      "equipamentos": [
+        "polia"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    },
+    {
+      "slug": "encolhimento-na-maquina",
+      "nome": "Encolhimento na máquina",
+      "grupo": "trapezio",
+      "equipamentos": [
+        "encolhimento_maquina"
+      ],
+      "usa_carga": "sim",
+      "medida": "repeticoes",
+      "apelidos": []
+    }
+  ]
+}

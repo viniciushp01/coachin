@@ -26,7 +26,7 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 ## 3. Estado atual (28/10/2026)
 
 - **Produto:** regras 1 a 147 (29ª rodada e decisões de 30/10). Nenhum ponto bloqueando o MVP. Pendências menores na seção 8 do `contexto-produto.md`.
-- **Banco:** migrations 0001 a 0006 e 0008 a 0010 aplicadas no Supabase (`kfjjiajxgbsqpuskxbzb`) e iguais às do repositório; a 0007 (catálogo, PR #4) ainda não. 270 verificações passando (PGlite). Administrador criado. Edge Functions `ativar-professor` e `enviar-convite` publicadas (pasta `supabase/functions`, testes em Deno no CI).
+- **Banco:** migrations 0001 a 0010 aplicadas no Supabase (`kfjjiajxgbsqpuskxbzb`) e iguais às do repositório (a 0007, do catálogo, entrou depois da 0010, pelo SQL Editor; ver `docs/schema-coach-in.md`). 305 verificações passando (PGlite). Administrador criado. Edge Functions `ativar-professor` e `enviar-convite` publicadas (pasta `supabase/functions`, testes em Deno no CI).
 - **Design:** Figma completo até a 24ª rodada. Faltam no FigJam original as seções 19 a 24.
 - **App:** **Fase 0 concluída** em 28/10/2026 (PR #1). Produção em https://coachin.vercel.app. Stack: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Tokens em `src/styles/tokens.css`; componentes base em `src/ui` (catálogo em `/dev/componentes`); camada Supabase em `src/lib` (`supabase.ts`, `rpc.ts`, `erros.ts`); roteamento por papel (`src/lib/destino.ts` e `sessao.ts`, rotas `/entrar`, `/admin`, `/professor`, `/aluno`, `/sem-professor`, `/primeiro-acesso`, `/bloqueado`); CI em `.github/workflows/ci.yml`. `main` protegida (PR obrigatório e os dois jobs do CI verdes). Projeto `coachin` na Vercel com preview por PR.
 - **Fatia 1 (Acesso) concluída** em 28/10/2026 (spec #8, PRs #23 a #32): login completo, criar conta e "Confirme seu e-mail", login com e-mail não confirmado, volta do link de confirmação, "Esqueci a senha" por link de 1 dia (vencido e já usado separados pela hora do pedido no link), sessão de 30 dias sem uso controlada no app (`src/lib/inatividade.ts`), "Sair" só deste aparelho e a folha "Sair do app?" pronta para o Perfil (fatia 6). Formulários com react-hook-form + zod (`src/lib/formularios.ts`). Rotas novas: `/criar-conta`, `/confirme-seu-email`, `/confirmar-email`, `/esqueci-a-senha`, `/confira-seu-email`, `/nova-senha`. As áreas dos papéis continuam provisórias ("Olá") até as fatias seguintes. Sem migration nova.
@@ -125,7 +125,7 @@ Problema durante o caminho: `/diagnosing-bugs`. Fim de fatia: `/retro`. Contexto
 
 ## 10. Pendências conhecidas
 
-- Abrir os tickets da fatia 4 (montar treino; o catálogo espera as dúvidas #5, #6 e #7) e da 9 (conta), liberadas pelas fatias 3 e 2.
+- Abrir os tickets da fatia 4 (montar treino; catálogo já aplicado, regras 123, 124 e 148) e da 9 (conta), liberadas pelas fatias 3 e 2. Da fatia 4: falta função para o professor mudar carga e medida de um exercício dele (regra 123). Sem caso real ainda: ocultar exercício do catálogo para todos (regra 148; `exercise_hidden` é por professor).
 - O nome do job do banco no CI ainda diz "239 verificações".
 - Fatia 1: links de confirmação enviados antes do PR #31 voltam para `/entrar` e entram direto (só contas de teste); SMTP do Gmail a trocar por provedor transacional antes do lançamento (Fase 2).
 - Figma: o frame "Login · 2 Erro de credenciais" diz "E-mail ou senha incorretos"; o texto decidido é "E-mail ou senha não conferem." (corrigir no Figma).
