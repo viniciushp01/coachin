@@ -50,7 +50,7 @@ export const CHIP_DO_ESTADO: Record<EstadoVisivel, { tom: TomChip; texto: string
 };
 
 /** "Recusou o convite em dd/mm" (regra 102); sem a data, só o fato. */
-export function textoDaRecusa(convite: ConviteDoAluno): string {
+export function textoDaRecusa(convite: Pick<ConviteDoAluno, "declined_at">): string {
   return convite.declined_at
     ? `Recusou o convite em ${dataCurta(convite.declined_at)}`
     : "Recusou o convite";

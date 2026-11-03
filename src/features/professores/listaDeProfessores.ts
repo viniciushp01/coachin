@@ -1,5 +1,6 @@
 import type { Database } from "@db/database.types";
 import { erroDaResposta } from "@/lib/erros";
+import { emOrdemAlfabetica, plural, resumoDaBusca } from "@/lib/listas";
 import { supabase } from "@/lib/supabase";
 import type { TomChip } from "@/ui";
 import { dataCurta, estadoDoConvite } from "@/features/alunos/conviteDoAluno";
@@ -100,29 +101,13 @@ export function montarLista(
     }
   }
 
-  return linhas.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  return emOrdemAlfabetica(linhas);
 }
 
-function semAcento(texto: string) {
-  return texto
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
-}
-
-/** Busca por parte do nome, sem diferenciar maiúsculas nem acentos. */
-export function buscarPorNome(linhas: LinhaDeProfessor[], termo: string) {
-  const busca = semAcento(termo.trim());
-  return busca ? linhas.filter((l) => semAcento(l.nome).includes(busca)) : linhas;
-}
-
-const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
-
-/** "4 professores · 1 convite pendente"; durante a busca, "N resultados". */
+/** "4 professores · 1 convite pendente"; durante a busca, "N resultados" (regra 147). */
 export function resumoDaLista(linhas: LinhaDeProfessor[], termo = "") {
-  if (termo.trim()) {
-    return plural(buscarPorNome(linhas, termo).length, "resultado", "resultados");
-  }
+  const busca = resumoDaBusca(linhas, termo);
+  if (busca) return busca;
   const total = plural(linhas.length, "professor", "professores");
   const pendentes = linhas.filter((l) => l.estado === "pendente").length;
   return pendentes

@@ -37,11 +37,9 @@ describe("dataCurta", () => {
 
 describe("textoDaRecusa (regra 102)", () => {
   it("com a data da recusa, e só o fato sem ela", () => {
-    expect(
-      textoDaRecusa({ ...base, status: "declined", declined_at: "2026-10-27T15:00:00Z" }),
-    ).toBe("Recusou o convite em 27/10");
-    expect(textoDaRecusa({ ...base, status: "declined", declined_at: null })).toBe(
-      "Recusou o convite",
+    expect(textoDaRecusa({ declined_at: "2026-10-27T15:00:00Z" })).toBe(
+      "Recusou o convite em 27/10",
     );
+    expect(textoDaRecusa({ declined_at: null })).toBe("Recusou o convite");
   });
 });
