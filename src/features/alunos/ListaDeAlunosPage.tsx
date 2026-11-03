@@ -12,12 +12,13 @@ import {
   StudentRow,
   Tela,
 } from "@/ui";
-import { CHIP_DO_ALUNO, resumoDaLista, type LinhaDoAluno } from "./listaDeAlunos";
+import { CHIP_DO_ALUNO, CHIP_DO_PEDIDO, resumoDaLista, type LinhaDoAluno } from "./listaDeAlunos";
 
 /**
  * Lista de alunos, a tela raiz do professor (regras 54, 55, 59, 102, 114 e 147; Figma "Professor
  * · Alunos", seção 1): resumo, busca por nome, uma linha por aluno com o chip do status e
- * "Cadastrar aluno" fixo no rodapé. As linhas com convite abrem a tela do aluno com convite.
+ * "Cadastrar aluno" fixo no rodapé. O chip "Pediu treino" marca o pedido aberto (regra 62). As
+ * linhas com convite abrem a tela do aluno com convite.
  */
 export function ListaDeAlunosPage({ linhas }: { linhas: LinhaDoAluno[] }) {
   const navegar = useNavigate();
@@ -70,6 +71,7 @@ export function ListaDeAlunosPage({ linhas }: { linhas: LinhaDoAluno[] }) {
                   <StudentRow
                     nome={l.nome}
                     status={CHIP_DO_ALUNO[l.status]}
+                    solicitacao={l.pediuTreino ? CHIP_DO_PEDIDO : undefined}
                     detalhe={l.detalhe}
                     onClick={
                       l.abre

@@ -384,6 +384,23 @@ begin
   perform t.login('t2');
   perform t.ok((select count(*) from public.completions) = 0, 'outro professor não lê marcações');
 
+  -- regra 147 (1): ficha do último treino na lista (migration 0010)
+  perform t.login('t1');
+  perform t.ok((select last_done_on = t.today() - 2 and last_done_letter = 'B' from public.teacher_student_list where student_id = v_s), 'lista: ficha do último treino');
+  perform t.login('s1');
+  perform public.mark_done((t.get('dayC'))::uuid, t.today() - 2, gen_random_uuid(), v_removed - interval '2 hours');
+  perform t.login('t1');
+  perform t.ok((select last_done_letter from public.teacher_student_list where student_id = v_s) = 'B', 'lista: duas fichas no mesmo dia, vale a marcada por último (B)');
+  perform t.login('s1');
+  perform public.undo_done((t.get('dayC'))::uuid, t.today() - 2);
+  perform public.mark_done((t.get('dayC'))::uuid, t.today() - 2, gen_random_uuid(), v_removed - interval '30 minutes');
+  perform t.login('t1');
+  perform t.ok((select last_done_letter from public.teacher_student_list where student_id = v_s) = 'C', 'lista: duas fichas no mesmo dia, vale a marcada por último (C)');
+  perform t.login('s1');
+  perform public.undo_done((t.get('dayC'))::uuid, t.today() - 2);
+  perform t.login('t1');
+  perform t.ok(not exists (select 1 from public.teacher_student_list where (last_done_on is null) <> (last_done_letter is null)), 'lista: sem marcação, sem ficha do último treino');
+
   -- Cargas (última edição por HORA DA AÇÃO, não do envio)
   perform t.login('s1');
   perform public.set_load(t.exid('Supino reto com barra'), 50, gen_random_uuid(), now() - interval '2 hours');

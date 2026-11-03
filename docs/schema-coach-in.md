@@ -1,6 +1,6 @@
 # Coach In · Desenho do banco de dados (para revisão)
 
-Estado: **aplicado no Supabase** (0001 a 0005 em 27/10/2026, 0006 em 28/10/2026, 0008 em 29/10/2026, 0009 em 30/10/2026; a 0007, do catálogo, está no PR #4 e não foi aplicada; ver "Resultado da aplicação" no fim). As migrations foram testadas num Postgres 17 (PGlite) com a camada de autenticação do Supabase simulada (247 verificações, todas passando). Base de regras: `contexto-produto.md` (regras 1 a 122) e as decisões de 27/10 (arquivar na troca de professor, exercícios e cargas seguem o aluno).
+Estado: **aplicado no Supabase** (0001 a 0005 em 27/10/2026, 0006 em 28/10/2026, 0008 em 29/10/2026, 0009 em 30/10/2026; a 0010, da lista de alunos, está no PR do #77 e ainda não foi aplicada; a 0007, do catálogo, está no PR #4 e não foi aplicada; ver "Resultado da aplicação" no fim). As migrations foram testadas num Postgres 17 (PGlite) com a camada de autenticação do Supabase simulada (247 verificações, todas passando). Base de regras: `contexto-produto.md` (regras 1 a 122) e as decisões de 27/10 (arquivar na troca de professor, exercícios e cargas seguem o aluno).
 
 Arquivos (em `supabase/`):
 
@@ -14,6 +14,7 @@ Arquivos (em `supabase/`):
 | `migrations/20261028094329_workout_before_link.sql` | 0006 · Regra 122: professor cria e edita treino para convite pendente, expirado ou recusado (`save_workout` e leitura de treinos) |
 | `migrations/20261029213932_invite_preview_teacher_unavailable.sql` | 0008 · Regras 133, 134 e 137: `get_invite_preview` devolve `state = 'teacher_unavailable'` (convite de aluno válido de professor bloqueado) e `already_linked` (a conta logada já é aluno ativo desse professor) |
 | `migrations/20261030093359_invite_email_claim.sql` | 0009 · Regras 139 e 140 (#52): coluna `invites.email_sent_at` `claim_invite_email(token)` e `reissue_invite` recusando reenvio dentro de 60 s; confere o convite e o intervalo de 60 s antes da Edge Function `enviar-convite` enviar |
+| `migrations/20261103120000_teacher_list_last_done_letter.sql` | 0010 · Regra 147 (1) (#79, feita no #77): coluna `last_done_letter` no fim da view `teacher_student_list`, a letra da ficha da marcação mais recente (empate no mesmo dia: `marked_at` mais recente) |
 | `tests/` | Simulação do Supabase, 247 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
 
 ## 1. Como o banco funciona (5 ideias)
@@ -42,7 +43,7 @@ Arquivos (em `supabase/`):
 | `student_exercise_loads` / `load_history` | Carga atual e histórico de edições | Por conta e exercício; o histórico guarda o nome do exercício |
 | `training_requests` | Solicitação de novo treino | Só `open`, `canceled`, `closed` gravados |
 | `workout_seen` | Controle do pop-up "Seu treino novo chegou" | Uma vez por treino |
-| view `teacher_student_list` | Lista de alunos do professor já com status, treino atual, agendado, pedido e último treino | Calculada no fuso de cada aluno; respeita a RLS de quem consulta |
+| view `teacher_student_list` | Lista de alunos do professor já com status, treino atual, agendado, pedido e último treino (data em `last_done_on` e ficha em `last_done_letter`, 0010) | Calculada no fuso de cada aluno; respeita a RLS de quem consulta |
 
 ## 3. Quem enxerga o quê
 
@@ -110,7 +111,7 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 2. Rodar o **Security Advisor** do Supabase depois (alertas de RLS ou de função sem `search_path`).
 3. Criar o administrador conforme o comentário no fim da migration 0001.
 
-**Ordem de aplicação:** os arquivos de `supabase/migrations/`, em ordem numérica (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link, 0008 invite_preview_teacher_unavailable, 0009 invite_email_claim), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
+**Ordem de aplicação:** os arquivos de `supabase/migrations/`, em ordem numérica (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link, 0008 invite_preview_teacher_unavailable, 0009 invite_email_claim, 0010 teacher_list_last_done_letter), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
 
 **Rodar os testes:** `supabase/tests/run.sh` (precisa de Postgres 16 instalado e Linux/WSL/macOS; sobe e derruba um banco descartável) ou, sem Postgres (Windows), `npm --prefix supabase/tests/pglite install` e `node supabase/tests/pglite/run.mjs` (Postgres 17.5 em WebAssembly, PGlite 0.4.6, banco em memória, um comando por transação como o `psql -f`; `--sem-pgcrypto` troca `digest` e `gen_random_bytes` por equivalentes nativos só no harness). Os dois devem terminar com "TODOS OS TESTES PASSARAM".
 
@@ -151,3 +152,9 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 - **Advisor:** sem alerta novo além do padrão já aceito (`claim_invite_email` entra na lista de RPCs `security definer` para `authenticated`, agora 24).
 - **Tipos:** regerados; `email_sent_at` e `claim_invite_email` em `database.types.ts`.
 - **Edge Function:** `enviar-convite` publicada (versão 1, `verify_jwt = true`).
+
+### 0010 (pendente de aplicação, issues #77 e #79)
+
+- **O que muda:** só a view `teacher_student_list` (`create or replace view`, `security_invoker` e grants mantidos). Coluna nova `last_done_letter` no fim; o `lateral` do último treino passa a pegar a marcação mais recente (`done_on` e depois `marked_at`, desc) com a letra de `workout_days`. `last_done_on` não muda de valor.
+- **Testes (PGlite, Postgres 17.5):** os testes novos (seção 8) falham sem ela. Com a 0010, **270 verificações**.
+- **Tipos:** `last_done_letter: string | null` acrescentado à mão em `database.types.ts` (a view no projeto real ainda não tem a coluna); regerar depois de aplicar.

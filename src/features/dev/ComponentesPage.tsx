@@ -15,6 +15,7 @@ import {
   SectionRow,
   Sheet,
   StepIndicator,
+  StudentRow,
   TextAreaField,
   TextButton,
   Toast,
@@ -199,6 +200,26 @@ function Demonstracoes() {
           titulo="Supino inclinado com halteres e pausa no peito"
           detalhe="Peito · nome longo trunca em uma linha"
           iconeDireita="more_horiz"
+        />
+      </Secao>
+
+      <Secao titulo="StudentRow">
+        <StudentRow
+          nome="Juliana Costa"
+          status={{ tom: "success", texto: "Ativo" }}
+          solicitacao={{ tom: "brand", texto: "Pediu treino" }}
+          detalhe="Treino concluído em 25/10 · treinou ontem"
+        />
+        <StudentRow
+          nome="Marcos Lima"
+          status={{ tom: "warning", texto: "Quase no fim" }}
+          detalhe="Fim em 03/11 · treinou ontem"
+        />
+        <StudentRow
+          nome="Rafael Torres"
+          status={{ tom: "info", texto: "Convite pendente" }}
+          detalhe="Convite enviado em 27/10 · vale até 03/11"
+          onClick={() => undefined}
         />
       </Secao>
 
