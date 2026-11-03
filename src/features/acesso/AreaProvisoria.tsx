@@ -1,11 +1,13 @@
 import { sair } from "@/lib/sessao";
 import { BarraFixa, Button, Tela } from "@/ui";
 
-/**
- * "Olá" de cada área, até as fatias trazerem as telas de verdade
- * (administrador: Lista de professores; professor: Lista de alunos; aluno: Home).
- */
-export function AreaProvisoria({ nome, area }: { nome: string; area: string }) {
+type AreaProvisoriaProps = {
+  nome: string;
+  area: string;
+};
+
+/** "Olá" da área do aluno, até a fatia da Home trazer a tela de verdade. */
+export function AreaProvisoria({ nome, area }: AreaProvisoriaProps) {
   const primeiroNome = nome.trim().split(/\s+/)[0] || nome;
   return (
     <Tela barra="um">

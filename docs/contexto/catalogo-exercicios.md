@@ -2,7 +2,7 @@
 
 28/10/2026 · Vini
 
-**Estado (28/10/2026):** a migração `20261028103500_exercise_catalog.sql` e os testes estão prontos no branch `fatia-4/catalogo-exercicios` (274 verificações passando no PGlite). **Ainda não foi aplicada** no Supabase: isso espera o item 6 da Fase 0 e o Claude Code.
+**Estado (28/10/2026):** a migração `20261103190000_exercise_catalog.sql` e os testes estão prontos no branch `fatia-4/catalogo-exercicios` (274 verificações passando no PGlite). **Ainda não foi aplicada** no Supabase: isso espera o item 6 da Fase 0 e o Claude Code.
 
 ## 1. Resumo para revisão
 
@@ -604,6 +604,8 @@ Critérios de aceite:
 - `/code-review` feito antes do `/pr`
 
 ## 9. Pontos em aberto para sua decisão
+
+**Decididos em 3/11/2026:** carga, medida em tempo e renomeação são as regras 123, 124 e 125, e a política de mudança do catálogo é a regra 148 (`contexto-produto.md`). Issues #5, #6 e #7. O texto abaixo fica como registro.
 
 Cada ponto traz a minha recomendação. Sem resposta, eu sigo com ela. Os três primeiros mudam o produto e, por isso, viram regras numeradas a partir da 123 pelo processo de `needs-info`.
 

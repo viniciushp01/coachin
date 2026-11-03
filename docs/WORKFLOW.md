@@ -25,10 +25,13 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 
 ## 3. Estado atual (28/10/2026)
 
-- **Produto:** regras 1 a 122 (25ª rodada). Nenhum ponto bloqueando o MVP. Pendências menores na seção 8 do `contexto-produto.md`.
-- **Banco:** migrations 0001 a 0006 aplicadas no Supabase (`kfjjiajxgbsqpuskxbzb`) e iguais às do repositório. 239 verificações passando (PGlite). Administrador criado.
+- **Produto:** regras 1 a 147 (29ª rodada e decisões de 30/10). Nenhum ponto bloqueando o MVP. Pendências menores na seção 8 do `contexto-produto.md`.
+- **Banco:** migrations 0001 a 0006 e 0008 a 0010 aplicadas no Supabase (`kfjjiajxgbsqpuskxbzb`) e iguais às do repositório; a 0007 (catálogo, PR #4) ainda não. 270 verificações passando (PGlite). Administrador criado. Edge Functions `ativar-professor` e `enviar-convite` publicadas (pasta `supabase/functions`, testes em Deno no CI).
 - **Design:** Figma completo até a 24ª rodada. Faltam no FigJam original as seções 19 a 24.
-- **App:** **Fase 0 concluída** em 28/10/2026 (PR #1). Produção em https://coachin.vercel.app. Stack: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Tokens em `src/styles/tokens.css`; componentes base em `src/ui` (catálogo em `/dev/componentes`); camada Supabase em `src/lib` (`supabase.ts`, `rpc.ts`, `erros.ts`); roteamento por papel (`src/lib/destino.ts` e `sessao.ts`, rotas `/entrar`, `/admin`, `/professor`, `/aluno`, `/sem-professor`, `/primeiro-acesso`, `/bloqueado`); CI em `.github/workflows/ci.yml`. `/entrar` é mínima e as áreas são provisórias ("Olá"), até as fatias. `main` protegida (PR obrigatório e os dois jobs do CI verdes). Projeto `coachin` na Vercel com preview por PR.
+- **App:** **Fase 0 concluída** em 28/10/2026 (PR #1). Produção em https://coachin.vercel.app. Stack: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Tokens em `src/styles/tokens.css`; componentes base em `src/ui` (catálogo em `/dev/componentes`); camada Supabase em `src/lib` (`supabase.ts`, `rpc.ts`, `erros.ts`); roteamento por papel (`src/lib/destino.ts` e `sessao.ts`, rotas `/entrar`, `/admin`, `/professor`, `/aluno`, `/sem-professor`, `/primeiro-acesso`, `/bloqueado`); CI em `.github/workflows/ci.yml`. `main` protegida (PR obrigatório e os dois jobs do CI verdes). Projeto `coachin` na Vercel com preview por PR.
+- **Fatia 1 (Acesso) concluída** em 28/10/2026 (spec #8, PRs #23 a #32): login completo, criar conta e "Confirme seu e-mail", login com e-mail não confirmado, volta do link de confirmação, "Esqueci a senha" por link de 1 dia (vencido e já usado separados pela hora do pedido no link), sessão de 30 dias sem uso controlada no app (`src/lib/inatividade.ts`), "Sair" só deste aparelho e a folha "Sair do app?" pronta para o Perfil (fatia 6). Formulários com react-hook-form + zod (`src/lib/formularios.ts`). Rotas novas: `/criar-conta`, `/confirme-seu-email`, `/confirmar-email`, `/esqueci-a-senha`, `/confira-seu-email`, `/nova-senha`. As áreas dos papéis continuam provisórias ("Olá") até as fatias seguintes. Sem migration nova.
+- **Fatia 2 (Convites e vínculo) concluída** em 30/10/2026 (spec #39, PRs #55 a #72): convite de aluno (abrir o link e voltar a ele depois do login, vincular, trocar de professor, recusar), primeiro acesso com aviso de dados e perfil em 2 passos, cadastro de aluno e "Convite gerado", aluno com convite pendente, expirado e recusado, lista de professores e "Convidar professor" do administrador com os estados do convite, convite de professor com conta, sem conta ("Ative seu acesso", Edge Function `ativar-professor`) e de outra conta, os casos da regra 137 e o envio do convite por e-mail com intervalo de 60 s (Edge Function `enviar-convite`). Migrations 0008 e 0009. Regras 132 a 145 (29ª rodada). A área do professor ainda é provisória (lista de alunos com convite) até a fatia 3, e a do aluno até a 5.
+- **Fatia 3 (Professor: lista de alunos) concluída** em 03/11/2026 (spec #74, PRs #81, #83 e #84): `/professor` deixa de ser provisória e vira a Lista de alunos (resumo, busca sem acento e sem maiúsculas, lista vazia, "Sair" sem a fila local), com os convites (detalhe com as datas, abre a tela do aluno com convite) e os alunos vinculados (chip de status, detalhe "treinou hoje"/último treino com a ficha, chip "Pediu treino"). Migration 0010 (`last_done_letter` na view `teacher_student_list`). Regras 146 e 147. À parte, o #80 (PR #82) fechou os dois casos do convite que ficaram do #49. A tela do aluno vinculado chega com as fatias 4 e 7; a área do aluno continua provisória até a 5.
 
 ## 4. Fases
 
@@ -51,15 +54,16 @@ Cada fatia = telas + funções do banco que ela usa + testes. Ordem sugerida pel
 
 | # | Fatia | Depende de | Regras principais |
 |---|---|---|---|
-| 1 | Acesso: criar conta, confirmar e-mail, login, esqueci a senha, sessão, sair | Fase 0 | 39, 47 a 51, 78, 83, 88 a 90, 100, 121 |
-| 2 | Convites e vínculo: administrador → professor; professor → aluno; primeiro acesso | 1 | 46 a 49, 79, 82, 91 a 98, 102 |
-| 3 | Professor: lista de alunos e cadastro | 2 | 54 a 59, 109 |
+| 1 | ~~Acesso: criar conta, confirmar e-mail, login, esqueci a senha, sessão, sair~~ Concluída (#8) | Fase 0 | 39, 47 a 51, 78, 83, 88 a 90, 100, 121, 127 a 131 |
+| 2 | ~~Convites e vínculo: administrador → professor; professor → aluno; primeiro acesso~~ Concluída (#39) | 1 | 46 a 49, 57, 58, 79, 82, 91 a 98, 102, 132 a 145 |
+| 3 | ~~Professor: lista de alunos (o cadastro entrou na fatia 2)~~ Concluída (#74) | 2 | 54 a 59, 109, 147 |
 | 4 | Professor: montar e editar treino, biblioteca | 3 | 73 a 77, 104 a 107, 111, 118, 122 |
 | 5 | Aluno: início, ficha, marcar como feito, carga | 4 | 1 a 29, 43, 110, 117 |
 | 6 | Aluno: Frequência, Progressão, Histórico, Perfil | 5 | 44, 45, 85, 99 |
 | 7 | Professor acompanha, solicitação de novo treino | 5 | 40, 52, 61 a 72, 103 |
 | 8 | PWA e fila offline | 5 | 38, 116 |
 | 9 | Conta: excluir, bloquear professor, tela de aluno bloqueado | 2 | 94, 95, 119, 120 |
+| 10 | Cardio na ficha: colunas em `workout_days`, seção na edição da ficha e cartão na ficha do aluno | 4 e 5 | 126 |
 
 As fatias 3 e 4 (professor) e 5 e 6 (aluno) são independentes entre si depois de 2, e podem andar em paralelo. A 8 só começa depois que a 5 estiver estável.
 
@@ -89,7 +93,7 @@ Problema durante o caminho: `/diagnosing-bugs`. Fim de fatia: `/retro`. Contexto
 - **Um agente por ticket, um worktree por agente** (`git worktree` ou o recurso de worktree do Claude Code), branch `fatia-N/ticket`. Ninguém trabalha na `main` direto.
 - **Migrations:** reservar o número antes de começar (issue "migration 0007 reservada para #N"). Só um agente aplica por vez, e quem aplica roda os testes inteiros depois.
 - **Componentes base:** pertencem à Fase 0. Precisa de um novo? Ticket próprio, feito por um agente, mergeado antes de quem depende dele.
-- **Numeração de regras e rodadas:** quem decide produto reserva a faixa. Hoje a próxima regra é a **123** e a próxima rodada é a **26ª**. Dois chats de produto ao mesmo tempo precisam combinar faixas antes (foi o que quase colidiu nos lotes 3 e 4).
+- **Numeração de regras e rodadas:** quem decide produto reserva a faixa. Hoje a próxima regra é a **132** e a próxima rodada é a **29ª**. Dois chats de produto ao mesmo tempo precisam combinar faixas antes (foi o que quase colidiu nos lotes 3 e 4).
 - **Revisor de consistência** ao fim de cada onda paralela: confere cada entrega contra as regras e o design system, e só o que passa chega a você.
 
 ## 7. Quando uma regra de negócio muda ou aparece
@@ -121,7 +125,9 @@ Problema durante o caminho: `/diagnosing-bugs`. Fim de fatia: `/retro`. Contexto
 
 ## 10. Pendências conhecidas
 
-- Abrir os tickets da Fase 1, começando pela fatia 1 (Acesso), que completa a tela /entrar.
+- Abrir os tickets da fatia 4 (montar treino; o catálogo espera as dúvidas #5, #6 e #7) e da 9 (conta), liberadas pelas fatias 3 e 2.
+- O nome do job do banco no CI ainda diz "239 verificações".
+- Fatia 1: links de confirmação enviados antes do PR #31 voltam para `/entrar` e entram direto (só contas de teste); SMTP do Gmail a trocar por provedor transacional antes do lançamento (Fase 2).
 - Figma: o frame "Login · 2 Erro de credenciais" diz "E-mail ou senha incorretos"; o texto decidido é "E-mail ou senha não conferem." (corrigir no Figma).
 - Renomear o Project de "Gym App" para "Coach In" (só você consegue).
 - FigJam original: replicar seções 19 a 24.

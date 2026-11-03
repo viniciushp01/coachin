@@ -84,6 +84,7 @@
   --spacing-card-padding: 20px;
 
   /* Raios */
+  --radius-sm: 8px;
   --radius-control: 16px;
   --radius-card: 24px;
   --radius-tile: 20px;

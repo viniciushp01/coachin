@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { destinoDaSessao, type EstadoSessao } from "./destino";
+import { destinoDoConvite, destinoDaRaiz, destinoDaSessao, type EstadoSessao } from "./destino";
 
 const aluno: Extract<EstadoSessao, { tipo: "logado" }> = {
   tipo: "logado",
   papel: "aluno",
   bloqueado: false,
   nome: "Vinicius",
+  email: "vinicius@exemplo.com",
   temProfessor: true,
   avisoAceito: true,
   perfilConcluido: true,
@@ -50,5 +51,41 @@ describe("destinoDaSessao", () => {
     const semNada = { temProfessor: false, avisoAceito: false, perfilConcluido: false };
     expect(destinoDaSessao({ ...aluno, ...semNada, papel: "professor" })).toBe("/professor");
     expect(destinoDaSessao({ ...aluno, ...semNada, papel: "admin" })).toBe("/admin");
+  });
+});
+
+describe("destinoDaRaiz (convite guardado no aparelho)", () => {
+  it("sem convite guardado, segue o destino do papel", () => {
+    expect(destinoDaRaiz(aluno, null)).toEqual({ to: "/aluno" });
+    expect(destinoDaRaiz({ tipo: "anonimo" }, null)).toEqual({ to: "/entrar" });
+  });
+
+  it("logado com convite guardado volta ao convite, em qualquer papel (regras 79 e 134)", () => {
+    const semProfessor = { ...aluno, temProfessor: false };
+    expect(destinoDaRaiz(semProfessor, "tok")).toEqual({
+      to: "/convite/$token",
+      params: { token: "tok" },
+    });
+    expect(destinoDaRaiz({ ...aluno, papel: "professor" }, "tok")).toEqual({
+      to: "/convite/$token",
+      params: { token: "tok" },
+    });
+  });
+
+  it("sem sessão ou bloqueado, o convite guardado espera (regras 95 e 119)", () => {
+    expect(destinoDaRaiz({ tipo: "anonimo" }, "tok")).toEqual({ to: "/entrar" });
+    expect(destinoDaRaiz({ ...aluno, bloqueado: true }, "tok")).toEqual({ to: "/bloqueado" });
+  });
+});
+
+describe("destinoDoConvite (conta bloqueada abre o link, regra 137 passo 0)", () => {
+  it("conta bloqueada vai para /bloqueado antes de qualquer estado do convite", () => {
+    expect(destinoDoConvite({ ...aluno, bloqueado: true })).toBe("/bloqueado");
+    expect(destinoDoConvite({ ...aluno, papel: "professor", bloqueado: true })).toBe("/bloqueado");
+  });
+
+  it("deslogado ou conta ativa seguem para a tela do convite", () => {
+    expect(destinoDoConvite({ tipo: "anonimo" })).toBeNull();
+    expect(destinoDoConvite(aluno)).toBeNull();
   });
 });

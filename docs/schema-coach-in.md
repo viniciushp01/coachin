@@ -1,6 +1,6 @@
 # Coach In · Desenho do banco de dados (para revisão)
 
-Estado: **aplicado no Supabase** (0001 a 0005 em 27/10/2026, 0006 em 28/10/2026; ver "Resultado da aplicação" no fim). As migrations foram testadas num Postgres 17 (PGlite) com a camada de autenticação do Supabase simulada (239 verificações, todas passando). Base de regras: `contexto-produto.md` (regras 1 a 122) e as decisões de 27/10 (arquivar na troca de professor, exercícios e cargas seguem o aluno).
+Estado: **aplicado no Supabase** (0001 a 0005 em 27/10/2026, 0006 em 28/10/2026, 0008 em 29/10/2026, 0009 em 30/10/2026, 0010 em 03/11/2026; a 0007, do catálogo, está no PR #4 e não foi aplicada; ver "Resultado da aplicação" no fim). As migrations foram testadas num Postgres 17 (PGlite) com a camada de autenticação do Supabase simulada (247 verificações, todas passando). Base de regras: `contexto-produto.md` (regras 1 a 122) e as decisões de 27/10 (arquivar na troca de professor, exercícios e cargas seguem o aluno).
 
 Arquivos (em `supabase/`):
 
@@ -12,8 +12,11 @@ Arquivos (em `supabase/`):
 | `migrations/20261027184907_seed_predefined_exercises.sql` | 149 exercícios pré-definidos de musculação |
 | `migrations/20261027192908_advisor_fixes.sql` | Correções do Advisor: `search_path` fixo, `(select auth.uid())` nas políticas, índices nas FKs (sem mudança de regra) |
 | `migrations/20261028094329_workout_before_link.sql` | 0006 · Regra 122: professor cria e edita treino para convite pendente, expirado ou recusado (`save_workout` e leitura de treinos) |
-| `migrations/20261028103500_exercise_catalog.sql` | 0007 · Catálogo de exercícios (**pronta e testada, ainda não aplicada**): 249 pré-definidos (os 149 da 0004 renomeados no lugar, mesmo id), grupos musculares, equipamentos, apelidos, carga e medida; busca por apelido |
-| `tests/` | Simulação do Supabase, 274 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
+| `migrations/20261029213932_invite_preview_teacher_unavailable.sql` | 0008 · Regras 133, 134 e 137: `get_invite_preview` devolve `state = 'teacher_unavailable'` (convite de aluno válido de professor bloqueado) e `already_linked` (a conta logada já é aluno ativo desse professor) |
+| `migrations/20261030093359_invite_email_claim.sql` | 0009 · Regras 139 e 140 (#52): coluna `invites.email_sent_at` `claim_invite_email(token)` e `reissue_invite` recusando reenvio dentro de 60 s; confere o convite e o intervalo de 60 s antes da Edge Function `enviar-convite` enviar |
+| `migrations/20261103174813_teacher_list_last_done_letter.sql` | 0010 · Regra 147 (1) (#79, feita no #77): coluna `last_done_letter` no fim da view `teacher_student_list`, a letra da ficha da marcação mais recente (empate no mesmo dia: `marked_at` mais recente) |
+| `migrations/20261103190000_exercise_catalog.sql` | 0007 · Catálogo de exercícios (**pronta e testada, ainda não aplicada**): 249 pré-definidos (os 149 da 0004 renomeados no lugar, mesmo id), grupos musculares, equipamentos, apelidos, carga e medida; busca por apelido |
+| `tests/` | Simulação do Supabase, 305 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
 
 ## 1. Como o banco funciona (5 ideias)
 
@@ -38,13 +41,13 @@ Arquivos (em `supabase/`):
 | `exercise_equipment` | Equipamentos de cada exercício (posição 1 = principal) | 0007. Lê quem lê o exercício; só migration escreve |
 | `exercise_hidden` | "Ocultar da busca", por professor | |
 | `workouts` | Treino: nome, início, semanas, fim calculado, frequência em texto | Um treino por data de início por aluno |
-| `workout_days` | Fichas, com letra fixa | Remoção lógica; letra nunca reaproveitada |
+| `workout_days` | Fichas, com letra fixa | Remoção lógica; letra nunca reaproveitada. **Planejado (regra 126, depois da fatia 4):** `cardio_equipment` (`treadmill`/`bike`/`stairs`/`elliptical`/`free`) e `cardio_minutes` (1 a 180), `cardio_minutes` pode ser nulo (tempo em branco), mas só existe com equipamento preenchido; só indicação, sem marcação |
 | `workout_exercises` | Exercício dentro da ficha (séries, reps, descanso, observação) | |
 | `completions` | Treino feito (ficha + data) | Único por ficha e dia; guarda hora da ação e do recebimento |
 | `student_exercise_loads` / `load_history` | Carga atual e histórico de edições | Por conta e exercício; o histórico guarda o nome do exercício |
 | `training_requests` | Solicitação de novo treino | Só `open`, `canceled`, `closed` gravados |
 | `workout_seen` | Controle do pop-up "Seu treino novo chegou" | Uma vez por treino |
-| view `teacher_student_list` | Lista de alunos do professor já com status, treino atual, agendado, pedido e último treino | Calculada no fuso de cada aluno; respeita a RLS de quem consulta |
+| view `teacher_student_list` | Lista de alunos do professor já com status, treino atual, agendado, pedido e último treino (data em `last_done_on` e ficha em `last_done_letter`, 0010) | Calculada no fuso de cada aluno; respeita a RLS de quem consulta |
 
 ## 3. Quem enxerga o quê
 
@@ -62,7 +65,7 @@ Conta **bloqueada** perde acesso a tudo, mas ainda lê o próprio perfil (para m
 
 ## 4. Funções (o "API" do app)
 
-**Convites e conta:** `get_invite_preview` (aceita sem login), `create_student_with_invite`, `create_teacher_invite`, `reissue_invite` (reenviar, gerar novo, corrigir e-mail), `accept_student_invite` (exige confirmar a troca se já tem professor), `accept_teacher_invite`, `decline_invite`, `set_teacher_status` (bloquear/desbloquear, encerra as sessões), `admin_teacher_student_counts`, `accept_data_notice`, `save_student_profile`, `delete_my_account`.
+**Convites e conta:** `get_invite_preview` (aceita sem login), `create_student_with_invite`, `create_teacher_invite`, `reissue_invite` (reenviar, gerar novo, corrigir e-mail), `accept_student_invite` (exige confirmar a troca se já tem professor), `accept_teacher_invite`, `decline_invite`, `claim_invite_email` (só a Edge Function `enviar-convite` chama, com o JWT de quem envia), `set_teacher_status` (bloquear/desbloquear, encerra as sessões), `admin_teacher_student_counts`, `accept_data_notice`, `save_student_profile`, `delete_my_account`.
 
 **Biblioteca:** `search_exercises` e `similar_exercises` (olham o nome e, desde a 0007, os apelidos), `create_exercise` (desde a 0007 com 4 parâmetros: nome, grupo, `load_mode`, `measure`; o grupo precisa estar em `muscle_groups`), `set_exercise_hidden`.
 
@@ -91,9 +94,14 @@ Estes pontos **não estavam definidos** nos documentos ou eram ambíguos. Cada u
 
 ## 6. O que NÃO está no SQL (vai para o app, Edge Functions e configuração)
 
-- **Ativar professor sem conta** (regra 93, e-mail sem cadastro): precisa de uma Edge Function que valida o token e cria o usuário já confirmado. Sem isso, só funciona para quem já tem conta.
+- **Ativar professor sem conta** (regra 93, e-mail sem cadastro): Edge Function **`ativar-professor`** (#51), a primeira do repositório. Recebe `{ token, senha }`; confere a senha (regra 78) e o convite por `get_invite_preview` (de professor, válido, e-mail ainda sem conta); cria a conta **já confirmada com o e-mail do convite** (nunca um e-mail vindo do app), entra com ela num cliente só da chamada e chama `accept_teacher_invite`. Se o banco recusar o aceite, **apaga a conta criada**; se a resposta do aceite se perder, confere se a conta já virou professor antes de apagar. O app, ao achar o convite já usado, tenta entrar com a mesma senha (a ativação anterior pode ter dado certo). Erros em `{ error: "codigo" }` (novo: `email_has_account`), traduzidos em `src/lib/erros.ts`; o app chama por `chamarFuncao()` de `src/lib/funcoes.ts` e depois entra com e-mail e senha. Sem migration.
+  - **Base das Edge Functions** (reaproveitada pelo e-mail, #52): código em `supabase/functions/<nome>/` (`index.ts` só liga ao Supabase; a lógica fica num módulo puro com testes `*_test.ts`), utilitários em `supabase/functions/_shared/` (CORS e JSON). CI: job "Edge Functions" roda `deno check` e `deno test`. Local: `npx -y deno@2 test supabase/functions`.
+  - **Risco aceito (29/10/2026, MVP):** o link é a prova de dono do e-mail. Quem tiver o link (ex.: repassado por engano) cria a conta com aquele e-mail sem confirmá-lo. Mitigação: uso único, vale 1 dia e vai só ao e-mail convidado; o dono pode recuperar por "Esqueci a senha".
+  - **Chaves:** a chave secreta só existe no ambiente da função (`SUPABASE_SECRET_KEYS`, com `SUPABASE_SERVICE_ROLE_KEY` de reserva), nunca no app nem no repositório.
+  - **Deploy:** pelo MCP do Supabase (`deploy_edge_function`, arquivos `index.ts`, `ativar.ts` e `../_shared/http.ts`), com **`verify_jwt = false`**: quem chama ainda não tem conta, e o que autoriza é o token do convite.
+- **Enviar o convite por e-mail** (regras 136, 138, 139 e 140): Edge Function **`enviar-convite`** (#52), sobre a base do #51. Recebe só `{ token }` (qualquer outro campo, como URL ou e-mail, é ignorado) e chama `claim_invite_email` **como quem pediu o envio** (o JWT do app segue na chamada; `verify_jwt = true`). O banco confere: convite de aluno só do professor dono; de professor, só administrador; pendente e no prazo (senão `invite_used`, `invite_replaced`, `invite_expired`, `invite_declined`); com e-mail (`invite_no_email`); e **nenhum envio ao mesmo aluno e e-mail (ou ao mesmo e-mail de professor) nos últimos 60 s** (`too_many_emails`; olha os convites da pessoa, porque reenviar cria um convite novo; corrigir o e-mail não espera). **`reissue_invite` também recusa com `too_many_emails`** nesse caso, **antes** de trocar o link, para o link recém-enviado não morrer sem o novo sair; e `claim_invite_email` recusa aluno que já não está como convidado (`student_already_linked`). O nome de quem convidou vai numa linha só, com até 60 caracteres (ele é editável e chega com o remetente oficial). Marca `email_sent_at` (a tentativa conta: se o SMTP falhar, o link segue valendo e o app mostra a espera) e devolve tipo, e-mail do convite e nome de quem convidou. A função monta o link com o segredo **`APP_URL`** + `/convite/` + token, envia pelo SMTP próprio (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`; remetente "Coach In") com os textos de `docs/email-convites-pt-br.md`, e **nunca registra o token** (troca por `[token]` em qualquer log). Falha do SMTP: `email_send_failed`; limite do provedor: `too_many_emails`. Deploy pelo MCP (`index.ts`, `enviar.ts`, `textos.ts`, `../_shared/http.ts`) com **`verify_jwt = true`**.
 - **E-mail:** configurar SMTP próprio (o padrão do Supabase tem limite baixo) e os textos em pt-BR (confirmar e-mail, redefinir senha, convites).
-- **Autenticação (painel do Supabase):** exigir confirmação de e-mail; senha mínima de 8 com letras e números; sessão de 30 dias sem uso (esse recurso pode exigir plano pago, a confirmar).
+- **Autenticação (painel do Supabase), configurada em 28/10/2026:** confirmação de e-mail ligada; senha mínima de 8 com letras e dígitos; validade dos links de e-mail de 1 dia (`Email OTP expiration` = 86400, regras 88 e 89); SMTP próprio (Gmail com senha de app, trocar por provedor transacional e domínio próprio antes do lançamento); textos dos e-mails em pt-BR (`docs/email-templates-pt-br.md`, 5 modelos; o "Invite user" não é usado). **Sessão de 30 dias sem uso:** o campo `Inactivity timeout` só existe no plano Pro; decidido controlar no app, sem plano Pro por enquanto (regra 121, feito na fatia 1, #18: `src/lib/inatividade.ts` guarda o último uso no aparelho; vencida, a sessão sai só neste aparelho e o Login mostra "Entre de novo"). URLs de retorno (Authentication → URL Configuration, #14): Site URL `https://coachin.vercel.app`; Redirect URLs `https://coachin.vercel.app/**`, `https://coachin-*-viniciushp01s-projects.vercel.app/**` (previews) e `http://localhost:5173/**`. "Secure password change" desligado. E-mails de confirmação e de nova senha testados com conta real em 28/10/2026.
 - **Regras de tela em TypeScript** (módulo puro e testado): "Ficha de hoje", "Semana 3 de 8", descanso após 2 dias, resumo do mês. Têm de rodar também offline.
 - **Fila offline (PWA):** guardar ações no aparelho com um `client_action_id` e a hora da ação; enviar ao abrir o app. As funções já aceitam reenvio.
 - **Fuso:** o app deve atualizar `profiles.timezone` a cada abertura com conexão.
@@ -107,7 +115,7 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 2. Rodar o **Security Advisor** do Supabase depois (alertas de RLS ou de função sem `search_path`).
 3. Criar o administrador conforme o comentário no fim da migration 0001.
 
-**Ordem de aplicação:** os arquivos de `supabase/migrations/`, em ordem numérica (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link, 0007 exercise_catalog — esta ainda não aplicada), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
+**Ordem de aplicação:** os arquivos de `supabase/migrations/`, em ordem numérica (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link, 0008 invite_preview_teacher_unavailable, 0009 invite_email_claim, 0010 teacher_list_last_done_letter, 0007 exercise_catalog — esta ainda não aplicada; roda depois da 0010, com o arquivo renomeado para a versão real ao aplicar), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
 
 **Rodar os testes:** `supabase/tests/run.sh` (precisa de Postgres 16 instalado e Linux/WSL/macOS; sobe e derruba um banco descartável) ou, sem Postgres (Windows), `npm --prefix supabase/tests/pglite install` e `node supabase/tests/pglite/run.mjs` (Postgres 17.5 em WebAssembly, PGlite 0.4.6, banco em memória, um comando por transação como o `psql -f`; `--sem-pgcrypto` troca `digest` e `gen_random_bytes` por equivalentes nativos só no harness). Os dois devem terminar com "TODOS OS TESTES PASSARAM".
 
@@ -132,10 +140,35 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 - **Tipos:** sem diferença (nenhuma assinatura mudou); `database.types.ts` mantido.
 - **Teste de fumaça no projeto real**, num bloco desfeito ao final (nada gravado): professor de teste cadastra aluno sem conta, cria treino com início hoje, lê o treino (1) e a lista mostra `convite_pendente`; com o vínculo arquivado, `save_workout` dá `student_not_found`. Depois: 1 usuário (o administrador), 149 exercícios, nenhum aluno ou treino.
 
+### Resultado da aplicação da 0008 (29/10/2026, issue #53)
+
+- **O que muda:** só `get_invite_preview` (`create or replace`, mesma assinatura e mesmo `search_path`, grants mantidos). Precedência da regra 137: usado, substituído, vencido e recusado vêm antes, então só o convite de aluno válido vira `teacher_unavailable` quando o professor do cadastro (`students.teacher_id`, o mesmo que o `accept_student_invite` confere) está bloqueado; desbloqueado no prazo, volta a `valid`. O campo novo `already_linked` só fala da conta de quem abre (`auth.uid()`); sem login ou em convite de professor é `false`.
+- **Testes (PGlite, Postgres 17.5):** os testes novos falham sem ela. Com a 0008, **247 verificações** (seções 10 e 11: prévia de professor bloqueado, desbloqueio, recusado antes do bloqueio, `already_linked` para o aluno do mesmo professor, para outro aluno e sem login).
+- **Aplicação:** registrada como versão `20261029213932` (arquivo local renomeado para essa versão; texto idêntico por md5). Conferido: `get_invite_preview('lixo')` devolve `invalid`; `EXECUTE` para `anon` e `authenticated`; `search_path=public, extensions`.
+- **Advisor:** sem alerta novo do SQL. Segurança: funções RPC `security definer` (1 para `anon`, `get_invite_preview`; 23 para `authenticated`), `auth_leaked_password_protection` e `auth_otp_long_expiry` (configuração do Auth no painel, validade do link de e-mail acima de 1 hora; não vem desta migration). Desempenho: `multiple_permissive_policies` (9) e `unused_index` (10).
+- **Tipos:** sem diferença (`get_invite_preview` devolve `Json`); `database.types.ts` mantido.
+
+### Resultado da aplicação da 0009 (30/10/2026, issue #52)
+
+- **O que muda:** coluna `invites.email_sent_at`; `private.invite_email_recent` (sem execute direto); `claim_invite_email` (nova, `security definer`, `search_path=public, extensions`, `EXECUTE` só para `authenticated`); `reissue_invite` (`create or replace`, mesma assinatura e grants) passa a recusar com `too_many_emails` antes de trocar o link.
+- **Testes (PGlite, Postgres 17.5):** os testes novos falham sem ela. Com a 0009, **266 verificações**.
+- **Aplicação:** registrada como versão `20261030093359` (arquivo local renomeado para essa versão). Conferido: `anon` sem `EXECUTE` em `claim_invite_email`; helper privado sem `EXECUTE` para `anon`/`authenticated`.
+- **Advisor:** sem alerta novo além do padrão já aceito (`claim_invite_email` entra na lista de RPCs `security definer` para `authenticated`, agora 24).
+- **Tipos:** regerados; `email_sent_at` e `claim_invite_email` em `database.types.ts`.
+- **Edge Function:** `enviar-convite` publicada (versão 1, `verify_jwt = true`).
+
+### Resultado da aplicação da 0010 (03/11/2026, issues #77 e #79)
+
+- **O que muda:** só a view `teacher_student_list` (`create or replace view`, `security_invoker` e grants mantidos). Coluna nova `last_done_letter` no fim; o `lateral` do último treino passa a pegar a marcação mais recente (`done_on` e depois `marked_at`, desc) com a letra de `workout_days`. `last_done_on` não muda de valor.
+- **Testes (PGlite, Postgres 17.5):** os testes novos (seção 8) falham sem ela. Com a 0010, **270 verificações**.
+- **Aplicação:** registrada como versão `20261103174813` (arquivo local renomeado para essa versão). Conferido: colunas na mesma ordem, `last_done_letter` no fim, `security_invoker=true`, `SELECT` só para `authenticated`.
+- **Advisor:** sem alerta novo (as mesmas 24 RPCs `security definer` para `authenticated`, `get_invite_preview` para `anon` e os dois avisos do Auth).
+- **Tipos:** regerados; sem diferença em relação ao `last_done_letter` já acrescentado em `database.types.ts`.
+
 ### 0007 · Catálogo de exercícios (pronta, ainda não aplicada)
 
 - **Especificação e dados:** `docs/contexto/catalogo-exercicios.md` e `docs/contexto/exercicios.catalogo.json`.
-- **Testes:** 274 verificações no PGlite (35 novas na seção 6b; dois testes antigos passaram a usar os nomes novos "Puxada alta aberta" e "Tríceps na polia com corda").
+- **Testes:** 305 verificações no PGlite, com a 0007 rodando depois da 0010 (ordem real de aplicação) (35 novas na seção 6b; dois testes antigos passaram a usar os nomes novos "Puxada alta aberta" e "Tríceps na polia com corda").
 - **Antes de aplicar:** item 6 da Fase 0 verde; issue com o número 0007 reservado; um agente por vez. A migration para com erro se um dos 149 pré-definidos não for achado pelo nome da 0004, e avisa (NOTICE) se um professor já tiver exercício com nome igual ao de um do catálogo.
 - **Depois de aplicar:** gerar tipos (`create_exercise` muda de assinatura; `exercises` ganha colunas; 3 tabelas novas), rodar o Security Advisor, conferir 249 pré-definidos, 15 grupos e 55 equipamentos, e registrar o resultado aqui.
 - **Efeito visível:** 61 exercícios mudam de nome e 11 de grupo (ids iguais). Não há fichas reais ainda.

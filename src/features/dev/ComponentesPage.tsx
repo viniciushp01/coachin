@@ -3,6 +3,7 @@ import {
   BackButton,
   Button,
   ButtonCompact,
+  CheckboxRow,
   Chip,
   EmptyState,
   ESPACO_NAVBAR,
@@ -13,12 +14,15 @@ import {
   PhoneField,
   SectionRow,
   Sheet,
+  StepIndicator,
+  StudentRow,
   TextAreaField,
   TextButton,
   Toast,
   useToast,
   type AbaAluno,
 } from "@/ui";
+import { FolhaSair } from "@/features/acesso/FolhaSair";
 
 // Catálogo dos componentes base (Fase 0, item 3) para conferir com a página Componentes do Figma.
 
@@ -28,6 +32,15 @@ function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
       <h2 className="text-overline text-text-secondary">{titulo}</h2>
       {children}
     </section>
+  );
+}
+
+function CaixaDeExemplo() {
+  const [marcada, setMarcada] = useState(false);
+  return (
+    <CheckboxRow checked={marcada} onChange={(e) => setMarcada(e.target.checked)}>
+      Li e entendi que o professor acessa esses dados para montar o meu treino.
+    </CheckboxRow>
   );
 }
 
@@ -70,6 +83,7 @@ function Tokens() {
 function Demonstracoes() {
   const mostrarToast = useToast();
   const [folha, setFolha] = useState(false);
+  const [folhaSair, setFolhaSair] = useState(false);
   const [aba, setAba] = useState<AbaAluno>("inicio");
   const [codigo, setCodigo] = useState("+55");
 
@@ -134,10 +148,32 @@ function Demonstracoes() {
         </Notice>
       </Secao>
 
+      <Secao titulo="StepIndicator">
+        <StepIndicator passo={1} total={2} />
+        <StepIndicator passo={2} total={2} />
+      </Secao>
+
+      <Secao titulo="CheckboxRow">
+        <CaixaDeExemplo />
+      </Secao>
+
       <Secao titulo="FormField, PhoneField">
         <FormField rotulo="E-mail" tipo="email" placeholder="seuemail@exemplo.com" />
         <FormField rotulo="Nome" defaultValue="Vinicius" />
         <FormField rotulo="Senha" tipo="password" defaultValue="segredo123" />
+        <FormField
+          rotulo="Senha"
+          tipo="password"
+          placeholder="Crie uma senha"
+          dica="Mínimo de 8 caracteres, com letras e números."
+        />
+        <FormField
+          rotulo="Senha"
+          tipo="password"
+          defaultValue="abcdefgh"
+          dica="Mínimo de 8 caracteres, com letras e números."
+          erro="A senha precisa ter pelo menos 8 caracteres, com letras e números."
+        />
         <FormField rotulo="Nome" defaultValue="V" erro="Digite seu nome completo." />
         <TextAreaField rotulo="Restrições ou dores" placeholder="Ex.: dor leve no ombro" />
         <PhoneField
@@ -164,6 +200,26 @@ function Demonstracoes() {
           titulo="Supino inclinado com halteres e pausa no peito"
           detalhe="Peito · nome longo trunca em uma linha"
           iconeDireita="more_horiz"
+        />
+      </Secao>
+
+      <Secao titulo="StudentRow">
+        <StudentRow
+          nome="Juliana Costa"
+          status={{ tom: "success", texto: "Ativo" }}
+          solicitacao={{ tom: "brand", texto: "Pediu treino" }}
+          detalhe="Treino concluído em 25/10 · treinou ontem"
+        />
+        <StudentRow
+          nome="Marcos Lima"
+          status={{ tom: "warning", texto: "Quase no fim" }}
+          detalhe="Fim em 03/11 · treinou ontem"
+        />
+        <StudentRow
+          nome="Rafael Torres"
+          status={{ tom: "info", texto: "Convite pendente" }}
+          detalhe="Convite enviado em 27/10 · vale até 03/11"
+          onClick={() => undefined}
         />
       </Secao>
 
@@ -194,6 +250,13 @@ function Demonstracoes() {
         >
           Você vai precisar entrar de novo com e-mail e senha.
         </Sheet>
+      </Secao>
+
+      <Secao titulo="FolhaSair (Perfil, regra 121)">
+        <Button variante="secondary" onClick={() => setFolhaSair(true)}>
+          Abrir "Sair do app?"
+        </Button>
+        <FolhaSair aberta={folhaSair} aoFechar={() => setFolhaSair(false)} />
       </Secao>
 
       <Secao titulo="EmptyState">

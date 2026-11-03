@@ -1,65 +1,145 @@
-import { useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { erroDeAuth } from "@/lib/erros";
+import { email, senhaDoLogin } from "@/lib/formularios";
+import { estadoSessaoQuery, registrarEntrada } from "@/lib/sessao";
 import { supabase } from "@/lib/supabase";
-import { BarraFixa, Button, FormField, Tela, useToast } from "@/ui";
+import { BarraFixa, Button, FormField, Tela, TextButton, useToast } from "@/ui";
+
+const esquema = z.object({ email, senha: senhaDoLogin });
+
+const rotaEntrar = getRouteApi("/entrar");
 
 /**
- * Entrar · versão mínima da Fase 0 (para o "olá" autenticado).
- * A fatia 1 completa esta tela: "Esqueci a senha", "Criar conta", validação com zod,
- * "Entre de novo" na sessão expirada (regra 121) e limite de tentativas.
+ * Entrada da rota `/entrar`: lê o e-mail da busca (`?email=`) e, do estado da sessão que a
+ * guarda da rota carregou, se a sessão venceu por inatividade.
  */
-export function EntrarPage() {
-  const navegar = useNavigate();
-  const mostrarToast = useToast();
-  const [enviando, setEnviando] = useState(false);
+export function TelaEntrar() {
+  const { email: emailDaBusca, confirmado } = rotaEntrar.useSearch();
+  const { estado } = rotaEntrar.useRouteContext();
+  const sessaoExpirada = estado.tipo === "anonimo" && estado.sessaoExpirada === true;
+  return (
+    <EntrarPage
+      emailInicial={emailDaBusca}
+      sessaoExpirada={sessaoExpirada}
+      emailConfirmado={confirmado}
+    />
+  );
+}
 
-  async function entrar(evento: FormEvent<HTMLFormElement>) {
-    evento.preventDefault();
-    const dados = new FormData(evento.currentTarget);
-    setEnviando(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: String(dados.get("email")).trim(),
-      password: String(dados.get("senha")),
-    });
-    setEnviando(false);
-    if (error) {
-      mostrarToast(
-        "error",
-        error.status === 400 ? "E-mail ou senha não conferem." : "Sem conexão. Tente de novo.",
-      );
+type EntrarPageProps = {
+  /** E-mail já preenchido, vindo de outra tela (ex.: "Entrar com este e-mail", regra 83). */
+  emailInicial?: string;
+  /** Sessão encerrada por 30 dias sem uso: título "Entre de novo" (regra 121). */
+  sessaoExpirada?: boolean;
+  /** Voltou do link de confirmação válido: toast "E-mail confirmado." (regra 128). */
+  emailConfirmado?: boolean;
+};
+
+/**
+ * Entrar (regras 39, 47 e 51). A mesma tela serve aos três papéis; o destino vem do servidor.
+ * Erro de credenciais em toast neutro, campos preenchidos, sem bloqueio por tentativas.
+ */
+export function EntrarPage({
+  emailInicial = "",
+  sessaoExpirada = false,
+  emailConfirmado = false,
+}: EntrarPageProps) {
+  const navegar = useNavigate();
+  const queryClient = useQueryClient();
+  const mostrarToast = useToast();
+
+  useEffect(() => {
+    if (emailConfirmado) mostrarToast("success", "E-mail confirmado.");
+  }, [emailConfirmado, mostrarToast]);
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(esquema),
+    defaultValues: { email: emailInicial, senha: "" },
+  });
+
+  async function entrar(dados: z.infer<typeof esquema>) {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: dados.email,
+        password: dados.senha,
+      });
+      if (error) throw error;
+    } catch (causa) {
+      const erro = erroDeAuth(causa);
+      // Senha certa, e-mail ainda não confirmado: a tela de confirmação, não o toast (regra 127).
+      // O Supabase só diz isso a quem acertou a senha, então não revela quem tem conta.
+      if (erro.codigo === "email_not_confirmed") {
+        await navegar({ to: "/confirme-seu-email", search: { email: dados.email, doLogin: true } });
+        return;
+      }
+      mostrarToast("error", erro.message);
       return;
     }
+    // Conta como uso (regra 121) e descarta o estado "anônimo" guardado antes de a raiz
+    // escolher o destino.
+    registrarEntrada();
+    queryClient.removeQueries({ queryKey: estadoSessaoQuery.queryKey });
     await navegar({ to: "/", replace: true });
   }
 
   return (
     <Tela barra="um">
-      <form id="entrar" onSubmit={entrar} className="flex flex-col gap-16" noValidate>
+      <form id="entrar" onSubmit={handleSubmit(entrar)} className="flex flex-col gap-16" noValidate>
         <div className="flex flex-col gap-8">
-          <h1 className="text-title-screen">Entrar</h1>
-          <p className="text-body text-text-secondary">Use o e-mail e a senha do seu acesso.</p>
+          <h1 className="text-title-screen">{sessaoExpirada ? "Entre de novo" : "Entrar"}</h1>
+          <p className="text-body text-text-secondary">
+            {sessaoExpirada
+              ? "Sua sessão expirou por inatividade. Use o e-mail e a senha do seu acesso."
+              : "Use o e-mail e a senha do seu acesso."}
+          </p>
         </div>
         <div className="flex flex-col gap-16">
           <FormField
             rotulo="E-mail"
-            name="email"
             tipo="email"
+            inputMode="email"
             autoComplete="email"
             placeholder="seuemail@exemplo.com"
-            required
+            erro={errors.email?.message}
+            {...register("email")}
           />
           <FormField
             rotulo="Senha"
-            name="senha"
             tipo="password"
             autoComplete="current-password"
             placeholder="Digite sua senha"
-            required
+            erro={errors.senha?.message}
+            {...register("senha")}
           />
         </div>
+        <TextButton
+          className="self-start"
+          onClick={() => {
+            // Leva o e-mail já digitado, para não digitar de novo (regra 50).
+            const emailDigitado = getValues("email").trim();
+            void navegar({
+              to: "/esqueci-a-senha",
+              search: emailDigitado ? { email: emailDigitado } : {},
+            });
+          }}
+        >
+          Esqueci a senha
+        </TextButton>
+        <TextButton tom="muted" className="w-full" onClick={() => navegar({ to: "/criar-conta" })}>
+          Não tem conta? Criar conta
+        </TextButton>
       </form>
       <BarraFixa>
-        <Button type="submit" form="entrar" disabled={enviando}>
+        <Button type="submit" form="entrar" disabled={isSubmitting}>
           Entrar
         </Button>
       </BarraFixa>

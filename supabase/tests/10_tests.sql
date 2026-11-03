@@ -426,6 +426,7 @@ begin
   perform t.su();
   update public.workouts set start_date = start_date - 10 where id = v_w;
   select removed_at into v_removed from public.workout_days where id = dB;
+  perform t.ok((select last_done_on is null and last_done_letter is null from public.teacher_student_list where student_id = v_s), 'lista: sem marcação, sem data nem ficha do último treino');
 
   perform t.login('s1');
   perform public.mark_done(dA, t.today() - 5, a1);
@@ -451,6 +452,22 @@ begin
   perform t.err($q$ delete from public.completions $q$, 'permission denied');
   perform t.login('t2');
   perform t.ok((select count(*) from public.completions) = 0, 'outro professor não lê marcações');
+
+  -- regra 147 (1): ficha do último treino na lista (migration 0010)
+  perform t.login('t1');
+  perform t.ok((select last_done_on = t.today() - 2 and last_done_letter = 'B' from public.teacher_student_list where student_id = v_s), 'lista: ficha do último treino');
+  perform t.login('s1');
+  perform public.mark_done((t.get('dayC'))::uuid, t.today() - 2, gen_random_uuid(), v_removed - interval '2 hours');
+  perform t.login('t1');
+  perform t.ok((select last_done_letter from public.teacher_student_list where student_id = v_s) = 'B', 'lista: duas fichas no mesmo dia, vale a marcada por último (B)');
+  perform t.login('s1');
+  perform public.undo_done((t.get('dayC'))::uuid, t.today() - 2);
+  perform public.mark_done((t.get('dayC'))::uuid, t.today() - 2, gen_random_uuid(), v_removed - interval '30 minutes');
+  perform t.login('t1');
+  perform t.ok((select last_done_letter from public.teacher_student_list where student_id = v_s) = 'C', 'lista: duas fichas no mesmo dia, vale a marcada por último (C)');
+  perform t.login('s1');
+  perform public.undo_done((t.get('dayC'))::uuid, t.today() - 2);
+  perform t.login('t1');
 
   -- Cargas (última edição por HORA DA AÇÃO, não do envio)
   perform t.login('s1');
@@ -627,11 +644,30 @@ begin
   perform t.ok(true, 'e segue marcando treino');
   perform t.login('s3');
   perform t.err(format($q$ select public.accept_student_invite(%L) $q$, t.get('inv_s3')), 'teacher_unavailable');
+  r := public.get_invite_preview(t.get('inv_s3'));                         -- regra 133: tela própria já ao abrir
+  perform t.ok(r ->> 'state' = 'teacher_unavailable', 'preview: convite de professor bloqueado = teacher_unavailable');
+  perform t.ok(r ->> 'inviter_name' is not null, 'preview de professor bloqueado traz o nome do professor');
   perform t.login('admin');
   perform t.err(format($q$ select public.set_teacher_status(%L, 'blocked') $q$, t.uid('s1')), 'teacher_not_found');
   perform public.set_teacher_status(t.uid('t2'), 'active');
+  perform t.ok(public.get_invite_preview(t.get('inv_s3')) ->> 'state' = 'valid', 'desbloqueado no prazo, o convite volta a valer');
   perform t.login('t2');
   perform t.ok((select count(*) from public.students) >= 2, 'desbloquear devolve o acesso como estava');
+  -- Regra 134: segundo convite do professor atual. Desfeito no fim (bloco com exceção) para não
+  -- mudar as contagens dos testes seguintes.
+  begin
+    r := public.create_student_with_invite('Segundo convite');
+    perform t.login('s1');
+    perform t.ok((public.get_invite_preview(r ->> 'token') ->> 'already_linked')::boolean, 'preview: aluno já vinculado ao mesmo professor = already_linked');
+    perform t.err(format($q$ select public.accept_student_invite(%L) $q$, r ->> 'token'), 'already_linked');
+    perform t.login('s3');
+    perform t.ok(not (public.get_invite_preview(r ->> 'token') ->> 'already_linked')::boolean, 'preview: aluno sem vínculo com o professor = not already_linked');
+    perform t.anon();
+    perform t.ok(not (public.get_invite_preview(r ->> 'token') ->> 'already_linked')::boolean, 'preview sem login = not already_linked');
+    raise exception 'desfaz_segundo_convite';
+  exception when others then
+    if sqlerrm <> 'desfaz_segundo_convite' then raise; end if;
+  end;
 end $$;
 
 -- ---------------------------------------------------------------------
@@ -644,6 +680,10 @@ begin
   perform public.decline_invite(t.get('inv_s3'));
   perform t.err(format($q$ select public.accept_student_invite(%L) $q$, t.get('inv_s3')), 'invite_declined');
   perform t.ok(public.get_invite_preview(t.get('inv_s3')) ->> 'state' = 'declined', 'preview: convite recusado');
+  perform t.login('admin');                                                -- regra 137: recusado vem antes do bloqueio
+  perform public.set_teacher_status(t.uid('t2'), 'blocked');
+  perform t.ok(public.get_invite_preview(t.get('inv_s3')) ->> 'state' = 'declined', 'preview: recusado de professor bloqueado = declined');
+  perform public.set_teacher_status(t.uid('t2'), 'active');
   perform t.login('t2');
   perform t.ok((select list_status from public.teacher_student_list where student_id = v_s3) = 'convite_recusado', 'lista: convite recusado');
   r := public.reissue_invite((select id from public.invites where student_id = v_s3 order by created_at desc limit 1));
@@ -895,6 +935,68 @@ begin
   perform t.login('t1');
   perform t.err(format($q$ select public.save_workout(%L, null, %L::jsonb) $q$, v_bt, v_ok::text), 'student_not_found');
   perform t.err(format($q$ select public.save_workout(%L, null, %L::jsonb) $q$, (t.get('st_s1'))::uuid, v_ok::text), 'student_not_found');
+end $$;
+
+-- e-mail do convite (regras 139 e 140): claim_invite_email confere quem chama, o estado e o
+-- intervalo de 60 s antes da Edge Function enviar
+do $$
+declare
+  r jsonb; v_st uuid; v_tok text; v_tok2 text; v_prof text;
+begin
+  perform t.login('t1');
+  r := public.create_student_with_invite('Eva Email', 'eva@x.com');
+  v_st := (r ->> 'student_id')::uuid; v_tok := r ->> 'token';
+  r := public.claim_invite_email(v_tok);
+  perform t.ok(r ->> 'kind' = 'student' and r ->> 'email' = 'eva@x.com' and r ->> 'inviter_name' = 'Prof Um', 'e-mail: quem convidou recebe o destinatário do convite');
+  perform t.ok((select email_sent_at from public.invites where student_id = v_st and status = 'pending') is not null, 'e-mail: professor lê quando o convite foi enviado');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_tok), 'too_many_emails');
+
+  -- reenviar dentro dos 60 s é recusado antes de trocar o link (o enviado segue valendo)
+  perform t.err(format($q$ select public.reissue_invite(%L) $q$, (select id from public.invites where student_id = v_st and status = 'pending')), 'too_many_emails');
+  perform t.ok((select count(*) from public.invites where student_id = v_st and status = 'pending') = 1, 'e-mail: reenvio recusado não troca o link');
+  perform t.su();
+  update public.invites set email_sent_at = now() - interval '61 seconds' where student_id = v_st and email_sent_at is not null;
+  perform t.login('t1');
+  r := public.reissue_invite((select id from public.invites where student_id = v_st and status = 'pending'));
+  v_tok2 := r ->> 'token';
+  perform t.ok(public.claim_invite_email(v_tok2) ->> 'email' = 'eva@x.com', 'e-mail: passados 60 s, reenvia com o link novo');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_tok2), 'too_many_emails');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_tok), 'invite_replaced');
+  -- corrigir o e-mail não espera o intervalo do endereço anterior
+  r := public.reissue_invite((select id from public.invites where student_id = v_st and status = 'pending'), 'eva2@x.com');
+  perform t.ok(public.claim_invite_email(r ->> 'token') ->> 'email' = 'eva2@x.com', 'e-mail: corrigido, envia ao novo endereço sem esperar');
+
+  perform t.login('t2');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_tok2), 'forbidden');
+
+  perform t.login('t1');
+  perform t.err($q$ select public.claim_invite_email('nao-existe') $q$, 'invite_not_found');
+  perform t.err($q$ select public.claim_invite_email(null) $q$, 'invalid_arguments');
+  r := public.create_student_with_invite('Sem Email');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, r ->> 'token'), 'invite_no_email');
+  r := public.create_student_with_invite('Vencida', 'vencida@x.com');
+  perform t.su();
+  update public.invites set expires_at = now() - interval '1 second' where student_id = (r ->> 'student_id')::uuid;
+  perform t.login('t1');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, r ->> 'token'), 'invite_expired');
+  -- aluno que já não está como convidado não recebe
+  r := public.create_student_with_invite('Já Ativa', 'jaativa@x.com');
+  perform t.su();
+  update public.students set status = 'active', user_id = t.uid('s6'), linked_at = now() where id = (r ->> 'student_id')::uuid;
+  perform t.login('t1');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, r ->> 'token'), 'student_already_linked');
+
+  -- convite de professor: o administrador envia; professor não
+  perform t.login('admin');
+  r := public.create_teacher_invite('Nova Pessoa', 'novaprof@x.com');
+  v_prof := r ->> 'token';
+  r := public.claim_invite_email(v_prof);
+  perform t.ok(r ->> 'kind' = 'teacher' and r ->> 'email' = 'novaprof@x.com', 'e-mail: administrador envia o convite de professor');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_prof), 'too_many_emails');
+  perform t.login('t1');
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_prof), 'forbidden');
+  perform t.anon();
+  perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_prof), 'permission denied');
 end $$;
 
 select 'FIM: todos os testes passaram' as resultado;

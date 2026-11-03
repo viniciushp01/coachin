@@ -1,12 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AreaProvisoria } from "@/features/acesso/AreaProvisoria";
+import { lerAlunos } from "@/features/alunos/listaDeAlunos";
+import { ListaDeAlunosPage } from "@/features/alunos/ListaDeAlunosPage";
 import { exigirDestino } from "@/lib/sessao";
 
-// Provisório: a tela de verdade chega com a fatia correspondente (docs/WORKFLOW.md, Fase 1).
+// Lista de alunos: a tela raiz do professor (regras 54, 59 e 147). `staleTime: 0` relê a lista
+// ao voltar da tela do aluno com convite.
 export const Route = createFileRoute("/professor")({
   beforeLoad: ({ context }) => exigirDestino(context.queryClient, "/professor"),
-  component: function Area() {
-    const { estado } = Route.useRouteContext();
-    return <AreaProvisoria nome={estado.tipo === "logado" ? estado.nome : ""} area="professor" />;
+  loader: () => lerAlunos(),
+  staleTime: 0,
+  component: function Lista() {
+    return <ListaDeAlunosPage linhas={Route.useLoaderData()} />;
   },
 });

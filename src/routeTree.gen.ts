@@ -13,11 +13,22 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AlunoRouteImport } from './routes/aluno'
 import { Route as BloqueadoRouteImport } from './routes/bloqueado'
+import { Route as ConfiraSeuEmailRouteImport } from './routes/confira-seu-email'
+import { Route as ConfirmarEmailRouteImport } from './routes/confirmar-email'
+import { Route as ConfirmeSeuEmailRouteImport } from './routes/confirme-seu-email'
+import { Route as CriarContaRouteImport } from './routes/criar-conta'
 import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as EsqueciASenhaRouteImport } from './routes/esqueci-a-senha'
+import { Route as NovaSenhaRouteImport } from './routes/nova-senha'
 import { Route as PrimeiroAcessoRouteImport } from './routes/primeiro-acesso'
 import { Route as ProfessorRouteImport } from './routes/professor'
 import { Route as SemProfessorRouteImport } from './routes/sem-professor'
+import { Route as AdminConvidarProfessorRouteImport } from './routes/admin_.convidar-professor'
+import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
 import { Route as DevComponentesRouteImport } from './routes/dev.componentes'
+import { Route as ProfessorCadastrarAlunoRouteImport } from './routes/professor_.cadastrar-aluno'
+import { Route as AdminConviteConviteIdRouteImport } from './routes/admin_.convite.$conviteId'
+import { Route as ProfessorAlunosAlunoIdRouteImport } from './routes/professor_.alunos.$alunoId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -39,9 +50,39 @@ const BloqueadoRoute = BloqueadoRouteImport.update({
   path: '/bloqueado',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConfiraSeuEmailRoute = ConfiraSeuEmailRouteImport.update({
+  id: '/confira-seu-email',
+  path: '/confira-seu-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfirmarEmailRoute = ConfirmarEmailRouteImport.update({
+  id: '/confirmar-email',
+  path: '/confirmar-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfirmeSeuEmailRoute = ConfirmeSeuEmailRouteImport.update({
+  id: '/confirme-seu-email',
+  path: '/confirme-seu-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CriarContaRoute = CriarContaRouteImport.update({
+  id: '/criar-conta',
+  path: '/criar-conta',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EntrarRoute = EntrarRouteImport.update({
   id: '/entrar',
   path: '/entrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EsqueciASenhaRoute = EsqueciASenhaRouteImport.update({
+  id: '/esqueci-a-senha',
+  path: '/esqueci-a-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NovaSenhaRoute = NovaSenhaRouteImport.update({
+  id: '/nova-senha',
+  path: '/nova-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrimeiroAcessoRoute = PrimeiroAcessoRouteImport.update({
@@ -59,9 +100,34 @@ const SemProfessorRoute = SemProfessorRouteImport.update({
   path: '/sem-professor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminConvidarProfessorRoute = AdminConvidarProfessorRouteImport.update({
+  id: '/admin_/convidar-professor',
+  path: '/admin/convidar-professor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConviteTokenRoute = ConviteTokenRouteImport.update({
+  id: '/convite/$token',
+  path: '/convite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DevComponentesRoute = DevComponentesRouteImport.update({
   id: '/dev/componentes',
   path: '/dev/componentes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfessorCadastrarAlunoRoute = ProfessorCadastrarAlunoRouteImport.update({
+  id: '/professor_/cadastrar-aluno',
+  path: '/professor/cadastrar-aluno',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminConviteConviteIdRoute = AdminConviteConviteIdRouteImport.update({
+  id: '/admin_/convite/$conviteId',
+  path: '/admin/convite/$conviteId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfessorAlunosAlunoIdRoute = ProfessorAlunosAlunoIdRouteImport.update({
+  id: '/professor_/alunos/$alunoId',
+  path: '/professor/alunos/$alunoId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -70,22 +136,44 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/aluno': typeof AlunoRoute
   '/bloqueado': typeof BloqueadoRoute
+  '/confira-seu-email': typeof ConfiraSeuEmailRoute
+  '/confirmar-email': typeof ConfirmarEmailRoute
+  '/confirme-seu-email': typeof ConfirmeSeuEmailRoute
+  '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
+  '/esqueci-a-senha': typeof EsqueciASenhaRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/professor': typeof ProfessorRoute
   '/sem-professor': typeof SemProfessorRoute
+  '/admin/convidar-professor': typeof AdminConvidarProfessorRoute
+  '/convite/$token': typeof ConviteTokenRoute
   '/dev/componentes': typeof DevComponentesRoute
+  '/professor/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
+  '/admin/convite/$conviteId': typeof AdminConviteConviteIdRoute
+  '/professor/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/aluno': typeof AlunoRoute
   '/bloqueado': typeof BloqueadoRoute
+  '/confira-seu-email': typeof ConfiraSeuEmailRoute
+  '/confirmar-email': typeof ConfirmarEmailRoute
+  '/confirme-seu-email': typeof ConfirmeSeuEmailRoute
+  '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
+  '/esqueci-a-senha': typeof EsqueciASenhaRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/professor': typeof ProfessorRoute
   '/sem-professor': typeof SemProfessorRoute
+  '/admin/convidar-professor': typeof AdminConvidarProfessorRoute
+  '/convite/$token': typeof ConviteTokenRoute
   '/dev/componentes': typeof DevComponentesRoute
+  '/professor/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
+  '/admin/convite/$conviteId': typeof AdminConviteConviteIdRoute
+  '/professor/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -93,11 +181,22 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/aluno': typeof AlunoRoute
   '/bloqueado': typeof BloqueadoRoute
+  '/confira-seu-email': typeof ConfiraSeuEmailRoute
+  '/confirmar-email': typeof ConfirmarEmailRoute
+  '/confirme-seu-email': typeof ConfirmeSeuEmailRoute
+  '/criar-conta': typeof CriarContaRoute
   '/entrar': typeof EntrarRoute
+  '/esqueci-a-senha': typeof EsqueciASenhaRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/primeiro-acesso': typeof PrimeiroAcessoRoute
   '/professor': typeof ProfessorRoute
   '/sem-professor': typeof SemProfessorRoute
+  '/admin_/convidar-professor': typeof AdminConvidarProfessorRoute
+  '/convite/$token': typeof ConviteTokenRoute
   '/dev/componentes': typeof DevComponentesRoute
+  '/professor_/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
+  '/admin_/convite/$conviteId': typeof AdminConviteConviteIdRoute
+  '/professor_/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -106,33 +205,66 @@ export interface FileRouteTypes {
     | '/admin'
     | '/aluno'
     | '/bloqueado'
+    | '/confira-seu-email'
+    | '/confirmar-email'
+    | '/confirme-seu-email'
+    | '/criar-conta'
     | '/entrar'
+    | '/esqueci-a-senha'
+    | '/nova-senha'
     | '/primeiro-acesso'
     | '/professor'
     | '/sem-professor'
+    | '/admin/convidar-professor'
+    | '/convite/$token'
     | '/dev/componentes'
+    | '/professor/cadastrar-aluno'
+    | '/admin/convite/$conviteId'
+    | '/professor/alunos/$alunoId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
     | '/aluno'
     | '/bloqueado'
+    | '/confira-seu-email'
+    | '/confirmar-email'
+    | '/confirme-seu-email'
+    | '/criar-conta'
     | '/entrar'
+    | '/esqueci-a-senha'
+    | '/nova-senha'
     | '/primeiro-acesso'
     | '/professor'
     | '/sem-professor'
+    | '/admin/convidar-professor'
+    | '/convite/$token'
     | '/dev/componentes'
+    | '/professor/cadastrar-aluno'
+    | '/admin/convite/$conviteId'
+    | '/professor/alunos/$alunoId'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/aluno'
     | '/bloqueado'
+    | '/confira-seu-email'
+    | '/confirmar-email'
+    | '/confirme-seu-email'
+    | '/criar-conta'
     | '/entrar'
+    | '/esqueci-a-senha'
+    | '/nova-senha'
     | '/primeiro-acesso'
     | '/professor'
     | '/sem-professor'
+    | '/admin_/convidar-professor'
+    | '/convite/$token'
     | '/dev/componentes'
+    | '/professor_/cadastrar-aluno'
+    | '/admin_/convite/$conviteId'
+    | '/professor_/alunos/$alunoId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -140,11 +272,22 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AlunoRoute: typeof AlunoRoute
   BloqueadoRoute: typeof BloqueadoRoute
+  ConfiraSeuEmailRoute: typeof ConfiraSeuEmailRoute
+  ConfirmarEmailRoute: typeof ConfirmarEmailRoute
+  ConfirmeSeuEmailRoute: typeof ConfirmeSeuEmailRoute
+  CriarContaRoute: typeof CriarContaRoute
   EntrarRoute: typeof EntrarRoute
+  EsqueciASenhaRoute: typeof EsqueciASenhaRoute
+  NovaSenhaRoute: typeof NovaSenhaRoute
   PrimeiroAcessoRoute: typeof PrimeiroAcessoRoute
   ProfessorRoute: typeof ProfessorRoute
   SemProfessorRoute: typeof SemProfessorRoute
+  AdminConvidarProfessorRoute: typeof AdminConvidarProfessorRoute
+  ConviteTokenRoute: typeof ConviteTokenRoute
   DevComponentesRoute: typeof DevComponentesRoute
+  ProfessorCadastrarAlunoRoute: typeof ProfessorCadastrarAlunoRoute
+  AdminConviteConviteIdRoute: typeof AdminConviteConviteIdRoute
+  ProfessorAlunosAlunoIdRoute: typeof ProfessorAlunosAlunoIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -177,11 +320,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BloqueadoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/confira-seu-email': {
+      id: '/confira-seu-email'
+      path: '/confira-seu-email'
+      fullPath: '/confira-seu-email'
+      preLoaderRoute: typeof ConfiraSeuEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confirmar-email': {
+      id: '/confirmar-email'
+      path: '/confirmar-email'
+      fullPath: '/confirmar-email'
+      preLoaderRoute: typeof ConfirmarEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confirme-seu-email': {
+      id: '/confirme-seu-email'
+      path: '/confirme-seu-email'
+      fullPath: '/confirme-seu-email'
+      preLoaderRoute: typeof ConfirmeSeuEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/criar-conta': {
+      id: '/criar-conta'
+      path: '/criar-conta'
+      fullPath: '/criar-conta'
+      preLoaderRoute: typeof CriarContaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/entrar': {
       id: '/entrar'
       path: '/entrar'
       fullPath: '/entrar'
       preLoaderRoute: typeof EntrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/esqueci-a-senha': {
+      id: '/esqueci-a-senha'
+      path: '/esqueci-a-senha'
+      fullPath: '/esqueci-a-senha'
+      preLoaderRoute: typeof EsqueciASenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nova-senha': {
+      id: '/nova-senha'
+      path: '/nova-senha'
+      fullPath: '/nova-senha'
+      preLoaderRoute: typeof NovaSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/primeiro-acesso': {
@@ -205,11 +390,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SemProfessorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin_/convidar-professor': {
+      id: '/admin_/convidar-professor'
+      path: '/admin/convidar-professor'
+      fullPath: '/admin/convidar-professor'
+      preLoaderRoute: typeof AdminConvidarProfessorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/convite/$token': {
+      id: '/convite/$token'
+      path: '/convite/$token'
+      fullPath: '/convite/$token'
+      preLoaderRoute: typeof ConviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dev/componentes': {
       id: '/dev/componentes'
       path: '/dev/componentes'
       fullPath: '/dev/componentes'
       preLoaderRoute: typeof DevComponentesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/professor_/cadastrar-aluno': {
+      id: '/professor_/cadastrar-aluno'
+      path: '/professor/cadastrar-aluno'
+      fullPath: '/professor/cadastrar-aluno'
+      preLoaderRoute: typeof ProfessorCadastrarAlunoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin_/convite/$conviteId': {
+      id: '/admin_/convite/$conviteId'
+      path: '/admin/convite/$conviteId'
+      fullPath: '/admin/convite/$conviteId'
+      preLoaderRoute: typeof AdminConviteConviteIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/professor_/alunos/$alunoId': {
+      id: '/professor_/alunos/$alunoId'
+      path: '/professor/alunos/$alunoId'
+      fullPath: '/professor/alunos/$alunoId'
+      preLoaderRoute: typeof ProfessorAlunosAlunoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -220,11 +440,22 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AlunoRoute: AlunoRoute,
   BloqueadoRoute: BloqueadoRoute,
+  ConfiraSeuEmailRoute: ConfiraSeuEmailRoute,
+  ConfirmarEmailRoute: ConfirmarEmailRoute,
+  ConfirmeSeuEmailRoute: ConfirmeSeuEmailRoute,
+  CriarContaRoute: CriarContaRoute,
   EntrarRoute: EntrarRoute,
+  EsqueciASenhaRoute: EsqueciASenhaRoute,
+  NovaSenhaRoute: NovaSenhaRoute,
   PrimeiroAcessoRoute: PrimeiroAcessoRoute,
   ProfessorRoute: ProfessorRoute,
   SemProfessorRoute: SemProfessorRoute,
+  AdminConvidarProfessorRoute: AdminConvidarProfessorRoute,
+  ConviteTokenRoute: ConviteTokenRoute,
   DevComponentesRoute: DevComponentesRoute,
+  ProfessorCadastrarAlunoRoute: ProfessorCadastrarAlunoRoute,
+  AdminConviteConviteIdRoute: AdminConviteConviteIdRoute,
+  ProfessorAlunosAlunoIdRoute: ProfessorAlunosAlunoIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

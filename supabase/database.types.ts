@@ -165,6 +165,7 @@ export type Database = {
           created_at: string
           declined_at: string | null
           email: string | null
+          email_sent_at: string | null
           expires_at: string
           id: string
           invitee_name: string | null
@@ -180,6 +181,7 @@ export type Database = {
           accepted_by?: string | null
           created_at?: string
           declined_at?: string | null
+          email_sent_at?: string | null
           email?: string | null
           expires_at: string
           id?: string
@@ -196,6 +198,7 @@ export type Database = {
           accepted_by?: string | null
           created_at?: string
           declined_at?: string | null
+          email_sent_at?: string | null
           email?: string | null
           expires_at?: string
           id?: string
@@ -755,6 +758,7 @@ export type Database = {
           invite_expires_at: string | null
           invite_id: string | null
           invite_state: string | null
+          last_done_letter: string | null
           last_done_on: string | null
           link_status: Database["public"]["Enums"]["link_status"] | null
           list_status: string | null
@@ -809,6 +813,7 @@ export type Database = {
         Returns: undefined
       }
       cancel_training_request: { Args: never; Returns: undefined }
+      claim_invite_email: { Args: { p_token: string }; Returns: Json }
       create_exercise: {
         Args: { p_muscle_group?: string; p_name: string }
         Returns: {

@@ -4,12 +4,18 @@ export type Papel = Database["public"]["Enums"]["app_role"];
 
 /** O que o servidor diz sobre quem está usando o app. Nunca vem de user_metadata. */
 export type EstadoSessao =
-  | { tipo: "anonimo" }
+  | {
+      tipo: "anonimo";
+      /** A sessão foi encerrada por 30 dias sem uso: o Login mostra "Entre de novo" (regra 121). */
+      sessaoExpirada?: true;
+    }
   | {
       tipo: "logado";
       papel: Papel;
       bloqueado: boolean;
       nome: string;
+      /** E-mail da conta ("Você entrou com…", regras 97 e 144). */
+      email: string;
       /** Só para aluno: tem vínculo ativo com um professor. */
       temProfessor: boolean;
       /** Só para aluno: confirmou o aviso de dados (passo 1 do primeiro acesso). */
@@ -42,4 +48,27 @@ export function destinoDaSessao(estado: EstadoSessao): Destino {
   if (!estado.temProfessor) return "/sem-professor";
   if (!estado.perfilConcluido) return "/primeiro-acesso";
   return "/aluno";
+}
+
+export type DestinoDaRaiz = { to: Destino } | { to: "/convite/$token"; params: { token: string } };
+
+/**
+ * Para onde a raiz do app leva, com o convite guardado no aparelho: quem acabou de entrar volta
+ * ao convite que abriu antes de criar a conta ou fazer login (regras 79 e 97), em qualquer papel
+ * (a tela do convite trata a conta errada, regra 134). Sem sessão ou bloqueado, o convite espera.
+ */
+export function destinoDaRaiz(estado: EstadoSessao, conviteGuardado: string | null): DestinoDaRaiz {
+  const destino = destinoDaSessao(estado);
+  if (conviteGuardado && destino !== "/entrar" && destino !== "/bloqueado") {
+    return { to: "/convite/$token", params: { token: conviteGuardado } };
+  }
+  return { to: destino };
+}
+
+/**
+ * Quem abre o link do convite já logado e bloqueado vai para o bloqueio, antes de qualquer
+ * estado do convite (regra 137, passo 0; regras 95 e 119). Deslogado, o app ainda não sabe da conta.
+ */
+export function destinoDoConvite(estado: EstadoSessao): "/bloqueado" | null {
+  return estado.tipo === "logado" && estado.bloqueado ? "/bloqueado" : null;
 }
