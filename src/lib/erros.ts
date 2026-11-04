@@ -36,8 +36,8 @@ export const MENSAGENS = {
   invite_not_found: "Não encontramos este convite.",
   invite_not_pending: "Este convite não está mais pendente.",
   email_mismatch: "Este convite foi enviado para outro e-mail.",
-  invite_no_email: "Convite sem e-mail. Copie o link e envie por outro app.", // [produto]
-  email_send_failed: "E-mail não enviado. Copie o link e envie por outro app.", // regra 136, Edge Function enviar-convite
+  invite_no_email: "Convite sem e-mail. Copie o link e envie por WhatsApp.", // [produto]
+  email_send_failed: "E-mail não enviado. Copie o link e envie por WhatsApp.", // regra 136, Edge Function enviar-convite
   email_has_account: "Este e-mail já tem conta. Entre para ativar o acesso.", // Edge Function ativar-professor
   already_linked: "Sua conta já está vinculada a este professor.",
   switch_requires_confirmation: "Confirme a troca de professor.",

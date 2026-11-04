@@ -76,7 +76,7 @@ describe("Enviar por e-mail (regras 57, 136 e 139)", () => {
     const usuario = abrir();
     await usuario.click(enviar());
     expect(
-      await screen.findByText("E-mail não enviado. Copie o link e envie por outro app."),
+      await screen.findByText("E-mail não enviado. Copie o link e envie por WhatsApp."),
     ).toBeVisible();
     expect(screen.getByRole("button", { name: "Copiar link" })).toBeEnabled();
     expect(enviar()).toHaveTextContent("Reenviar em 60 s");
