@@ -83,7 +83,7 @@ describe("Convite pendente (regras 55 e 58)", () => {
     await usuario.click(screen.getByRole("button", { name: "Reenviar convite" }));
     expect(
       await screen.findByText(
-        "Não foi possível enviar o e-mail. Copie o link e envie por outro app.",
+        "E-mail não enviado. Copie o link e envie por outro app.",
       ),
     ).toBeVisible();
     await usuario.click(screen.getByRole("button", { name: "Copiar link" }));

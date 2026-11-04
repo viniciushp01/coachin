@@ -14,12 +14,12 @@ export type TomToast = "success" | "error";
 
 type ToastProps = { tom: TomToast; children: ReactNode; className?: string };
 
-/** Aviso curto. A mensagem tem de caber em uma linha (≈ 30 caracteres). */
+/** Aviso curto. A mensagem quebra em até 2 linhas (≈ 60 caracteres, regra 155), sem cortar. */
 export function Toast({ tom, children, className }: ToastProps) {
   return (
     <div
       className={clsx(
-        "flex h-[56px] w-full items-center gap-12 rounded-tile bg-bg-surface-raised p-16 shadow-raised",
+        "flex min-h-[56px] w-full items-center gap-12 rounded-tile bg-bg-surface-raised p-16 shadow-raised",
         className,
       )}
     >
@@ -31,7 +31,7 @@ export function Toast({ tom, children, className }: ToastProps) {
       >
         <Icon nome={tom === "success" ? "check" : "close"} tamanho={16} />
       </span>
-      <p className="min-w-0 flex-1 truncate text-body-strong text-text-primary">{children}</p>
+      <p className="min-w-0 flex-1 text-body-strong text-text-primary">{children}</p>
     </div>
   );
 }
