@@ -999,4 +999,100 @@ begin
   perform t.err(format($q$ select public.claim_invite_email(%L) $q$, v_prof), 'permission denied');
 end $$;
 
+-- ---------------------------------------------------------------------
+-- 12. Limites de save_workout (regras 149 (4) e 154 (2), migration 0012)
+-- ---------------------------------------------------------------------
+-- Treino de uma ficha e um exercício, com os campos de p_ex por cima do padrão.
+create function t.um_exercicio(p_base jsonb, p_ex jsonb) returns jsonb language sql stable as $$
+  select p_base || jsonb_build_object('days', jsonb_build_array(
+    t.day(null, 'Ficha', array[t.item('Supino reto com barra', 3, '10') || p_ex])))
+$$;
+create function t.salvar_recusa(p_student uuid, p_workout uuid, p_data jsonb, p_code text) returns void
+language sql as $$
+  select t.err(format($q$ select public.save_workout(%L, %L, %L::jsonb) $q$, p_student, p_workout, p_data::text), p_code)
+$$;
+create function t.exercicio_salvo(p_workout uuid) returns public.workout_exercises language sql stable as $$
+  select e.* from public.workout_exercises e
+    join public.workout_days d on d.id = e.day_id
+   where d.workout_id = p_workout and d.removed_at is null
+   order by d.position, e.position limit 1
+$$;
+
+do $$
+declare
+  v_s uuid;
+  v_w uuid; v_w2 uuid;
+  v_base jsonb;
+  v_ok jsonb;
+  v_vinte text := repeat('x', 20);
+  v_ex public.workout_exercises;
+begin
+  perform t.login('t1');
+  v_s := (public.create_student_with_invite('Lia Limites', 'lia.limites@x.com') ->> 'student_id')::uuid;
+  v_base := jsonb_build_object('name', 'Limites', 'start_date', t.today(), 'weeks', 8);
+  v_ok := t.um_exercicio(v_base, '{}');
+
+  -- semanas: de 1 a 104; número gigante não pode virar erro cru de inteiro
+  perform t.salvar_recusa(v_s, null, v_ok || '{"weeks":12345678901234567890}', 'weeks_invalid');
+  perform t.salvar_recusa(v_s, null, v_ok || '{"weeks":"12345678901234567890"}', 'weeks_invalid');
+  perform t.salvar_recusa(v_s, null, v_ok || '{"weeks":0}', 'weeks_invalid');
+  perform t.salvar_recusa(v_s, null, v_ok || '{"weeks":105}', 'weeks_invalid');
+  perform t.salvar_recusa(v_s, null, v_ok || '{"weeks":-1}', 'weeks_invalid');
+  perform t.salvar_recusa(v_s, null, v_ok || '{"weeks":8.5}', 'weeks_invalid');
+  perform t.salvar_recusa(v_s, null, v_ok - 'weeks', 'weeks_invalid');
+
+  -- séries: de 1 a 20
+  perform t.salvar_recusa(v_s, null, t.um_exercicio(v_base, '{"sets":0}'), 'sets_invalid');
+  perform t.salvar_recusa(v_s, null, t.um_exercicio(v_base, '{"sets":21}'), 'sets_invalid');
+  perform t.salvar_recusa(v_s, null, t.um_exercicio(v_base, '{"sets":12345678901234567890}'), 'sets_invalid');
+  perform t.salvar_recusa(v_s, null, t.um_exercicio(v_base, '{"sets":""}'), 'sets_invalid');
+
+  -- repetições ou tempo: não vazio, até 20 caracteres depois do btrim
+  perform t.salvar_recusa(v_s, null, t.um_exercicio(v_base, '{"reps":"   "}'), 'reps_invalid');
+  perform t.salvar_recusa(v_s, null, t.um_exercicio(v_base, jsonb_build_object('reps', repeat('x', 21))), 'reps_invalid');
+
+  -- descanso: de 0 a 600
+  perform t.salvar_recusa(v_s, null, t.um_exercicio(v_base, '{"rest_seconds":601}'), 'rest_invalid');
+  perform t.salvar_recusa(v_s, null, t.um_exercicio(v_base, '{"rest_seconds":12345678901234567890}'), 'rest_invalid');
+  perform t.salvar_recusa(v_s, null, t.um_exercicio(v_base, '{"rest_seconds":-1}'), 'rest_invalid');
+  perform t.salvar_recusa(v_s, null, t.um_exercicio(v_base, '{"rest_seconds":"abc"}'), 'rest_invalid');
+
+  -- no limite passa (20 séries, 20 caracteres com espaços em volta, 600 s, 104 semanas)
+  v_w := public.save_workout(v_s, null, t.um_exercicio(v_base || '{"weeks":104}',
+    jsonb_build_object('sets', 20, 'reps', '  ' || v_vinte || '  ', 'rest_seconds', 600)));
+  v_ex := t.exercicio_salvo(v_w);
+  perform t.ok((select weeks from public.workouts where id = v_w) = 104, 'limites: 104 semanas passa');
+  perform t.ok(v_ex.sets = 20, 'limites: 20 séries passa');
+  perform t.ok(v_ex.reps = v_vinte, 'limites: 20 caracteres passa, sem os espaços em volta');
+  perform t.ok(v_ex.rest_seconds = 600, 'limites: descanso 600 passa');
+
+  -- no mínimo passa, e descanso vazio grava 0 (em branco, nulo, ausente ou só espaços)
+  v_w2 := public.save_workout(v_s, null, t.um_exercicio(v_base || jsonb_build_object('weeks', 1, 'start_date', t.today() + 30),
+    '{"sets":1,"reps":"1","rest_seconds":""}'));
+  v_ex := t.exercicio_salvo(v_w2);
+  perform t.ok((select weeks from public.workouts where id = v_w2) = 1 and v_ex.sets = 1, 'limites: 1 semana e 1 série passam');
+  perform t.ok(v_ex.rest_seconds = 0, 'limites: descanso em branco grava 0');
+
+  v_ok := t.um_exercicio(v_base || jsonb_build_object('start_date', t.today() + 30), '{"rest_seconds":null}');
+  perform public.save_workout(v_s, v_w2, v_ok);
+  perform t.ok((t.exercicio_salvo(v_w2)).rest_seconds = 0, 'limites: descanso nulo grava 0');
+
+  v_ok := t.um_exercicio(v_base || jsonb_build_object('start_date', t.today() + 30), '{}');
+  v_ok := jsonb_set(v_ok, '{days,0,exercises,0}', (v_ok #> '{days,0,exercises,0}') - 'rest_seconds');
+  perform public.save_workout(v_s, v_w2, v_ok);
+  perform t.ok((t.exercicio_salvo(v_w2)).rest_seconds = 0, 'limites: descanso ausente grava 0');
+
+  perform public.save_workout(v_s, v_w2, t.um_exercicio(v_base || jsonb_build_object('start_date', t.today() + 30), '{"rest_seconds":"   "}'));
+  perform t.ok((t.exercicio_salvo(v_w2)).rest_seconds = 0, 'limites: descanso só com espaços grava 0');
+
+  -- o limite também vale ao editar (treino agendado e treino ativo)
+  v_ok := t.um_exercicio(v_base || jsonb_build_object('start_date', t.today() + 30), '{}');
+  perform t.salvar_recusa(v_s, v_w2, v_ok || '{"weeks":105}', 'weeks_invalid');
+  perform t.salvar_recusa(v_s, v_w2, t.um_exercicio(v_base || jsonb_build_object('start_date', t.today() + 30), '{"sets":21}'), 'sets_invalid');
+  perform t.salvar_recusa(v_s, v_w2, t.um_exercicio(v_base || jsonb_build_object('start_date', t.today() + 30), jsonb_build_object('reps', repeat('x', 21))), 'reps_invalid');
+  perform t.salvar_recusa(v_s, v_w2, t.um_exercicio(v_base || jsonb_build_object('start_date', t.today() + 30), '{"rest_seconds":601}'), 'rest_invalid');
+  perform t.salvar_recusa(v_s, v_w, t.um_exercicio(v_base || '{"weeks":104}', '{"sets":21}'), 'sets_invalid');
+  perform t.su();
+end $$;
+
 select 'FIM: todos os testes passaram' as resultado;
