@@ -21,7 +21,7 @@ import {
 import { TreinoSalvo } from "./TreinoSalvo";
 
 /** As telas cheias do fluxo, que a rota guarda no histórico para o "voltar" do aparelho. */
-export type PassoDoTreino = "dados" | "fichas" | "ficha" | "adicionar";
+export type PassoDoTreino = "dados" | "fichas" | "ficha" | "adicionar" | "novo-exercicio";
 
 type CriarTreinoPageProps = {
   aluno: AlunoDoTreino;
@@ -98,11 +98,13 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
 
   const indice = edicao ? rascunho.fichas.findIndex((f) => f.id === edicao.id) : -1;
 
-  if (edicao && indice >= 0 && passo === "adicionar") {
+  if (edicao && indice >= 0 && (passo === "adicionar" || passo === "novo-exercicio")) {
     return (
       <AdicionarExercicio
         ficha={edicao}
         indice={indice}
+        criando={passo === "novo-exercicio"}
+        aoCriar={() => irPara("novo-exercicio")}
         aoVoltar={voltar}
         aoAdicionar={(exercicio) => {
           setEdicao(salvarExercicio(edicao, exercicio));

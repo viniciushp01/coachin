@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { erroDaResposta } from "@/lib/erros";
-import { BackButton, SearchField, SectionRow, Tela, useToast } from "@/ui";
+import { BackButton, SearchField, SectionRow, Tela, TextButton, useToast } from "@/ui";
 import { buscarExercicios, type ExercicioDaBusca } from "./biblioteca";
+import { CriarExercicio } from "./CriarExercicio";
+import { procurarParecido } from "./exercicioNovo";
 import { FolhaDoExercicio } from "./FolhaDoExercicio";
 import { novoExercicio, tituloDaFicha, type ExercicioDoRascunho, type Ficha } from "./rascunho";
 
@@ -10,6 +12,9 @@ const ESPERA_DA_BUSCA_MS = 250;
 type AdicionarExercicioProps = {
   ficha: Ficha;
   indice: number;
+  /** O passo "novo-exercicio": a criação fica na rota para o "voltar" do aparelho. */
+  criando: boolean;
+  aoCriar: () => void;
   aoVoltar: () => void;
   aoAdicionar: (exercicio: ExercicioDoRascunho) => void;
 };
@@ -18,6 +23,8 @@ type AdicionarExercicioProps = {
 export function AdicionarExercicio({
   ficha,
   indice,
+  criando,
+  aoCriar,
   aoVoltar,
   aoAdicionar,
 }: AdicionarExercicioProps) {
@@ -25,6 +32,14 @@ export function AdicionarExercicio({
   const [termo, setTermo] = useState("");
   const [resultados, setResultados] = useState<ExercicioDaBusca[]>([]);
   const [escolhido, setEscolhido] = useState<ExercicioDaBusca | null>(null);
+  const [criacao, setCriacao] = useState<{
+    nome: string;
+    parecido: ExercicioDaBusca | null;
+  } | null>(null);
+  const [procurandoParecido, setProcurandoParecido] = useState(false);
+  /** Muda ao voltar da criação: o exercício novo precisa aparecer na busca. */
+  const [leitura, setLeitura] = useState(0);
+  const nomeDigitado = termo.trim();
 
   useEffect(() => {
     let valida = true;
@@ -42,7 +57,34 @@ export function AdicionarExercicio({
       valida = false;
       clearTimeout(espera);
     };
-  }, [termo, mostrarToast]);
+  }, [termo, leitura, mostrarToast]);
+
+  async function tocarEmCriar() {
+    setProcurandoParecido(true);
+    try {
+      setCriacao({ nome: nomeDigitado, parecido: await procurarParecido(nomeDigitado) });
+      aoCriar();
+    } catch (causa) {
+      mostrarToast("error", erroDaResposta(causa).message);
+    } finally {
+      setProcurandoParecido(false);
+    }
+  }
+
+  if (criando && criacao) {
+    return (
+      <CriarExercicio
+        nome={criacao.nome}
+        parecido={criacao.parecido}
+        aoVoltar={aoVoltar}
+        aoEscolher={(exercicio) => {
+          setEscolhido(exercicio);
+          setLeitura((n) => n + 1);
+          aoVoltar();
+        }}
+      />
+    );
+  }
 
   return (
     <Tela>
@@ -68,6 +110,15 @@ export function AdicionarExercicio({
           </li>
         ))}
       </ul>
+      {nomeDigitado && (
+        <TextButton
+          className="self-start text-left"
+          disabled={procurandoParecido}
+          onClick={() => void tocarEmCriar()}
+        >
+          Criar “{nomeDigitado}” como novo exercício
+        </TextButton>
+      )}
       {escolhido && (
         <FolhaDoExercicio
           key={escolhido.id}
