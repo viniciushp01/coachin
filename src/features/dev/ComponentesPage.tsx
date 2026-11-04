@@ -5,6 +5,7 @@ import {
   ButtonCompact,
   CheckboxRow,
   Chip,
+  DateField,
   EmptyState,
   ESPACO_NAVBAR,
   FormField,
@@ -15,6 +16,7 @@ import {
   SectionRow,
   Sheet,
   StepIndicator,
+  Stepper,
   StudentRow,
   TextAreaField,
   TextButton,
@@ -22,6 +24,7 @@ import {
   useToast,
   type AbaAluno,
 } from "@/ui";
+import { ListaReordenavel, ReorderRow } from "@/ui/ReorderRow";
 import { FolhaSair } from "@/features/acesso/FolhaSair";
 
 // Catálogo dos componentes base (Fase 0, item 3) para conferir com a página Componentes do Figma.
@@ -80,8 +83,27 @@ function Tokens() {
   );
 }
 
+const HOJE_EXEMPLO = "2026-10-29";
+
+const semanas = (n: number) => (n === 1 ? "1 semana" : `${n} semanas`);
+
+const FICHAS_EXEMPLO = [
+  { id: "a", titulo: "Ficha A · Peito e tríceps", detalhe: "6 exercícios", comProblema: false },
+  { id: "b", titulo: "Ficha B · Costas e bíceps", detalhe: "Sem exercícios", comProblema: true },
+  { id: "c", titulo: "Ficha C · Pernas e glúteos", detalhe: "7 exercícios", comProblema: false },
+  {
+    id: "d",
+    titulo: "Ficha D · Nome bem comprido que trunca em uma linha só",
+    detalhe: "4 séries · 10 reps · Descanso 90 s · detalhe comprido também trunca",
+    comProblema: false,
+  },
+];
+
 function Demonstracoes() {
   const mostrarToast = useToast();
+  const [numeroDeSemanas, setNumeroDeSemanas] = useState(8);
+  const [inicio, setInicio] = useState(HOJE_EXEMPLO);
+  const [fichas, setFichas] = useState(FICHAS_EXEMPLO);
   const [folha, setFolha] = useState(false);
   const [folhaSair, setFolhaSair] = useState(false);
   const [aba, setAba] = useState<AbaAluno>("inicio");
@@ -187,6 +209,42 @@ function Demonstracoes() {
           defaultValue="(31) 98765-43"
           erro="Digite um telefone com DDD, como (31) 91234-5678."
         />
+      </Secao>
+
+      <Secao titulo="Stepper">
+        <Stepper
+          rotulo="Número de semanas"
+          valor={numeroDeSemanas}
+          aoMudar={setNumeroDeSemanas}
+          formatar={semanas}
+        />
+        <Stepper rotulo="No mínimo" valor={1} aoMudar={() => {}} formatar={semanas} />
+      </Secao>
+
+      <Secao titulo="DateField e seletor de data (hoje = 29/10/2026)">
+        <DateField rotulo="Início" valor={inicio} hoje={HOJE_EXEMPLO} aoMudar={setInicio} />
+        <DateField
+          rotulo="Início futuro"
+          valor="2026-11-03"
+          hoje={HOJE_EXEMPLO}
+          aoMudar={() => {}}
+        />
+      </Secao>
+
+      <Secao titulo="ReorderRow">
+        <ListaReordenavel itens={fichas} aoReordenar={setFichas}>
+          {(ficha, indice) => (
+            <ReorderRow
+              key={ficha.id}
+              id={ficha.id}
+              indice={indice}
+              titulo={ficha.titulo}
+              detalhe={ficha.detalhe}
+              comProblema={ficha.comProblema}
+              onClick={() => mostrarToast("success", `Abrir ${ficha.titulo}`)}
+            />
+          )}
+        </ListaReordenavel>
       </Secao>
 
       <Secao titulo="SectionRow">

@@ -2,6 +2,7 @@ export { BarraFixa } from "./BarraFixa";
 export { Button, ButtonCompact, TextButton } from "./Button";
 export { CheckboxRow } from "./CheckboxRow";
 export { Chip, type TomChip } from "./Chip";
+export { DateField } from "./DateField";
 export { EmptyState } from "./EmptyState";
 export { CODIGOS_PAIS } from "./codigosPais";
 export { DataField, FormField, PhoneField, TextAreaField } from "./FormField";
@@ -10,10 +11,14 @@ export { BackButton, IconButton } from "./IconButton";
 export { Logo } from "./Logo";
 export { ESPACO_NAVBAR, NavBar, type AbaAluno } from "./NavBar";
 export { Notice } from "./Notice";
+// ReorderRow fica fora deste índice: importe de "@/ui/ReorderRow". Daqui, a biblioteca de arrastar
+// entraria no pacote de todas as telas.
 export { SearchField } from "./SearchField";
 export { SectionRow } from "./SectionRow";
+export { SeletorDeData } from "./SeletorDeData";
 export { Sheet } from "./Sheet";
 export { StepIndicator } from "./StepIndicator";
+export { Stepper } from "./Stepper";
 export { StudentRow } from "./StudentRow";
 export { Tela } from "./Tela";
 export { Toast, ToastProvider, useToast, type TomToast } from "./Toast";
