@@ -85,6 +85,9 @@ function Tokens() {
 
 const HOJE_EXEMPLO = "2026-10-29";
 
+const MAXIMO_DE_SEMANAS = 104;
+const ERRO_DE_SEMANAS = "Use de 1 a 104 semanas.";
+
 const semanas = (n: number) => (n === 1 ? "1 semana" : `${n} semanas`);
 
 const FICHAS_EXEMPLO = [
@@ -217,8 +220,25 @@ function Demonstracoes() {
           valor={numeroDeSemanas}
           aoMudar={setNumeroDeSemanas}
           formatar={semanas}
+          maximo={MAXIMO_DE_SEMANAS}
+          erroMaximo={ERRO_DE_SEMANAS}
         />
-        <Stepper rotulo="No mínimo" valor={1} aoMudar={() => {}} formatar={semanas} />
+        <Stepper
+          rotulo="No mínimo"
+          valor={1}
+          aoMudar={() => {}}
+          formatar={semanas}
+          maximo={MAXIMO_DE_SEMANAS}
+          erroMaximo={ERRO_DE_SEMANAS}
+        />
+        <Stepper
+          rotulo="No máximo"
+          valor={MAXIMO_DE_SEMANAS}
+          aoMudar={() => {}}
+          formatar={semanas}
+          maximo={MAXIMO_DE_SEMANAS}
+          erroMaximo={ERRO_DE_SEMANAS}
+        />
       </Secao>
 
       <Secao titulo="DateField e seletor de data (hoje = 29/10/2026)">

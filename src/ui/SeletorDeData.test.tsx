@@ -86,9 +86,28 @@ describe("SeletorDeData", () => {
     expect(screen.getByText("janeiro de 2027")).toBeVisible();
     expect(dia("1 de janeiro de 2027")).toBeEnabled();
     await userEvent.click(screen.getByRole("button", { name: "Mês anterior" }));
+    expect(screen.getByText("dezembro de 2026")).toBeVisible();
+    expect(dia("29 de dezembro de 2026")).toBeDisabled();
+  });
+
+  it("no mês de hoje, a seta de mês anterior fica desabilitada e a de avançar segue ativa", () => {
+    abrir();
+    expect(screen.getByRole("button", { name: "Mês anterior" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Próximo mês" })).toBeEnabled();
+  });
+
+  it("nos meses seguintes, a seta de mês anterior fica ativa, inclusive em outro ano", async () => {
+    abrir({ hoje: "2026-12-30", valor: "2026-12-30" });
+    await userEvent.click(screen.getByRole("button", { name: "Próximo mês" }));
+    expect(screen.getByRole("button", { name: "Mês anterior" })).toBeEnabled();
     await userEvent.click(screen.getByRole("button", { name: "Mês anterior" }));
-    expect(screen.getByText("novembro de 2026")).toBeVisible();
-    expect(dia("30 de novembro de 2026")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Mês anterior" })).toBeDisabled();
+  });
+
+  it("no mesmo mês de outro ano, a seta de mês anterior fica ativa", () => {
+    abrir({ valor: "2027-10-05" });
+    expect(screen.getByText("outubro de 2027")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Mês anterior" })).toBeEnabled();
   });
 
   it("abre no mês da data escolhida e marca hoje como data atual", () => {

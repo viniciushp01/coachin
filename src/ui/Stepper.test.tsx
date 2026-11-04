@@ -3,16 +3,39 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Stepper } from "./Stepper";
 
 afterEach(cleanup);
 
 const semanas = (n: number) => (n === 1 ? "1 semana" : `${n} semanas`);
 
-function Exemplo({ inicial }: { inicial: number }) {
+const ERRO = "Use de 1 a 104 semanas.";
+
+function Exemplo({
+  inicial,
+  aoMudar,
+  aoMudarValidade,
+}: {
+  inicial: number;
+  aoMudar?: (valor: number) => void;
+  aoMudarValidade?: (valido: boolean) => void;
+}) {
   const [valor, setValor] = useState(inicial);
-  return <Stepper rotulo="Número de semanas" valor={valor} aoMudar={setValor} formatar={semanas} />;
+  return (
+    <Stepper
+      rotulo="Número de semanas"
+      valor={valor}
+      aoMudar={(novo) => {
+        setValor(novo);
+        aoMudar?.(novo);
+      }}
+      formatar={semanas}
+      maximo={104}
+      erroMaximo={ERRO}
+      aoMudarValidade={aoMudarValidade}
+    />
+  );
 }
 
 const campo = () => screen.getByRole("spinbutton", { name: "Número de semanas" });
@@ -42,13 +65,13 @@ describe("Stepper", () => {
     expect(mais()).toBeEnabled();
   });
 
-  it("aceita digitação direta, sem máximo (regra 105)", async () => {
+  it("aceita digitação direta", async () => {
     render(<Exemplo inicial={8} />);
     await userEvent.click(campo());
     expect(campo()).toHaveValue("8");
     await userEvent.clear(campo());
-    await userEvent.type(campo(), "120{Enter}");
-    expect(campo()).toHaveValue("120 semanas");
+    await userEvent.type(campo(), "104{Enter}");
+    expect(campo()).toHaveValue("104 semanas");
   });
 
   it("ao sair do campo, valor digitado abaixo do mínimo vira o mínimo", async () => {
@@ -79,5 +102,91 @@ describe("Stepper", () => {
     await userEvent.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}");
     await userEvent.tab();
     expect(campo()).toHaveValue("1 semana");
+  });
+
+  describe("máximo", () => {
+    it("no máximo, o + fica desabilitado e o − continua ativo", () => {
+      render(<Exemplo inicial={104} />);
+      expect(mais()).toBeDisabled();
+      expect(menos()).toBeEnabled();
+    });
+
+    it("o + para no máximo", async () => {
+      render(<Exemplo inicial={103} />);
+      await userEvent.click(mais());
+      expect(campo()).toHaveValue("104 semanas");
+      expect(mais()).toBeDisabled();
+    });
+
+    it("a seta para cima do teclado para no máximo", async () => {
+      render(<Exemplo inicial={104} />);
+      await userEvent.click(campo());
+      await userEvent.keyboard("{ArrowUp}");
+      await userEvent.tab();
+      expect(campo()).toHaveValue("104 semanas");
+    });
+
+    it.each([
+      ["105", "105"],
+      ["um número de 20 dígitos", "12345678901234567890"],
+    ])("digitar %s mostra o erro e não vira valor da tela", async (_nome, numero) => {
+      const aoMudar = vi.fn();
+      const aoMudarValidade = vi.fn();
+      render(<Exemplo inicial={8} aoMudar={aoMudar} aoMudarValidade={aoMudarValidade} />);
+      await userEvent.clear(campo());
+      await userEvent.type(campo(), numero);
+
+      expect(screen.getByText(ERRO)).toBeVisible();
+      expect(campo()).toHaveAttribute("aria-invalid", "true");
+      expect(campo()).toHaveAccessibleDescription(ERRO);
+      expect(aoMudarValidade).toHaveBeenLastCalledWith(false);
+
+      await userEvent.tab();
+      expect(campo()).toHaveValue(numero);
+      expect(screen.getByText(ERRO)).toBeVisible();
+      expect(aoMudar).not.toHaveBeenCalled();
+      expect(aoMudarValidade).toHaveBeenLastCalledWith(false);
+    });
+
+    it.each([
+      ["105", "105"],
+      ["um número de 20 dígitos", "12345678901234567890"],
+    ])("colar %s mostra o erro e não vira valor da tela", async (_nome, numero) => {
+      const aoMudar = vi.fn();
+      render(<Exemplo inicial={8} aoMudar={aoMudar} />);
+      await userEvent.clear(campo());
+      await userEvent.paste(numero);
+      expect(screen.getByText(ERRO)).toBeVisible();
+      await userEvent.tab();
+      expect(aoMudar).not.toHaveBeenCalled();
+    });
+
+    it("voltar o foco ao campo mantém o número errado para corrigir", async () => {
+      const aoMudarValidade = vi.fn();
+      render(<Exemplo inicial={8} aoMudarValidade={aoMudarValidade} />);
+      await userEvent.clear(campo());
+      await userEvent.type(campo(), "105");
+      await userEvent.tab();
+      await userEvent.click(campo());
+      expect(campo()).toHaveValue("105");
+
+      await userEvent.clear(campo());
+      await userEvent.type(campo(), "10");
+      expect(screen.queryByText(ERRO)).not.toBeInTheDocument();
+      expect(aoMudarValidade).toHaveBeenLastCalledWith(true);
+      await userEvent.tab();
+      expect(campo()).toHaveValue("10 semanas");
+    });
+
+    it("com número acima do máximo, o − leva ao máximo e tira o erro", async () => {
+      const aoMudarValidade = vi.fn();
+      render(<Exemplo inicial={8} aoMudarValidade={aoMudarValidade} />);
+      await userEvent.clear(campo());
+      await userEvent.type(campo(), "105");
+      await userEvent.click(menos());
+      expect(campo()).toHaveValue("104 semanas");
+      expect(screen.queryByText(ERRO)).not.toBeInTheDocument();
+      expect(aoMudarValidade).toHaveBeenLastCalledWith(true);
+    });
   });
 });

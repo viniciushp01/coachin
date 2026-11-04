@@ -33,6 +33,9 @@ export function SeletorDeData({ aberta, ...props }: SeletorDeDataProps) {
 function Conteudo({ aoFechar, hoje, valor, aoConfirmar }: Omit<SeletorDeDataProps, "aberta">) {
   const [escolhida, setEscolhida] = useState(valor < hoje ? hoje : valor);
   const [mes, setMes] = useState(() => mesDe(escolhida));
+  const mesDeHoje = mesDe(hoje);
+  // Antes do mês de hoje só haveria datas desabilitadas (regra 154).
+  const noMesDeHoje = mes.ano === mesDeHoje.ano && mes.mes === mesDeHoje.mes;
 
   return (
     <Sheet
@@ -53,6 +56,7 @@ function Conteudo({ aoFechar, hoje, valor, aoConfirmar }: Omit<SeletorDeDataProp
               icone="chevron_left"
               rotulo="Mês anterior"
               tamanho="sm"
+              disabled={noMesDeHoje}
               onClick={() => setMes(somarMeses(mes, -1))}
             />
             <IconButton
