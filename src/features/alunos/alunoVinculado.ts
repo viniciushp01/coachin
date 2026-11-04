@@ -44,7 +44,7 @@ export type TelaDoAluno =
   { tela: "convite"; dados: AlunoComConvite } | { tela: "vinculado"; dados: AlunoVinculado };
 
 /** O fuso do aluno; sem conta, não há perfil para ler. */
-async function lerFuso(contaId: string | null) {
+export async function lerFuso(contaId: string | null) {
   if (!contaId) return null;
   const perfil = await supabase.from("profiles").select("timezone").eq("id", contaId).maybeSingle();
   if (perfil.error) throw erroDaResposta(perfil.error);

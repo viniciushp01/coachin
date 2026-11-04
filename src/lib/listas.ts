@@ -20,6 +20,9 @@ export function buscarPorNome<T extends ComNome>(linhas: T[], termo: string): T[
   return busca ? linhas.filter((l) => semAcento(l.nome).includes(busca)) : linhas;
 }
 
+/** "Juliana" de "Juliana Costa": os textos com o nome usam só o primeiro (regra 144). */
+export const primeiroNome = (nome: string) => nome.trim().split(/\s+/)[0] || nome;
+
 /** "1 aluno", "6 alunos", "0 resultados". */
 export const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
