@@ -1,3 +1,4 @@
+export { ActiveWorkoutCard } from "./ActiveWorkoutCard";
 export { BarraFixa } from "./BarraFixa";
 export { Button, ButtonCompact, TextButton } from "./Button";
 export { CheckboxRow } from "./CheckboxRow";

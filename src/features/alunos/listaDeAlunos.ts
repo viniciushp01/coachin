@@ -46,8 +46,6 @@ export type LinhaDoAluno = {
   detalhe: string | undefined;
   /** Pedido de treino aberto, chip "Pediu treino" (regras 62 e 103; a view já calcula). */
   pediuTreino: boolean;
-  /** Só a linha com convite abre tela; a do aluno vinculado espera a fatia 7 (regra 147 (4)). */
-  abre: boolean;
 };
 
 /** Chip do pedido de treino aberto (Figma Lista · 1, camada `Solicitação`). */
@@ -92,7 +90,7 @@ function detalheDoConvite(aluno: AlunoDaLista, enviadoEm: string | undefined) {
 }
 
 /** "dd/mm" de uma data sem hora ("aaaa-mm-dd", já no fuso do aluno), sem passar por fuso. */
-function diaEMes(data: string) {
+export function diaEMes(data: string) {
   return `${data.slice(8, 10)}/${data.slice(5, 7)}`;
 }
 
@@ -156,7 +154,6 @@ export function linhaDoAluno(
     status: aluno.list_status,
     detalhe: doConvite ?? detalheDoVinculado(aluno, hoje),
     pediuTreino: aluno.has_open_request ?? false,
-    abre: doConvite !== undefined,
   };
 }
 
