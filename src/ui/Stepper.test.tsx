@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -72,6 +72,14 @@ describe("Stepper", () => {
     await userEvent.clear(campo());
     await userEvent.type(campo(), "104{Enter}");
     expect(campo()).toHaveValue("104 semanas");
+  });
+
+  it("ao focar, o número já fica selecionado: o primeiro dígito substitui e não se perde", () => {
+    render(<Exemplo inicial={8} />);
+    act(() => campo().focus());
+    const entrada = campo() as HTMLInputElement;
+    expect(entrada).toHaveValue("8");
+    expect([entrada.selectionStart, entrada.selectionEnd]).toEqual([0, 1]);
   });
 
   it("ao sair do campo, valor digitado abaixo do mínimo vira o mínimo", async () => {

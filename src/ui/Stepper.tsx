@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { useEffect, useId, useState } from "react";
+import { flushSync } from "react-dom";
 import { Moldura } from "./FormField";
 import { IconButton } from "./IconButton";
 
@@ -86,10 +87,11 @@ export function Stepper({
           aria-describedby={acimaDoMaximo ? `${id}-erro` : undefined}
           value={rascunho ?? formatar(valor)}
           onFocus={(e) => {
-            if (!acimaDoMaximo) setRascunho(String(valor));
-            // O valor só muda no próximo render; selecionar depois dele.
+            // Renderiza agora para selecionar o número já trocado. Selecionar depois (em outro quadro)
+            // poderia apagar um dígito recém-digitado.
             const campo = e.currentTarget;
-            requestAnimationFrame(() => campo.select());
+            if (!acimaDoMaximo) flushSync(() => setRascunho(String(valor)));
+            campo.select();
           }}
           onChange={(e) => setRascunho(e.target.value.replace(/\D/g, ""))}
           onBlur={() => {
