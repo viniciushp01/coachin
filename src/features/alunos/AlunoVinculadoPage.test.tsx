@@ -105,12 +105,18 @@ describe("Tela do aluno vinculado (regras 5, 10, 68, 114 e 144)", () => {
 });
 
 describe("Rodapé: o botão só aparece quando o destino existe", () => {
-  it("nesta fatia nenhuma ação tem destino, e nada aparece desabilitado", () => {
-    for (const aluno of [comTreino, semTreino]) {
-      const { unmount } = render(<AlunoVinculadoPage aluno={aluno} />);
-      expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual([""]);
-      unmount();
-    }
+  it("editar e agendar ainda não têm destino, e nada aparece desabilitado", () => {
+    render(<AlunoVinculadoPage aluno={comTreino} />);
+    expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual([""]);
+  });
+
+  it("Criar treino leva ao início da montagem (#90)", async () => {
+    render(<AlunoVinculadoPage aluno={semTreino} />);
+    await userEvent.setup().click(screen.getByRole("button", { name: "Criar treino" }));
+    expect(navegar).toHaveBeenCalledWith({
+      to: "/professor/alunos/$alunoId/criar-treino",
+      params: { alunoId: "a2" },
+    });
   });
 
   it("com destino, o botão navega; Criar treino é o principal", async () => {

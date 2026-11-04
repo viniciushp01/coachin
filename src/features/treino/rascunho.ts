@@ -1,0 +1,244 @@
+// O rascunho da montagem do treino: só memória, nada vai ao banco antes de "Salvar treino" (regra
+// 107). Módulo puro: cada operação devolve um rascunho novo. Datas em "aaaa-mm-dd".
+import { z } from "zod";
+import { MENSAGENS } from "@/lib/erros";
+import { plural } from "@/lib/listas";
+import { formatarData } from "@/ui/datas";
+import type { Medida } from "./medida";
+
+export type ExercicioDoRascunho = {
+  /** Id só da tela: o mesmo exercício do catálogo pode entrar duas vezes na ficha. */
+  id: string;
+  exercicioId: string;
+  nome: string;
+  medida: Medida;
+  series: number;
+  /** Como digitado (regra 124). */
+  reps: string;
+  /** Em segundos; 0 é sem descanso. */
+  descanso: number;
+  observacao: string;
+};
+
+export type Ficha = { id: string; nome: string; exercicios: ExercicioDoRascunho[] };
+
+export type Rascunho = {
+  nome: string;
+  inicio: string;
+  semanas: number;
+  frequencia: string;
+  fichas: Ficha[];
+};
+
+export const SEMANAS_MAX = 104;
+
+/** Limites de `save_workout` (migration 0012). */
+const SERIES_MAX = 20;
+const REPS_MAX_CARACTERES = 20;
+const DESCANSO_MAX = 600;
+
+let ultimoId = 0;
+const novoId = () => `local-${++ultimoId}`;
+
+/** Sem regra para o padrão de semanas: 8 é o valor de todas as telas de Dados no Figma. */
+export function criarRascunho(hoje: string): Rascunho {
+  return { nome: "", inicio: hoje, semanas: 8, frequencia: "", fichas: [] };
+}
+
+// Fim e aviso ---------------------------------------------------------------------------------
+
+/** Início + 7 × semanas − 1 dia (regra 73). */
+export function fimDoTreino(inicio: string, semanas: number) {
+  const fim = new Date(`${inicio}T00:00:00Z`);
+  fim.setUTCDate(fim.getUTCDate() + 7 * semanas - 1);
+  return fim.toISOString().slice(0, 10);
+}
+
+/** "dd/mm" de uma data. */
+export const diaEMes = (data: string) => formatarData(data).slice(0, 5);
+
+/** O texto sob "Termina em…" em Dados (regras 75 e 150 (1)). */
+export function avisoDoInicio({
+  inicio,
+  hoje,
+  semanas,
+  temTreinoAtual,
+}: {
+  inicio: string;
+  hoje: string;
+  semanas: number;
+  temTreinoAtual: boolean;
+}) {
+  if (inicio > hoje) {
+    return `Fica agendado. Só você vê até ${diaEMes(inicio)}, e pode alterar ou cancelar antes.`;
+  }
+  const dura = `O treino dura ${plural(semanas, "semana", "semanas")} a partir do início.`;
+  return temTreinoAtual
+    ? `${dura} Fica ativo hoje e o anterior vai para o Histórico.`
+    : `${dura} Fica ativo hoje.`;
+}
+
+// Letras --------------------------------------------------------------------------------------
+
+/**
+ * A letra da posição, igual a `private.letter_for` no banco: A…Z, AA, AB… Até o primeiro
+ * salvamento, a letra acompanha a posição (regra 149 (3)).
+ */
+export function letraDaFicha(indice: number) {
+  let letra = "";
+  for (let n = indice; n >= 0; n = Math.floor(n / 26) - 1) {
+    letra = String.fromCharCode(65 + (n % 26)) + letra;
+  }
+  return letra;
+}
+
+/** "Ficha A · Peito e tríceps"; ainda sem nome, "Ficha A". */
+export function tituloDaFicha(ficha: Pick<Ficha, "nome">, indice: number) {
+  const nome = ficha.nome.trim();
+  const letra = `Ficha ${letraDaFicha(indice)}`;
+  return nome ? `${letra} · ${nome}` : letra;
+}
+
+// Fichas e exercícios -------------------------------------------------------------------------
+
+export function adicionarFicha(r: Rascunho): Rascunho {
+  return { ...r, fichas: [...r.fichas, { id: novoId(), nome: "", exercicios: [] }] };
+}
+
+export function salvarFicha(r: Rascunho, ficha: Ficha): Rascunho {
+  return { ...r, fichas: r.fichas.map((f) => (f.id === ficha.id ? ficha : f)) };
+}
+
+export function removerFicha(r: Rascunho, fichaId: string): Rascunho {
+  return { ...r, fichas: r.fichas.filter((f) => f.id !== fichaId) };
+}
+
+export type ValoresDoExercicio = Pick<
+  ExercicioDoRascunho,
+  "series" | "reps" | "descanso" | "observacao"
+>;
+
+export function novoExercicio(
+  catalogo: { id: string; nome: string; measure: Medida },
+  valores: ValoresDoExercicio,
+): ExercicioDoRascunho {
+  return {
+    id: novoId(),
+    exercicioId: catalogo.id,
+    nome: catalogo.nome,
+    medida: catalogo.measure,
+    ...valores,
+  };
+}
+
+/** Troca o exercício de mesmo id; sem ele na ficha, entra no fim. */
+export function salvarExercicio(ficha: Ficha, exercicio: ExercicioDoRascunho): Ficha {
+  const existe = ficha.exercicios.some((e) => e.id === exercicio.id);
+  return {
+    ...ficha,
+    exercicios: existe
+      ? ficha.exercicios.map((e) => (e.id === exercicio.id ? exercicio : e))
+      : [...ficha.exercicios, exercicio],
+  };
+}
+
+export function removerExercicio(ficha: Ficha, exercicioId: string): Ficha {
+  return { ...ficha, exercicios: ficha.exercicios.filter((e) => e.id !== exercicioId) };
+}
+
+/** Houve alteração em relação a `original`? (regra 107) */
+export function mudou<T>(original: T, atual: T) {
+  return JSON.stringify(original) !== JSON.stringify(atual);
+}
+
+// Validação -----------------------------------------------------------------------------------
+
+/** Erros de Dados ao tocar em "Continuar" (regras 105 e 154). */
+export function validarDados({ nome, semanas }: Pick<Rascunho, "nome" | "semanas">) {
+  const erros: { nome?: string; semanas?: string } = {};
+  if (!nome.trim()) erros.nome = MENSAGENS.workout_name_required;
+  if (semanas < 1 || semanas > SEMANAS_MAX) erros.semanas = MENSAGENS.weeks_invalid;
+  return erros;
+}
+
+/** Erros de Editar ficha ao tocar em "Salvar ficha" (regra 104). O banco exige o nome. */
+export function validarFicha(ficha: Ficha) {
+  const erros: { nome?: string; semExercicio?: boolean } = {};
+  if (!ficha.nome.trim()) erros.nome = MENSAGENS.day_name_required;
+  if (ficha.exercicios.length === 0) erros.semExercicio = true;
+  return erros;
+}
+
+export type ErroDoTreino =
+  | { tipo: "sem_ficha" }
+  /** `letra` é a da primeira; `fichas`, todas as que mostram "Sem exercícios". */
+  | { tipo: "ficha_sem_exercicio"; letra: string; fichas: string[] };
+
+/** O erro de "Salvar treino" (regra 104); nulo se pode salvar. */
+export function validarTreino({ fichas }: Pick<Rascunho, "fichas">): ErroDoTreino | null {
+  if (fichas.length === 0) return { tipo: "sem_ficha" };
+  const primeira = fichas.findIndex((f) => f.exercicios.length === 0);
+  if (primeira < 0) return null;
+  return {
+    tipo: "ficha_sem_exercicio",
+    letra: letraDaFicha(primeira),
+    fichas: fichas.filter((f) => f.exercicios.length === 0).map((f) => f.id),
+  };
+}
+
+/**
+ * Os campos da folha "Editar exercício" → valores do rascunho (regras 124 e 149 (4)). Os erros de
+ * limite de repetições e de descanso não têm texto próprio na regra: usam os de `save_workout`.
+ */
+export function esquemaDoExercicio(medida: Medida) {
+  return z
+    .object({
+      series: z.string(),
+      reps: z.string(),
+      descanso: z.string(),
+      observacao: z.string(),
+    })
+    .transform((v, ctx): ValoresDoExercicio => {
+      const erro = (campo: string, message: string) =>
+        ctx.addIssue({ code: "custom", path: [campo], message });
+
+      const series = v.series.trim();
+      const numeroDeSeries = Number(series);
+      if (!/^\d{1,2}$/.test(series) || numeroDeSeries < 1 || numeroDeSeries > SERIES_MAX) {
+        erro("series", "Digite o número de séries (de 1 a 20).");
+      }
+
+      const reps = v.reps.trim();
+      if (!reps) erro("reps", medida === "time" ? "Digite o tempo." : "Digite as repetições.");
+      else if (reps.length > REPS_MAX_CARACTERES) erro("reps", MENSAGENS.reps_invalid);
+
+      const descansoLido = /^(\d{1,3})\s*s?$/i.exec(v.descanso.trim());
+      const descanso = v.descanso.trim() ? Number(descansoLido?.[1] ?? NaN) : 0;
+      if (!(descanso <= DESCANSO_MAX)) erro("descanso", MENSAGENS.rest_invalid);
+
+      return { series: numeroDeSeries, reps, descanso, observacao: v.observacao.trim() };
+    });
+}
+
+// Saída ---------------------------------------------------------------------------------------
+
+/** O `p_data` de `save_workout`; a ordem das listas é a ordem no banco. */
+export function paraSaveWorkout(r: Rascunho) {
+  return {
+    name: r.nome.trim(),
+    start_date: r.inicio,
+    weeks: r.semanas,
+    suggested_frequency: r.frequencia.trim() || null,
+    days: r.fichas.map((ficha) => ({
+      id: null,
+      name: ficha.nome.trim(),
+      exercises: ficha.exercicios.map((e) => ({
+        exercise_id: e.exercicioId,
+        sets: e.series,
+        reps: e.reps,
+        rest_seconds: e.descanso,
+        note: e.observacao || null,
+      })),
+    })),
+  };
+}

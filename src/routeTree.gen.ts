@@ -29,6 +29,7 @@ import { Route as DevComponentesRouteImport } from './routes/dev.componentes'
 import { Route as ProfessorCadastrarAlunoRouteImport } from './routes/professor_.cadastrar-aluno'
 import { Route as AdminConviteConviteIdRouteImport } from './routes/admin_.convite.$conviteId'
 import { Route as ProfessorAlunosAlunoIdRouteImport } from './routes/professor_.alunos.$alunoId'
+import { Route as ProfessorAlunosAlunoIdCriarTreinoRouteImport } from './routes/professor_.alunos.$alunoId_.criar-treino'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -130,6 +131,12 @@ const ProfessorAlunosAlunoIdRoute = ProfessorAlunosAlunoIdRouteImport.update({
   path: '/professor/alunos/$alunoId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfessorAlunosAlunoIdCriarTreinoRoute =
+  ProfessorAlunosAlunoIdCriarTreinoRouteImport.update({
+    id: '/professor_/alunos/$alunoId_/criar-treino',
+    path: '/professor/alunos/$alunoId/criar-treino',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/professor/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
   '/admin/convite/$conviteId': typeof AdminConviteConviteIdRoute
   '/professor/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
+  '/professor/alunos/$alunoId/criar-treino': typeof ProfessorAlunosAlunoIdCriarTreinoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -174,6 +182,7 @@ export interface FileRoutesByTo {
   '/professor/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
   '/admin/convite/$conviteId': typeof AdminConviteConviteIdRoute
   '/professor/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
+  '/professor/alunos/$alunoId/criar-treino': typeof ProfessorAlunosAlunoIdCriarTreinoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -197,6 +206,7 @@ export interface FileRoutesById {
   '/professor_/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
   '/admin_/convite/$conviteId': typeof AdminConviteConviteIdRoute
   '/professor_/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
+  '/professor_/alunos/$alunoId_/criar-treino': typeof ProfessorAlunosAlunoIdCriarTreinoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/professor/cadastrar-aluno'
     | '/admin/convite/$conviteId'
     | '/professor/alunos/$alunoId'
+    | '/professor/alunos/$alunoId/criar-treino'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -243,6 +254,7 @@ export interface FileRouteTypes {
     | '/professor/cadastrar-aluno'
     | '/admin/convite/$conviteId'
     | '/professor/alunos/$alunoId'
+    | '/professor/alunos/$alunoId/criar-treino'
   id:
     | '__root__'
     | '/'
@@ -265,6 +277,7 @@ export interface FileRouteTypes {
     | '/professor_/cadastrar-aluno'
     | '/admin_/convite/$conviteId'
     | '/professor_/alunos/$alunoId'
+    | '/professor_/alunos/$alunoId_/criar-treino'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -288,6 +301,7 @@ export interface RootRouteChildren {
   ProfessorCadastrarAlunoRoute: typeof ProfessorCadastrarAlunoRoute
   AdminConviteConviteIdRoute: typeof AdminConviteConviteIdRoute
   ProfessorAlunosAlunoIdRoute: typeof ProfessorAlunosAlunoIdRoute
+  ProfessorAlunosAlunoIdCriarTreinoRoute: typeof ProfessorAlunosAlunoIdCriarTreinoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -432,6 +446,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfessorAlunosAlunoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/professor_/alunos/$alunoId_/criar-treino': {
+      id: '/professor_/alunos/$alunoId_/criar-treino'
+      path: '/professor/alunos/$alunoId/criar-treino'
+      fullPath: '/professor/alunos/$alunoId/criar-treino'
+      preLoaderRoute: typeof ProfessorAlunosAlunoIdCriarTreinoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -456,6 +477,8 @@ const rootRouteChildren: RootRouteChildren = {
   ProfessorCadastrarAlunoRoute: ProfessorCadastrarAlunoRoute,
   AdminConviteConviteIdRoute: AdminConviteConviteIdRoute,
   ProfessorAlunosAlunoIdRoute: ProfessorAlunosAlunoIdRoute,
+  ProfessorAlunosAlunoIdCriarTreinoRoute:
+    ProfessorAlunosAlunoIdCriarTreinoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,4 +1,5 @@
 import { useNavigate, type NavigateOptions } from "@tanstack/react-router";
+import { primeiroNome as lerPrimeiroNome } from "@/lib/listas";
 import { ActiveWorkoutCard, BackButton, BarraFixa, Button, Chip, Notice, Tela } from "@/ui";
 import type { AcaoDoRodape, AlunoVinculado } from "./alunoVinculado";
 import { CHIP_DO_ALUNO } from "./listaDeAlunos";
@@ -9,7 +10,9 @@ type DestinoDaAcao = (alunoId: string) => NavigateOptions;
  * Para onde cada ação do rodapé leva. O botão só aparece quando a ação tem destino, e cada ticket
  * liga o seu: "criar" no #90, "editar" no #96, "agendar" no #97.
  */
-const DESTINOS: Partial<Record<AcaoDoRodape, DestinoDaAcao>> = {};
+const DESTINOS: Partial<Record<AcaoDoRodape, DestinoDaAcao>> = {
+  criar: (alunoId) => ({ to: "/professor/alunos/$alunoId/criar-treino", params: { alunoId } }),
+};
 
 /** Rótulos do Figma: só "Criar treino" é o botão principal (regra 68; design.md, barra fixa). */
 const BOTAO_DA_ACAO: Record<AcaoDoRodape, { texto: string; variante: "primary" | "secondary" }> = {
@@ -33,7 +36,7 @@ export function AlunoVinculadoPage({
   destinos?: typeof DESTINOS;
 }) {
   const navegar = useNavigate();
-  const primeiroNome = aluno.nome.trim().split(/\s+/)[0] || aluno.nome;
+  const primeiroNome = lerPrimeiroNome(aluno.nome);
   const chip = CHIP_DO_ALUNO[aluno.status];
   const acoes = aluno.acoes.filter((acao) => destinos[acao]);
 
