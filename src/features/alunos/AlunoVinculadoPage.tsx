@@ -1,5 +1,5 @@
 import { useNavigate, type NavigateOptions } from "@tanstack/react-router";
-import { primeiroNome as lerPrimeiroNome } from "@/lib/listas";
+import { primeiroNome } from "@/lib/listas";
 import { ActiveWorkoutCard, BackButton, BarraFixa, Button, Chip, Notice, Tela } from "@/ui";
 import type { AcaoDoRodape, AlunoVinculado } from "./alunoVinculado";
 import { CHIP_DO_ALUNO } from "./listaDeAlunos";
@@ -36,7 +36,7 @@ export function AlunoVinculadoPage({
   destinos?: typeof DESTINOS;
 }) {
   const navegar = useNavigate();
-  const primeiroNome = lerPrimeiroNome(aluno.nome);
+  const nome = primeiroNome(aluno.nome);
   const chip = CHIP_DO_ALUNO[aluno.status];
   const acoes = aluno.acoes.filter((acao) => destinos[acao]);
 
@@ -52,7 +52,7 @@ export function AlunoVinculadoPage({
       ) : (
         !aluno.agendado && (
           <Notice tom="neutral" titulo="Sem treino ativo">
-            {primeiroNome} não tem treino ativo. Crie um para {primeiroNome} voltar a treinar.
+            {nome} não tem treino ativo. Crie um para {nome} voltar a treinar.
           </Notice>
         )
       )}

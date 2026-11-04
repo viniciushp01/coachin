@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ErroApp, erroDaResposta } from "@/lib/erros";
+import { erroDaResposta } from "@/lib/erros";
 import { BackButton, SearchField, SectionRow, Tela, useToast } from "@/ui";
 import { buscarExercicios, type ExercicioDaBusca } from "./biblioteca";
 import { FolhaDoExercicio } from "./FolhaDoExercicio";
@@ -34,9 +34,7 @@ export function AdicionarExercicio({
           if (valida) setResultados(lista);
         },
         (causa: unknown) => {
-          if (!valida) return;
-          const erro = causa instanceof ErroApp ? causa : erroDaResposta(causa);
-          mostrarToast("error", erro.message);
+          if (valida) mostrarToast("error", erroDaResposta(causa).message);
         },
       );
     }, ESPERA_DA_BUSCA_MS);
@@ -74,7 +72,7 @@ export function AdicionarExercicio({
         <FolhaDoExercicio
           key={escolhido.id}
           nome={escolhido.nome}
-          medida={escolhido.measure}
+          medida={escolhido.medida}
           aoFechar={() => setEscolhido(null)}
           aoSalvar={(valores) => aoAdicionar(novoExercicio(escolhido, valores))}
         />

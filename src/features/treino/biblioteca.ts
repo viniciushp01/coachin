@@ -6,7 +6,7 @@ import type { Medida } from "./medida";
 export type ExercicioDaBusca = {
   id: string;
   nome: string;
-  measure: Medida;
+  medida: Medida;
   /** "Peito · barra reta" ou "Seu exercício" (regra 151 (2)). */
   detalhe: string;
 };
@@ -35,7 +35,7 @@ export async function buscarExercicios(termo: string): Promise<ExercicioDaBusca[
     return {
       id: e.id,
       nome: e.name,
-      measure: e.measure as Medida,
+      medida: e.measure as Medida,
       detalhe: e.owner_id ? "Seu exercício" : partes.join(" · "),
     };
   });

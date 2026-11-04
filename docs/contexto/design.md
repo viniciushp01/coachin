@@ -201,7 +201,7 @@ Seção "Professor (lote 4)" na página Componentes (criada na 4A, ampliada na 4
 | DataRow (4B) | camadas `Rótulo` (`text/caption` secundário) e `Valor` (`text/body`) | 318 × hug | Par rótulo e valor, em cartão `surface` com padding 20 e espaço 16 (perfil do aluno só leitura, inclusive "Telefone (WhatsApp)") |
 | Stepper (4C) | camadas `Nome`, `Menos`, `Valor`, `Mais` | 350 × 76 | Número com − e + (`IconButton size=sm`): "8 semanas", "1 semana" (mínimo, com o − a 35%). Caixa de 52 com borda 2 px `border/subtle` |
 | DateField (4C) | camadas `Nome` e `Valor` (+ ícone `calendar_month`) | 350 × 76 | Campo de data que abre o seletor de data: "Hoje · 29/10/2026" ou "03/11/2026". Mesmo visual de `FormField`, padding vertical 0 |
-| ReorderRow (4C) | camadas `Alça` (2 barras de 16×2), `Título`, `Detalhe` (ambos truncam em 1 linha) e seta à direita | 350 × 72 | Linha reordenável (arrastar): fichas ("Ficha A · Peito e tríceps", "6 exercícios") e exercícios ("Supino reto", "4 séries · 10 reps · Descanso 90 s"). Fundo `surface`, raio `radius/tile`, padding 16. Com problema: detalhe "Sem exercícios" em `status/danger` e borda 2 px `border/danger` |
+| ReorderRow (4C) | camadas `Alça` (2 barras de 16×2), `Título`, `Detalhe` (ambos truncam em 1 linha) e seta à direita | 350 × 72 | Linha reordenável (arrastar): fichas ("Ficha A · Peito e tríceps", "6 exercícios") e exercícios ("Supino reto", "4 séries · 10 reps · descanso 90 s"). Fundo `surface`, raio `radius/tile`, padding 16. Com problema: detalhe "Sem exercícios" em `status/danger` e borda 2 px `border/danger` |
 
 ## Em código (`src/ui`, Fase 0)
 Catálogo vivo em `/dev/componentes` (só local e preview). Nomes de props em pt-BR; variantes do Figma viram props:

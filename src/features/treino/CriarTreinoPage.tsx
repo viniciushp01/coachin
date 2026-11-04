@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ErroApp, erroDaResposta } from "@/lib/erros";
+import { erroDaResposta } from "@/lib/erros";
 import { rpc } from "@/lib/rpc";
 import { useToast } from "@/ui";
 import { AdicionarExercicio } from "./AdicionarExercicio";
@@ -60,7 +60,7 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
       });
       setSalvo(rascunho);
     } catch (causa) {
-      mostrarToast("error", (causa instanceof ErroApp ? causa : erroDaResposta(causa)).message);
+      mostrarToast("error", erroDaResposta(causa).message);
     } finally {
       setSalvando(false);
     }

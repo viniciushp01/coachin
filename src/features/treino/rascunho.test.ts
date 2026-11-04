@@ -160,8 +160,8 @@ describe("Fichas e exercícios no rascunho", () => {
 
   it("novoExercicio guarda o catálogo e os valores lidos, com id próprio", () => {
     const valores = { series: 3, reps: "45 s", descanso: 0, observacao: "" };
-    const a = novoExercicio({ id: "uuid", nome: "Prancha", measure: "time" }, valores);
-    const b = novoExercicio({ id: "uuid", nome: "Prancha", measure: "time" }, valores);
+    const a = novoExercicio({ id: "uuid", nome: "Prancha", medida: "time" }, valores);
+    const b = novoExercicio({ id: "uuid", nome: "Prancha", medida: "time" }, valores);
     expect(a).toMatchObject({ exercicioId: "uuid", nome: "Prancha", medida: "time", ...valores });
     expect(a.id).not.toBe(b.id);
   });

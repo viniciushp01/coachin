@@ -1,5 +1,5 @@
 // O rascunho da montagem do treino: só memória, nada vai ao banco antes de "Salvar treino" (regra
-// 107). Módulo puro: cada operação devolve um rascunho novo. Datas em "aaaa-mm-dd".
+// 107). Sem tela e sem banco: cada operação devolve um rascunho novo. Datas em "aaaa-mm-dd".
 import { z } from "zod";
 import { MENSAGENS } from "@/lib/erros";
 import { plural } from "@/lib/listas";
@@ -119,14 +119,14 @@ export type ValoresDoExercicio = Pick<
 >;
 
 export function novoExercicio(
-  catalogo: { id: string; nome: string; measure: Medida },
+  catalogo: { id: string; nome: string; medida: Medida },
   valores: ValoresDoExercicio,
 ): ExercicioDoRascunho {
   return {
     id: novoId(),
     exercicioId: catalogo.id,
     nome: catalogo.nome,
-    medida: catalogo.measure,
+    medida: catalogo.medida,
     ...valores,
   };
 }
