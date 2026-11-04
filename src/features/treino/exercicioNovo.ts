@@ -5,7 +5,7 @@ import type { Medida } from "./medida";
 /** `exercises.load_mode`: "Sim", "Opcional" e "Não" (regra 123). */
 export type ModoDeCarga = "required" | "optional" | "none";
 
-export const SEU_EXERCICIO = "Seu exercício";
+const SEU_EXERCICIO = "Seu exercício";
 
 /** O mais parecido com o nome (regra 74: olha nome e apelido); `null` se não houver. */
 export async function procurarParecido(nome: string): Promise<ExercicioDaBusca | null> {

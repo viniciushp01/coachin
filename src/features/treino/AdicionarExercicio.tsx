@@ -38,7 +38,7 @@ export function AdicionarExercicio({
   } | null>(null);
   const [procurandoParecido, setProcurandoParecido] = useState(false);
   /** Muda ao voltar da criação: o exercício novo precisa aparecer na busca. */
-  const [leitura, setLeitura] = useState(0);
+  const [versaoDaBusca, setVersaoDaBusca] = useState(0);
   const nomeDigitado = termo.trim();
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export function AdicionarExercicio({
       valida = false;
       clearTimeout(espera);
     };
-  }, [termo, leitura, mostrarToast]);
+  }, [termo, versaoDaBusca, mostrarToast]);
 
   async function tocarEmCriar() {
     setProcurandoParecido(true);
@@ -79,7 +79,7 @@ export function AdicionarExercicio({
         aoVoltar={aoVoltar}
         aoEscolher={(exercicio) => {
           setEscolhido(exercicio);
-          setLeitura((n) => n + 1);
+          setVersaoDaBusca((n) => n + 1);
           aoVoltar();
         }}
       />
