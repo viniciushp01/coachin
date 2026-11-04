@@ -79,7 +79,7 @@ export const MENSAGENS = {
   sets_invalid: "Confira o número de séries.",
   reps_invalid: "Confira as repetições.",
   rest_invalid: "Confira o tempo de descanso.",
-  weeks_invalid: "Confira o número de semanas.",
+  weeks_invalid: "Use de 1 a 104 semanas.",
   start_date_invalid: "Confira a data de início.",
   start_in_past: "O início não pode ser numa data passada.",
   start_date_taken: "Já existe um treino com essa data de início.",
