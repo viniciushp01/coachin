@@ -22,7 +22,8 @@ function idDaDescricao(id: string, { erro, dica }: Pick<CampoBase, "erro" | "dic
   return undefined;
 }
 
-function Moldura({
+/** Rótulo em cima e erro ou dica embaixo. Também usado por Stepper e DateField. */
+export function Moldura({
   id,
   rotulo,
   erro,

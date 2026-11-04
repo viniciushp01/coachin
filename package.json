@@ -20,6 +20,9 @@
     "test:db": "node supabase/tests/pglite/run.mjs"
   },
   "dependencies": {
+    "@dnd-kit/abstract": "^0.5.3",
+    "@dnd-kit/dom": "^0.5.3",
+    "@dnd-kit/react": "^0.5.3",
     "@fontsource/inter": "^5.3.0",
     "@fontsource/jost": "^5.3.0",
     "@hookform/resolvers": "^6.0.2",
