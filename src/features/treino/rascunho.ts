@@ -113,6 +113,15 @@ export function removerFicha(r: Rascunho, fichaId: string): Rascunho {
   return { ...r, fichas: r.fichas.filter((f) => f.id !== fichaId) };
 }
 
+/** A ordem da lista é a ordem de `save_workout`; a letra acompanha a posição (regra 149 (3)). */
+export function reordenarFichas(r: Rascunho, fichas: Ficha[]): Rascunho {
+  return { ...r, fichas };
+}
+
+export function reordenarExercicios(ficha: Ficha, exercicios: ExercicioDoRascunho[]): Ficha {
+  return { ...ficha, exercicios };
+}
+
 export type ValoresDoExercicio = Pick<
   ExercicioDoRascunho,
   "series" | "reps" | "descanso" | "observacao"

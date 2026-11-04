@@ -11,6 +11,8 @@ import {
   paraSaveWorkout,
   removerExercicio,
   removerFicha,
+  reordenarExercicios,
+  reordenarFichas,
   salvarExercicio,
   salvarFicha,
   tituloDaFicha,
@@ -173,6 +175,57 @@ describe("Saber se mudou (regra 107)", () => {
     expect(mudou(r, structuredClone(r))).toBe(false);
     expect(mudou(r, { ...r, nome: "Novo" })).toBe(true);
     expect(mudou(r, removerFicha(r, r.fichas[0]!.id))).toBe(true);
+  });
+
+  it("reordenar muda; voltar à ordem de antes não muda", () => {
+    const r = comFichas(["Peito", "Costas"]);
+    const invertido = reordenarFichas(r, [...r.fichas].reverse());
+    expect(mudou(r, invertido)).toBe(true);
+    expect(mudou(r, reordenarFichas(invertido, [...invertido.fichas].reverse()))).toBe(false);
+  });
+
+  it("depois de salvar uma ficha, o treino continua diferente do começo", () => {
+    expect(mudou(criarRascunho(HOJE), comFichas(["Peito"]))).toBe(true);
+  });
+
+  it("salvar um exercício com os mesmos valores não muda a ficha", () => {
+    const { fichas } = comFichas(["Peito"]);
+    const ficha = fichas[0]!;
+    expect(mudou(ficha, salvarExercicio(ficha, { ...supino, series: 4 }))).toBe(false);
+  });
+});
+
+describe("Reordenar (regras 66 e 149 (3))", () => {
+  it("a letra acompanha a posição e a ordem nova vai em p_data", () => {
+    const r = comFichas(["Peito", "Costas", "Pernas"]);
+    const [peito, costas, pernas] = r.fichas;
+    const novo = reordenarFichas(r, [pernas!, peito!, costas!]);
+    expect(novo.fichas.map(tituloDaFicha)).toEqual([
+      "Ficha A · Pernas",
+      "Ficha B · Peito",
+      "Ficha C · Costas",
+    ]);
+    expect(paraSaveWorkout(novo).days.map((d) => d.name)).toEqual(["Pernas", "Peito", "Costas"]);
+  });
+
+  it("exercícios: a ordem nova vai em p_data, com o mesmo exercício duas vezes", () => {
+    const r = comFichas(["Peito"]);
+    const ficha = salvarExercicio(r.fichas[0]!, {
+      ...supino,
+      id: "e2",
+      exercicioId: "uuid-crucifixo",
+    });
+    const repetido = { ...supino, id: "e3" };
+    const completa = salvarExercicio(ficha, repetido);
+    const [primeiro, segundo, terceiro] = completa.exercicios;
+    const nova = reordenarExercicios(completa, [segundo!, terceiro!, primeiro!]);
+    expect(nova.exercicios.map((e) => e.id)).toEqual(["e2", "e3", "e1"]);
+    const dias = paraSaveWorkout(salvarFicha(r, nova)).days;
+    expect(dias[0]!.exercises.map((e) => e.exercise_id)).toEqual([
+      "uuid-crucifixo",
+      "uuid-supino",
+      "uuid-supino",
+    ]);
   });
 });
 

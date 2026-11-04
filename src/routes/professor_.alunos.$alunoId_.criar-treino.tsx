@@ -34,7 +34,7 @@ export const Route = createFileRoute("/professor_/alunos/$alunoId_/criar-treino"
         aluno={aluno}
         passo={passo}
         irPara={(proximo) => void navegar({ search: { passo: proximo } })}
-        voltar={() => router.history.back()}
+        voltar={() => router.history.back({ ignoreBlocker: true })}
       />
     );
   },
