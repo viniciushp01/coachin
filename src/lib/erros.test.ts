@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ErroApp, MENSAGENS, erroDaResposta, erroDeAuth } from "./erros";
+import { ErroApp, MENSAGENS, erroDaResposta, erroDeAuth, type CodigoErro } from "./erros";
 
 const migrations = import.meta.glob<string>("/supabase/migrations/*.sql", {
   query: "?raw",
@@ -132,5 +132,17 @@ describe("erroDeAuth", () => {
     expect(erroDeAuth({ code: "unexpected_failure", status: 500 }).codigo).toBe(
       "erro_desconhecido",
     );
+  });
+});
+
+describe("tamanho das mensagens no toast (regra 155)", () => {
+  /** Só aparecem no campo, nunca em toast; os textos são das regras 78 e 83. */
+  const SO_EM_CAMPO: CodigoErro[] = ["weak_password", "user_already_exists"];
+
+  it("cabem em 2 linhas: até 60 caracteres", () => {
+    const longas = Object.entries(MENSAGENS).filter(
+      ([codigo, texto]) => !SO_EM_CAMPO.includes(codigo as CodigoErro) && texto.length > 60,
+    );
+    expect(longas).toEqual([]);
   });
 });
