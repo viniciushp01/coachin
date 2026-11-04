@@ -47,6 +47,7 @@ export function EditarFicha({
       <h1 className="text-title-screen">Ficha {letraDaFicha(indice)}</h1>
       <FormField
         rotulo="Nome da ficha"
+        placeholder="Ex.: Peito e tríceps"
         autoComplete="off"
         value={ficha.nome}
         erro={erros.nome}

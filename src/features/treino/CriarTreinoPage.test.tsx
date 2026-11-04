@@ -317,6 +317,10 @@ describe("Editar ficha (regras 104, 107 e 149)", () => {
     await irParaFichas(u);
     await u.click(botao("Adicionar ficha"));
     expect(screen.getByRole("heading", { name: "Ficha A" })).toBeVisible();
+    expect(screen.getByLabelText("Nome da ficha")).toHaveAttribute(
+      "placeholder",
+      "Ex.: Peito e tríceps",
+    );
     expect(screen.getByText("EXERCÍCIOS")).toBeVisible();
     expect(botao("Salvar ficha")).toBeEnabled();
   });
