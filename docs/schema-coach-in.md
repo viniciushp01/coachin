@@ -1,6 +1,6 @@
 # Coach In · Desenho do banco de dados (para revisão)
 
-Estado: **aplicado no Supabase** (0001 a 0005 em 27/10/2026, 0006 em 28/10/2026, 0008 em 29/10/2026, 0009 em 30/10/2026, 0010 e 0007 em 03/11/2026; a 0007 entrou depois da 0010; ver "Resultado da aplicação" no fim). As migrations foram testadas num Postgres 17 (PGlite) com a camada de autenticação do Supabase simulada (247 verificações, todas passando). Base de regras: `contexto-produto.md` (regras 1 a 122) e as decisões de 27/10 (arquivar na troca de professor, exercícios e cargas seguem o aluno).
+Estado: **aplicado no Supabase** (0001 a 0005 em 27/10/2026, 0006 em 28/10/2026, 0008 em 29/10/2026, 0009 em 30/10/2026, 0010 e 0007 em 03/11/2026, 0012 em 04/11/2026; a 0007 entrou depois da 0010; ver "Resultado da aplicação" no fim). As migrations foram testadas num Postgres 17 (PGlite) com a camada de autenticação do Supabase simulada (247 verificações, todas passando). Base de regras: `contexto-produto.md` (regras 1 a 122) e as decisões de 27/10 (arquivar na troca de professor, exercícios e cargas seguem o aluno).
 
 Arquivos (em `supabase/`):
 
@@ -171,9 +171,19 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 - **Especificação e dados:** `docs/contexto/catalogo-exercicios.md` e `docs/contexto/exercicios.catalogo.json`.
 - **Testes:** 305 verificações no PGlite, com a 0007 rodando depois da 0010 (ordem real de aplicação) (35 novas na seção 6b; dois testes antigos passaram a usar os nomes novos "Puxada alta aberta" e "Tríceps na polia com corda").
 - **Travas:** a migration para com erro se um dos 149 pré-definidos não for achado pelo nome da 0004, e avisa (NOTICE) se um professor já tiver exercício com nome igual ao de um do catálogo.
-- **Aplicação manual:** o `apply_migration` do MCP voltou "declined" três vezes, sem mostrar tela de aprovação (um teste com `update` e `drop table` em transação desfeita também foi recusado, e um sem eles passou; causa provável: comando destrutivo pede uma confirmação que o app não mostra). Por decisão do usuário, a migration rodou no SQL Editor do painel com **"Run without RLS"**: a opção "Run with RLS" deu `relation "_catalog" does not exist`, provavelmente por mexer nas tabelas temporárias, e não deixou nada no banco. A própria migration liga o RLS nas 3 tabelas novas.
+- **Aplicação manual:** o `apply_migration` do MCP voltou "declined" três vezes, sem mostrar tela de aprovação (um teste com `update` e `drop table` em transação desfeita também foi recusado, e um sem eles passou; a causa ainda não está clara, ver a 0012). Por decisão do usuário, a migration rodou no SQL Editor do painel com **"Run without RLS"**: a opção "Run with RLS" deu `relation "_catalog" does not exist`, provavelmente por mexer nas tabelas temporárias, e não deixou nada no banco. A própria migration liga o RLS nas 3 tabelas novas.
 - **Registro:** versão `20261103190000` (nome do arquivo), inserida à mão em `supabase_migrations.schema_migrations`, sem o texto em `statements`.
 - **Conferido no banco:** 249 pré-definidos com slug, 15 grupos, 55 equipamentos, 305 ligações exercício-equipamento, nenhum exercício sem equipamento; carga 195 `required`, 16 `optional` e 38 `none`; 5 por tempo; RLS ligado e 3 políticas; `SELECT` só para `authenticated`; `create_exercise` de 4 parâmetros, sem `anon`; nenhuma tabela temporária sobrando.
 - **Advisor:** sem alerta novo (as mesmas 24 RPCs `security definer` para `authenticated`, `get_invite_preview` para `anon` e os dois avisos do Auth).
 - **Tipos:** regerados; `exercises` com as colunas novas, `equipment`, `exercise_equipment`, `muscle_groups` e `create_exercise` novo em `database.types.ts`.
 - **Efeito visível:** 61 exercícios mudam de nome e 11 de grupo (ids iguais). Não há fichas reais ainda.
+
+### Resultado da aplicação da 0012 (04/11/2026, issue #100)
+
+- **O que muda:** só o corpo de `save_workout` (`create or replace`, mesma assinatura e grants).
+- **Testes (PGlite, Postgres 17.5):** **336 verificações**.
+- **Aplicação manual:** o `apply_migration` do MCP voltou "declined" sem tela, apesar de a migration não ter `drop` (só um `delete` no corpo da função). Por decisão do usuário, rodou no SQL Editor. A 0008 a 0010 passaram pelo MCP em outras sessões, então a causa pode ser o `delete`, ou a sessão. Se acontecer de novo, não insista: vá ao SQL Editor, com "Run without RLS" se aparecerem as duas opções.
+- **Registro:** versão `20261104110318` (nome do arquivo), inserida à mão em `supabase_migrations.schema_migrations`, sem o texto em `statements`.
+- **Conferido no banco:** os limites novos estão no corpo da função; uma só versão de `save_workout`; `EXECUTE` para `authenticated` e não para `anon`.
+- **Advisor:** sem alerta novo (as mesmas 24 RPCs `security definer` para `authenticated`, `get_invite_preview` para `anon` e os dois avisos do Auth).
+- **Tipos:** não regerados: a assinatura é a mesma e nenhuma tabela mudou.
