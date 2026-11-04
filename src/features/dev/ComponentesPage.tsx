@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import {
+  ActiveWorkoutCard,
   BackButton,
   Button,
   ButtonCompact,
@@ -159,6 +160,25 @@ function Demonstracoes() {
           <Chip tom="neutral">Aguardando envio</Chip>
           <Chip tom="warning">Quase no fim</Chip>
         </div>
+      </Secao>
+
+      <Secao titulo="ActiveWorkoutCard">
+        <ActiveWorkoutCard
+          nome="Hipertrofia · Fase 2"
+          situacao="Semana 4 de 8"
+          progresso={25 / 56}
+          feitos={12}
+          inicio="05/10"
+          fim="29/11"
+        />
+        <ActiveWorkoutCard
+          nome="Treino com um nome longo demais para caber em uma só linha"
+          situacao="Treino concluído"
+          progresso={1}
+          feitos={1}
+          inicio="05/10"
+          fim="29/11"
+        />
       </Secao>
 
       <Secao titulo="Notice">

@@ -23,7 +23,6 @@ const linhas: LinhaDoAluno[] = [
     status: "convite_expirado",
     detalhe: "Convite expirou em 24/10",
     pediuTreino: false,
-    abre: true,
   },
   {
     id: "a2",
@@ -31,7 +30,6 @@ const linhas: LinhaDoAluno[] = [
     status: "sem_treino",
     detalhe: "Último treino em 20/09",
     pediuTreino: false,
-    abre: false,
   },
   {
     id: "a3",
@@ -39,7 +37,6 @@ const linhas: LinhaDoAluno[] = [
     status: "ativo",
     detalhe: "Treino concluído em 25/10 · treinou ontem",
     pediuTreino: true,
-    abre: false,
   },
   {
     id: "a4",
@@ -47,7 +44,6 @@ const linhas: LinhaDoAluno[] = [
     status: "quase_no_fim",
     detalhe: "Fim em 03/11 · treinou ontem",
     pediuTreino: false,
-    abre: false,
   },
   {
     id: "a5",
@@ -55,7 +51,6 @@ const linhas: LinhaDoAluno[] = [
     status: "convite_pendente",
     detalhe: "Convite enviado em 27/10 · vale até 03/11",
     pediuTreino: false,
-    abre: true,
   },
   {
     id: "a6",
@@ -63,7 +58,6 @@ const linhas: LinhaDoAluno[] = [
     status: "convite_recusado",
     detalhe: "Recusou o convite em 27/10",
     pediuTreino: false,
-    abre: true,
   },
 ];
 
@@ -127,26 +121,19 @@ describe("Lista de alunos (regras 54, 55, 59, 102, 114 e 147)", () => {
     expect(screen.getByText("1 aluno")).toBeVisible();
   });
 
-  it("aluno vinculado: sem seta, sem efeito de toque e sem ser botão (regra 147 (4))", () => {
-    abrir(linhas.slice(1, 2));
-    const item = screen.getByRole("listitem");
-    expect(within(item).queryByRole("button")).toBeNull();
-    expect(item.firstElementChild).not.toHaveClass("active:bg-bg-surface-raised");
-    expect(item.textContent).toBe("Carla MendesSem treinoÚltimo treino em 20/09");
-  });
-
   it("nome longo trunca em 1 linha (regra 114)", () => {
     const nome = "Juliana Aparecida de Souza Costa Albuquerque Nogueira";
     abrir([{ ...linhas[2]!, nome }]);
     expect(screen.getByText(nome)).toHaveClass("truncate");
   });
 
-  it("linha com convite abre a tela do aluno com convite", async () => {
+  it("toda linha é botão com seta e abre a tela do aluno; a rota escolhe qual (regra 147 (4))", async () => {
     const usuario = abrir();
     const itens = screen.getAllByRole("listitem") as HTMLElement[];
-    for (const i of [1, 2, 3]) expect(within(itens[i]!).queryByRole("button")).toBeNull();
-    for (const i of [0, 4, 5]) {
-      await usuario.click(within(itens[i]!).getByRole("button"));
+    for (const [i, item] of itens.entries()) {
+      const linha = within(item).getByRole("button");
+      expect(linha).toHaveClass("active:bg-bg-surface-raised");
+      await usuario.click(linha);
       expect(navegar).toHaveBeenLastCalledWith({
         to: "/professor/alunos/$alunoId",
         params: { alunoId: linhas[i]!.id },

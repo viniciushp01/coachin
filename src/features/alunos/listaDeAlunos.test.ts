@@ -27,13 +27,13 @@ function aluno(a: Partial<AlunoDaLista> & Pick<AlunoDaLista, "student_id" | "nam
 }
 
 describe("linhaDoAluno (regras 55, 102, 122 e 147)", () => {
-  it("vinculado (ativo, sem treino, quase no fim): não abre nada (regra 147 (4))", () => {
+  it("vinculado (ativo, sem treino, quase no fim): id, nome e status", () => {
     for (const status of ["ativo", "sem_treino", "quase_no_fim"] as const) {
       const linha = linhaDoAluno(
         aluno({ student_id: "a1", name: "Ana", list_status: status }),
         HOJE,
       );
-      expect(linha).toMatchObject({ id: "a1", nome: "Ana", status, abre: false });
+      expect(linha).toMatchObject({ id: "a1", nome: "Ana", status });
     }
   });
 
@@ -52,7 +52,6 @@ describe("linhaDoAluno (regras 55, 102, 122 e 147)", () => {
     expect(linha).toMatchObject({
       status: "convite_pendente",
       detalhe: "Convite enviado em 27/10 · vale até 03/11",
-      abre: true,
     });
   });
 
@@ -68,7 +67,7 @@ describe("linhaDoAluno (regras 55, 102, 122 e 147)", () => {
       HOJE,
       "2026-10-17T12:00:00-03:00",
     );
-    expect(linha).toMatchObject({ detalhe: "Convite expirou em 24/10", abre: true });
+    expect(linha).toMatchObject({ detalhe: "Convite expirou em 24/10" });
   });
 
   it("convite recusado: a data da recusa (e só o fato, sem ela)", () => {
@@ -82,7 +81,6 @@ describe("linhaDoAluno (regras 55, 102, 122 e 147)", () => {
     });
     expect(linhaDoAluno(recusado, HOJE)).toMatchObject({
       detalhe: "Recusou o convite em 27/10",
-      abre: true,
     });
     expect(linhaDoAluno({ ...recusado, invite_declined_at: null }, HOJE).detalhe).toBe(
       "Recusou o convite",
