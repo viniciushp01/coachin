@@ -209,6 +209,18 @@ export function removerExercicio(ficha: Ficha, exercicioId: string): Ficha {
   return { ...ficha, exercicios: ficha.exercicios.filter((e) => e.id !== exercicioId) };
 }
 
+/** O exercício foi ajustado na biblioteca (regra 123): as repetições digitadas ficam como estão. */
+export function fichaComMedida(ficha: Ficha, exercicioId: string, medida: Medida): Ficha {
+  return {
+    ...ficha,
+    exercicios: ficha.exercicios.map((e) => (e.exercicioId === exercicioId ? { ...e, medida } : e)),
+  };
+}
+
+export function rascunhoComMedida(r: Rascunho, exercicioId: string, medida: Medida): Rascunho {
+  return { ...r, fichas: r.fichas.map((f) => fichaComMedida(f, exercicioId, medida)) };
+}
+
 /** Houve alteração em relação a `original`? (regra 107) */
 export function mudou<T>(original: T, atual: T) {
   return JSON.stringify(original) !== JSON.stringify(atual);

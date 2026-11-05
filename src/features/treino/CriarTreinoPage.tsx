@@ -10,13 +10,16 @@ import { EditarFicha } from "./EditarFicha";
 import { FichasDoTreino } from "./FichasDoTreino";
 import { FolhaDescartar } from "./FolhaDescartar";
 import { FolhaRemoverFicha } from "./FolhaRemoverFicha";
+import type { Medida } from "./medida";
 import {
   criarRascunho,
+  fichaComMedida,
   fichaMudou,
   letraDaFichaAberta,
   mudou,
   novaFicha,
   paraSaveWorkout,
+  rascunhoComMedida,
   removerFicha,
   reordenarFichas,
   salvarExercicio,
@@ -29,7 +32,7 @@ import { TreinoSalvo } from "./TreinoSalvo";
 
 /** As telas cheias do fluxo, que a rota guarda no histórico para o "voltar" do aparelho. */
 export type PassoDoTreino =
-  "dados" | "fichas" | "ficha" | "adicionar" | "novo-exercicio" | "ocultos";
+  "dados" | "fichas" | "ficha" | "adicionar" | "novo-exercicio" | "ajustar-exercicio" | "ocultos";
 
 // Figma "Criar treino · 13 e 14". Dados usa a mesma folha de Fichas (regra 107).
 const DESCARTAR_FICHA = {
@@ -65,7 +68,7 @@ type CriarTreinoPageProps = {
 export function CriarTreinoPage({ aluno, treino, passo, irPara, voltar }: CriarTreinoPageProps) {
   const navegar = useNavigate();
   const mostrarToast = useToast();
-  const [inicial] = useState(() => treino?.rascunho ?? criarRascunho(aluno.hoje));
+  const [inicial, setInicial] = useState(() => treino?.rascunho ?? criarRascunho(aluno.hoje));
   const [rascunho, setRascunho] = useState(inicial);
   const [dadosConfirmados, setDadosConfirmados] = useState(treino !== undefined);
   /** A cópia da ficha aberta em Editar ficha: só entra no rascunho em "Salvar ficha". */
@@ -156,6 +159,13 @@ export function CriarTreinoPage({ aluno, treino, passo, irPara, voltar }: CriarT
     voltar();
   }
 
+  /** A mudança é na biblioteca, não no treino: também em `inicial`, para não pedir "descartar". */
+  function aplicarMedida(exercicioId: string, medida: Medida) {
+    setInicial((r) => rascunhoComMedida(r, exercicioId, medida));
+    setRascunho((r) => rascunhoComMedida(r, exercicioId, medida));
+    setEdicao((f) => f && fichaComMedida(f, exercicioId, medida));
+  }
+
   function abrirFicha(ficha: Ficha) {
     setEdicao(ficha);
     irPara("ficha");
@@ -181,13 +191,22 @@ export function CriarTreinoPage({ aluno, treino, passo, irPara, voltar }: CriarT
       );
     }
 
-    if (edicao && (passo === "adicionar" || passo === "novo-exercicio" || passo === "ocultos")) {
+    if (
+      edicao &&
+      (passo === "adicionar" ||
+        passo === "novo-exercicio" ||
+        passo === "ajustar-exercicio" ||
+        passo === "ocultos")
+    ) {
       return (
         <AdicionarExercicio
           ficha={edicao}
           letra={letra}
           criando={passo === "novo-exercicio"}
           aoCriar={() => irPara("novo-exercicio")}
+          ajustando={passo === "ajustar-exercicio"}
+          aoAjustar={() => irPara("ajustar-exercicio")}
+          aoMudarMedida={aplicarMedida}
           emOcultos={passo === "ocultos"}
           aoVerOcultos={() => irPara("ocultos")}
           aoVoltar={voltar}

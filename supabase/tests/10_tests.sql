@@ -1139,4 +1139,158 @@ begin
   perform t.su();
 end $$;
 
+-- ---------------------------------------------------------------------
+-- Ajustar medida e modo de carga do exercício do professor (regras 123 e 148)
+-- ---------------------------------------------------------------------
+do $$
+declare
+  v_id uuid;
+  v_do_t2 uuid;
+  v_ex public.exercises;
+begin
+  perform t.login('t1');
+  v_id := (public.create_exercise('Elevação do Ajuste')).id;
+
+  -- Carga e histórico de um aluno, para conferir que o ajuste não encosta neles.
+  perform t.su();
+  insert into public.student_exercise_loads (user_id, exercise_id, kg, edited_at)
+  values (t.uid('s1'), v_id, 42, now());
+  insert into public.load_history (user_id, exercise_id, exercise_name, kg, edited_at, client_action_id)
+  values (t.uid('s1'), v_id, 'Elevação do Ajuste', 42, now(), gen_random_uuid());
+
+  perform t.login('t1');
+  v_ex := public.set_exercise_settings(v_id, 'none', 'time');
+  perform t.ok(v_ex.id = v_id and v_ex.load_mode = 'none' and v_ex.measure = 'time',
+               'ajuste: dono muda modo de carga e medida, e recebe o exercício de volta');
+  perform t.ok(v_ex.name = 'Elevação do Ajuste' and v_ex.owner_id = t.uid('t1'),
+               'ajuste: nome e dono não mudam');
+  perform t.ok((select load_mode = 'none' and measure = 'time' from public.exercises where id = v_id),
+               'ajuste: a mudança fica gravada');
+
+  perform t.su();
+  perform t.ok((select kg from public.student_exercise_loads where exercise_id = v_id) = 42
+               and (select count(*) from public.load_history where exercise_id = v_id) = 1,
+               'ajuste: de "sim" para "não", carga e histórico ficam (regra 123)');
+
+  perform t.login('t1');
+  v_ex := public.set_exercise_settings(v_id, 'required', 'reps');
+  perform t.ok(v_ex.load_mode = 'required' and v_ex.measure = 'reps', 'ajuste: volta para "sim" e repetições');
+  v_ex := public.set_exercise_settings(v_id, 'optional', 'reps');
+  perform t.ok(v_ex.load_mode = 'optional', 'ajuste: aceita "opcional"');
+  perform t.su();
+  perform t.ok((select kg from public.student_exercise_loads where exercise_id = v_id) = 42
+               and (select count(*) from public.load_history where exercise_id = v_id) = 1,
+               'ajuste: de volta para "sim", carga e histórico continuam iguais');
+
+  -- Predefinido: fixo, e a recusa não muda nada (regra 148).
+  perform t.login('t1');
+  perform t.err(format($q$ select public.set_exercise_settings(%L, 'none', 'time') $q$, t.exid('Supino reto com barra')), 'exercise_predefined');
+  perform t.su();
+  perform t.ok((select load_mode = 'required' and measure = 'reps' from public.exercises where id = t.exid('Supino reto com barra')),
+               'ajuste: predefinido segue como estava');
+
+  -- Valores inválidos, inclusive nulos: não há padrão como em create_exercise.
+  perform t.login('t1');
+  perform t.err(format($q$ select public.set_exercise_settings(%L, 'talvez', 'reps') $q$, v_id), 'load_mode_invalid');
+  perform t.err(format($q$ select public.set_exercise_settings(%L, null, 'reps') $q$, v_id), 'load_mode_invalid');
+  perform t.err(format($q$ select public.set_exercise_settings(%L, 'none', 'minutos') $q$, v_id), 'measure_invalid');
+  perform t.err(format($q$ select public.set_exercise_settings(%L, 'none', null) $q$, v_id), 'measure_invalid');
+  perform t.err(format($q$ select public.set_exercise_settings(%L, 'none', 'time') $q$, gen_random_uuid()), 'exercise_not_found');
+  perform t.err($q$ select public.set_exercise_settings(null, 'none', 'time') $q$, 'exercise_not_found');
+
+  -- Outro professor não enxerga o exercício; aluno não pode; visitante nem executa.
+  perform t.login('t2');
+  perform t.err(format($q$ select public.set_exercise_settings(%L, 'none', 'time') $q$, v_id), 'exercise_not_found');
+  perform t.login('s1');
+  perform t.err(format($q$ select public.set_exercise_settings(%L, 'none', 'time') $q$, v_id), 'forbidden');
+  perform t.login('admin');
+  perform t.err(format($q$ select public.set_exercise_settings(%L, 'none', 'time') $q$, v_id), 'forbidden');
+
+  -- A ordem: dono e predefinido vêm antes dos valores, para a resposta não depender deles.
+  perform t.login('t2');
+  perform t.err(format($q$ select public.set_exercise_settings(%L, 'talvez', 'reps') $q$, v_id), 'exercise_not_found');
+  perform t.login('t1');
+  perform t.err(format($q$ select public.set_exercise_settings(%L, 'talvez', 'reps') $q$, t.exid('Supino reto com barra')), 'exercise_predefined');
+
+  -- Professor bloqueado não ajusta nem o próprio exercício.
+  perform t.login('t2');
+  v_do_t2 := (public.create_exercise('Elevação do Bloqueado')).id;
+  perform t.login('admin');
+  perform public.set_teacher_status(t.uid('t2'), 'blocked');
+  perform t.login('t2');
+  perform t.err(format($q$ select public.set_exercise_settings(%L, 'none', 'time') $q$, v_do_t2), 'forbidden');
+  perform t.login('admin');
+  perform public.set_teacher_status(t.uid('t2'), 'active');
+
+  perform t.su();
+  perform t.ok((select load_mode = 'optional' and measure = 'reps' from public.exercises where id = v_id),
+               'ajuste: nenhuma recusa mudou o exercício');
+  perform t.ok(not has_function_privilege('anon', 'public.set_exercise_settings(uuid, text, text)', 'execute')
+               and has_function_privilege('authenticated', 'public.set_exercise_settings(uuid, text, text)', 'execute'),
+               'ajuste: sem execução para anon; com execução para authenticated');
+end $$;
+
+-- O "N" do aviso: a mesma leitura do app, sob a RLS (regra 151 (4)): só treino ativo e agendado.
+create function t.fichas_do_aviso(p_exercise uuid) returns integer language sql stable as $$
+  select count(distinct e.day_id)::integer
+    from public.workout_exercises e
+    join public.workout_days d on d.id = e.day_id
+   where e.exercise_id = p_exercise and d.removed_at is null
+     and d.workout_id in (select current_workout_id from public.teacher_student_list
+                          union select scheduled_workout_id from public.teacher_student_list)
+$$;
+
+do $$
+declare
+  v_id uuid;
+  v_s  uuid;
+  v_w  uuid;
+  v_item jsonb;
+  v_dia_a uuid;
+begin
+  perform t.login('t1');
+  v_id := (public.create_exercise('Remada do Aviso')).id;
+  v_item := jsonb_build_object('exercise_id', v_id, 'sets', 3, 'reps', '10');
+  v_s := (public.create_student_with_invite('Bia Aviso', 'bia.aviso@x.com') ->> 'student_id')::uuid;
+  v_w := public.save_workout(v_s, null, jsonb_build_object(
+    'name', 'Aviso', 'start_date', t.today(), 'weeks', 8,
+    'days', jsonb_build_array(
+      t.day(null, 'Com o exercício duas vezes', array[v_item, v_item]),
+      t.day(null, 'Com o exercício', array[v_item]),
+      t.day(null, 'Sem o exercício', array[t.item('Supino reto com barra', 3, '10')])
+    )));
+  v_dia_a := t.dayid(v_w, 'A');
+
+  perform t.ok(t.fichas_do_aviso(v_id) = 2, 'aviso: conta fichas, não linhas, e só as que têm o exercício');
+
+  -- Ficha removida sai da conta.
+  perform public.save_workout(v_s, v_w, jsonb_build_object(
+    'name', 'Aviso', 'start_date', t.today(), 'weeks', 8,
+    'days', jsonb_build_array(t.day(v_dia_a, 'Com o exercício duas vezes', array[v_item, v_item]))));
+  perform t.ok(t.fichas_do_aviso(v_id) = 1, 'aviso: ficha removida não conta');
+
+  -- Um treino novo encerra o anterior: a ficha continua lá, mas sai da conta.
+  perform t.su();
+  update public.workouts set start_date = t.today() - 30 where id = v_w;
+  perform t.login('t1');
+  perform public.save_workout(v_s, null, jsonb_build_object(
+    'name', 'Novo', 'start_date', t.today(), 'weeks', 8,
+    'days', jsonb_build_array(t.day(null, 'Sem o exercício', array[t.item('Supino reto com barra', 3, '10')]))));
+  perform t.ok(exists (select 1 from public.workout_exercises e where e.exercise_id = v_id),
+               'aviso: a ficha do treino encerrado continua existindo');
+  perform t.ok(t.fichas_do_aviso(v_id) = 0, 'aviso: treino encerrado não conta');
+
+  -- Treino agendado conta.
+  perform public.save_workout(v_s, null, jsonb_build_object(
+    'name', 'Agendado', 'start_date', t.today() + 7, 'weeks', 8,
+    'days', jsonb_build_array(t.day(null, 'Com o exercício', array[v_item]))));
+  perform t.ok(t.fichas_do_aviso(v_id) = 1, 'aviso: treino agendado conta');
+
+  -- Outro professor não enxerga as fichas deste.
+  perform t.login('t2');
+  perform t.ok(not exists (select 1 from public.workout_exercises e where e.exercise_id = v_id),
+               'aviso: fichas de outro professor não entram na conta');
+  perform t.su();
+end $$;
+
 select 'FIM: todos os testes passaram' as resultado;

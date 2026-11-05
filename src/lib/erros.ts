@@ -63,6 +63,7 @@ export const MENSAGENS = {
   // Biblioteca de exercícios
   exercise_exists: "Esse nome já existe. Confira os ocultos.",
   exercise_not_found: "Não encontramos este exercício.",
+  exercise_predefined: "Exercícios predefinidos não podem ser ajustados.",
   exercises_are_permanent: "Exercícios não podem ser excluídos.",
   name_too_long: "O nome está longo demais.",
   muscle_group_invalid: "Escolha um grupo muscular da lista.",

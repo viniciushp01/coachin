@@ -1004,6 +1004,29 @@ export type Database = {
         Args: { p_exercise_id: string; p_hidden: boolean }
         Returns: undefined
       }
+      set_exercise_settings: {
+        Args: { p_exercise_id: string; p_load_mode: string; p_measure: string }
+        Returns: {
+          aliases: string[]
+          aliases_normalized: string
+          catalog_version: number | null
+          created_at: string
+          id: string
+          load_mode: string
+          measure: string
+          muscle_group: string | null
+          name: string
+          name_normalized: string
+          owner_id: string | null
+          slug: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "exercises"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_load: {
         Args: {
           p_client_action_id: string
