@@ -7,6 +7,7 @@ import { ErroApp, erroDaResposta } from "@/lib/erros";
 import { email } from "@/lib/formularios";
 import { rpc } from "@/lib/rpc";
 import {
+  ActiveWorkoutCard,
   BackButton,
   BarraFixa,
   Button,
@@ -69,6 +70,7 @@ export function AlunoComConvitePage({
   aluno,
   convite,
   agora = new Date(),
+  treino,
   papel = "aluno",
 }: AlunoComConvite & { agora?: Date; papel?: Papel }) {
   const textos = POR_PAPEL[papel];
@@ -81,6 +83,14 @@ export function AlunoComConvitePage({
   // A rota só abre esta tela com um estado visível (lerAlunoComConvite).
   const estado = estadoDoConvite(convite, agora) as EstadoVisivel;
   const voltar = () => navegar({ to: textos.volta });
+  const abrirTreino = (acao: "criar" | "editar") =>
+    void navegar({
+      to:
+        acao === "criar"
+          ? "/professor/alunos/$alunoId/criar-treino"
+          : "/professor/alunos/$alunoId/editar-treino",
+      params: { alunoId: aluno.id },
+    });
 
   /** Gera o link novo. Erro do campo de e-mail volta para quem chamou; os demais viram toast. */
   async function reemitir(novoEmail?: string): Promise<ErroApp | undefined> {
@@ -162,6 +172,18 @@ export function AlunoComConvitePage({
       </Notice>
       {estado === "pendente" && (
         <p className="text-caption text-text-secondary">{SEM_COPIAR_LINK}</p>
+      )}
+      {treino && (
+        <>
+          {treino.cartao && <ActiveWorkoutCard rotulo="Treino salvo" {...treino.cartao} />}
+          {treino.acoes
+            .filter((acao): acao is "criar" | "editar" => acao === "criar" || acao === "editar")
+            .map((acao) => (
+              <Button key={acao} variante="secondary" onClick={() => abrirTreino(acao)}>
+                {acao === "criar" ? "Criar treino" : "Editar treino"}
+              </Button>
+            ))}
+        </>
       )}
     </Cabecalho>
   );

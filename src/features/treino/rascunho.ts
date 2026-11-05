@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { MENSAGENS } from "@/lib/erros";
 import { plural } from "@/lib/listas";
+import type { EstadoVisivel } from "@/features/alunos/conviteDoAluno";
 import { formatarData } from "@/ui/datas";
 import type { Medida } from "./medida";
 
@@ -84,6 +85,30 @@ export function avisoDoInicio({
   return temTreinoAtual
     ? `${dura} Fica ativo hoje e o anterior vai para o Histórico.`
     : `${dura} Fica ativo hoje.`;
+}
+
+/** O aviso extra de Dados para quem ainda não aceitou o convite (regra 153 (2)): só com início hoje. */
+export function avisoDoConvite({
+  convite,
+  nome,
+  inicio,
+  hoje,
+}: {
+  convite: EstadoVisivel | null;
+  nome: string;
+  inicio: string;
+  hoje: string;
+}): { titulo: string; texto: string } | null {
+  if (!convite || inicio > hoje) return null;
+  return convite === "recusado"
+    ? {
+        titulo: `${nome} recusou o convite`,
+        texto: "O treino fica guardado até um novo convite ser aceito.",
+      }
+    : {
+        titulo: `${nome} ainda não aceitou o convite`,
+        texto: "O treino começa a contar na data de início, mesmo antes do aceite.",
+      };
 }
 
 // Letras --------------------------------------------------------------------------------------

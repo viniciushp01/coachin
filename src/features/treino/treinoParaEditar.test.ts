@@ -96,11 +96,19 @@ describe("lerTreinoParaEditar", () => {
 
   it.each([
     ["sem treino ativo", { current_workout_id: null }],
-    ["com convite (#98)", { link_status: "invited" }],
     ["com pedido aberto, em que o rodapé só oferece criar", { has_open_request: true }],
   ])("%s: nulo", async (_caso, mudanca) => {
     respostas.teacher_student_list = { data: { ...VINCULO, ...mudanca } };
     expect(await lerTreinoParaEditar("a1")).toBeNull();
+  });
+
+  it("aluno com convite também edita o treino salvo (regra 122)", async () => {
+    respostas.teacher_student_list = {
+      data: { ...VINCULO, link_status: "invited", list_status: "convite_recusado" },
+    };
+    const lido = await lerTreinoParaEditar("a1");
+    expect(lido?.aluno.convite).toBe("recusado");
+    expect(lido?.treino.id).toBe("w1");
   });
 
   it("com agendado, ainda edita o ativo", async () => {

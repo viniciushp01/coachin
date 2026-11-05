@@ -244,3 +244,52 @@ describe("Recusa sem data registrada", () => {
     expect(screen.getByText("Recusou o convite")).toBeVisible();
   });
 });
+
+describe("Treino montado antes do aceite (regras 122 e 153)", () => {
+  const cartao = {
+    nome: "Hipertrofia · Fase 3",
+    situacao: "8 semanas",
+    progresso: 0,
+    feitos: 0,
+    inicio: "29/10",
+    fim: "23/12",
+  };
+
+  it("sem treino: Criar treino em contorno, e o laranja continua sendo Reenviar convite", async () => {
+    const u = abrir({ ...pendente, treino: { cartao: null, agendado: false, acoes: ["criar"] } });
+    expect(screen.queryByText("Treino salvo")).not.toBeInTheDocument();
+    await u.click(screen.getByRole("button", { name: "Criar treino" }));
+    expect(navegar).toHaveBeenCalledWith({
+      to: "/professor/alunos/$alunoId/criar-treino",
+      params: { alunoId: "s1" },
+    });
+    expect(screen.getByRole("button", { name: /^Reenviar convite/ })).toBeVisible();
+  });
+
+  it("com treino: cartão Treino salvo e Editar treino", async () => {
+    const u = abrir({
+      ...pendente,
+      treino: { cartao, agendado: false, acoes: ["editar", "agendar"] },
+    });
+    expect(screen.getByText("Treino salvo")).toBeVisible();
+    expect(screen.getByText("Hipertrofia · Fase 3")).toBeVisible();
+    expect(screen.getByText("8 semanas")).toBeVisible();
+    expect(screen.getByText("treinos feitos")).toBeVisible();
+    // "Agendar novo treino" é o #97, adiado: sem botão.
+    expect(screen.queryByRole("button", { name: "Agendar novo treino" })).not.toBeInTheDocument();
+    await u.click(screen.getByRole("button", { name: "Editar treino" }));
+    expect(navegar).toHaveBeenCalledWith({
+      to: "/professor/alunos/$alunoId/editar-treino",
+      params: { alunoId: "s1" },
+    });
+  });
+
+  it("vale também para o convite recusado", () => {
+    abrir({
+      ...pendente,
+      convite: { ...pendente.convite, status: "declined", declined_at: "2026-10-28T12:00:00Z" },
+      treino: { cartao: null, agendado: false, acoes: ["criar"] },
+    });
+    expect(screen.getByRole("button", { name: "Criar treino" })).toBeVisible();
+  });
+});

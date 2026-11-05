@@ -13,6 +13,7 @@ type TreinoSalvoProps = {
 export function TreinoSalvo({ aluno, rascunho, aoVoltar }: TreinoSalvoProps) {
   const nome = primeiroNome(aluno.nome);
   const agendado = rascunho.inicio > aluno.hoje;
+  const semAceite = aluno.convite !== null;
   const anterior = aluno.temTreinoAtual ? ` O anterior foi para o Histórico de ${nome}.` : "";
   return (
     <Tela barra="um">
@@ -24,7 +25,9 @@ export function TreinoSalvo({ aluno, rascunho, aoVoltar }: TreinoSalvoProps) {
       >
         {agendado
           ? `Começa em ${diaEMes(rascunho.inicio)}. Só você vê até lá, e pode alterar ou cancelar antes.`
-          : `O treino de ${nome} já está ativo.${anterior}`}
+          : semAceite
+            ? `O treino de ${nome} já está salvo. Começa a contar hoje, mesmo antes do aceite.`
+            : `O treino de ${nome} já está ativo.${anterior}`}
       </EmptyState>
       <BarraFixa>
         <Button onClick={aoVoltar}>Voltar ao aluno</Button>
