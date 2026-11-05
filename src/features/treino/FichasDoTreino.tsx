@@ -29,6 +29,7 @@ type FichasDoTreinoProps = {
   aoVoltar: () => void;
   aoAbrirFicha: (ficha: Ficha) => void;
   aoAdicionarFicha: () => void;
+  aoReordenar: (fichas: Ficha[]) => void;
   aoSalvar: () => void;
 };
 
@@ -39,15 +40,18 @@ export function FichasDoTreino({
   aoVoltar,
   aoAbrirFicha,
   aoAdicionarFicha,
+  aoReordenar,
   aoSalvar,
 }: FichasDoTreinoProps) {
-  const [erro, setErro] = useState<ErroDoTreino | null>(null);
+  const [tentouSalvar, setTentouSalvar] = useState(false);
+  // Calculado a cada tela: reordenar muda a letra que o aviso cita.
+  const erro = tentouSalvar ? validarTreino(rascunho) : null;
   const comProblema = erro?.tipo === "ficha_sem_exercicio" ? erro.fichas : [];
+  const temFicha = rascunho.fichas.length > 0;
 
   function salvar() {
-    const erroNovo = validarTreino(rascunho);
-    setErro(erroNovo);
-    if (!erroNovo) aoSalvar();
+    setTentouSalvar(true);
+    if (!validarTreino(rascunho)) aoSalvar();
   }
 
   return (
@@ -55,14 +59,17 @@ export function FichasDoTreino({
       <BackButton onClick={aoVoltar} />
       <div className="flex flex-col gap-8">
         <h1 className="text-title-screen">Fichas</h1>
-        <p className="truncate text-body text-text-secondary">
-          {rascunho.nome.trim()} · {plural(rascunho.semanas, "semana", "semanas")}.
-        </p>
+        {/* Em blocos: o nome longo trunca (regra 114) sem cortar a instrução. */}
+        <div className="text-body text-text-secondary">
+          <p className="truncate">
+            {rascunho.nome.trim()} · {plural(rascunho.semanas, "semana", "semanas")}.
+          </p>
+          {temFicha && <p>Arraste para reordenar.</p>}
+        </div>
       </div>
       {erro && <AvisoDoTreino erro={erro} />}
-      {rascunho.fichas.length > 0 && (
-        // Arrastar é do #91: até lá, a linha solta volta para o lugar.
-        <ListaReordenavel itens={rascunho.fichas} aoReordenar={() => {}}>
+      {temFicha && (
+        <ListaReordenavel itens={rascunho.fichas} aoReordenar={aoReordenar}>
           {(ficha, indice) => (
             <ReorderRow
               key={ficha.id}
