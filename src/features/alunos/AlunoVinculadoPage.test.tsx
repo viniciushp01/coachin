@@ -105,9 +105,18 @@ describe("Tela do aluno vinculado (regras 5, 10, 68, 114 e 144)", () => {
 });
 
 describe("Rodapé: o botão só aparece quando o destino existe", () => {
-  it("editar e agendar ainda não têm destino, e nada aparece desabilitado", () => {
+  it("agendar ainda não tem destino, e nada aparece desabilitado", () => {
     render(<AlunoVinculadoPage aluno={comTreino} />);
-    expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual([""]);
+    expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual(["", "Editar treino"]);
+  });
+
+  it("Editar treino abre o treino ativo (#96)", async () => {
+    render(<AlunoVinculadoPage aluno={comTreino} />);
+    await userEvent.setup().click(screen.getByRole("button", { name: "Editar treino" }));
+    expect(navegar).toHaveBeenCalledWith({
+      to: "/professor/alunos/$alunoId/editar-treino",
+      params: { alunoId: comTreino.id },
+    });
   });
 
   it("Criar treino leva ao início da montagem (#90)", async () => {

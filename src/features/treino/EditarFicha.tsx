@@ -4,7 +4,6 @@ import { ListaReordenavel, ReorderRow } from "@/ui/ReorderRow";
 import { FolhaDoExercicio } from "./FolhaDoExercicio";
 import { linhaDoExercicio } from "./medida";
 import {
-  letraDaFicha,
   removerExercicio,
   reordenarExercicios,
   salvarExercicio,
@@ -14,7 +13,7 @@ import {
 
 type EditarFichaProps = {
   ficha: Ficha;
-  indice: number;
+  letra: string;
   aoMudar: (ficha: Ficha) => void;
   aoVoltar: () => void;
   aoAdicionarExercicio: () => void;
@@ -25,7 +24,7 @@ type EditarFichaProps = {
 /** Passo 3: nome e exercícios da ficha; "Salvar ficha" não grava o treino (regras 104 e 107). */
 export function EditarFicha({
   ficha,
-  indice,
+  letra,
   aoMudar,
   aoVoltar,
   aoAdicionarExercicio,
@@ -45,7 +44,7 @@ export function EditarFicha({
   return (
     <Tela barra="um">
       <BackButton onClick={aoVoltar} />
-      <h1 className="text-title-screen">Ficha {letraDaFicha(indice)}</h1>
+      <h1 className="text-title-screen">Ficha {letra}</h1>
       <FormField
         rotulo="Nome da ficha"
         placeholder="Ex.: Peito e tríceps"

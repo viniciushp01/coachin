@@ -14,7 +14,7 @@ const ESPERA_DA_BUSCA_MS = 250;
 
 type AdicionarExercicioProps = {
   ficha: Ficha;
-  indice: number;
+  letra: string;
   /** A tela "Exercícios ocultos": um passo no histórico, sem perder o que foi digitado. */
   emOcultos: boolean;
   aoVerOcultos: () => void;
@@ -28,7 +28,7 @@ type AdicionarExercicioProps = {
 /** Busca simples na biblioteca; tocar abre a folha (regras 74 e 151 (2); Biblioteca · 1). */
 export function AdicionarExercicio({
   ficha,
-  indice,
+  letra,
   emOcultos,
   aoVerOcultos,
   criando,
@@ -120,7 +120,7 @@ export function AdicionarExercicio({
       <BackButton onClick={aoVoltar} />
       <div className="flex flex-col gap-8">
         <h1 className="text-title-screen">Adicionar exercício</h1>
-        <p className="truncate text-body text-text-secondary">{tituloDaFicha(ficha, indice)}</p>
+        <p className="truncate text-body text-text-secondary">{tituloDaFicha(ficha, letra)}</p>
       </div>
       <SearchField
         rotulo="Buscar exercício"

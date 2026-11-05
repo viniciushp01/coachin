@@ -6,6 +6,7 @@ import { useState, type ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ErroApp, MENSAGENS } from "@/lib/erros";
 import { ToastProvider } from "@/ui";
+import type { TreinoParaEditar } from "./treinoParaEditar";
 import { CriarTreinoPage, type PassoDoTreino } from "./CriarTreinoPage";
 import { FichasDoTreino } from "./FichasDoTreino";
 import { criarRascunho, novaFicha, novoExercicio, reordenarFichas, salvarFicha } from "./rascunho";
@@ -138,11 +139,12 @@ const JULIANA = {
 };
 
 /** Faz o papel da rota: guarda os passos como o histórico do navegador. */
-function Caminho({ aluno }: { aluno: typeof JULIANA }) {
-  const [pilha, setPilha] = useState<PassoDoTreino[]>(["dados"]);
+function Caminho({ aluno, treino }: { aluno: typeof JULIANA; treino?: TreinoParaEditar }) {
+  const [pilha, setPilha] = useState<PassoDoTreino[]>([treino ? "fichas" : "dados"]);
   return (
     <CriarTreinoPage
       aluno={aluno}
+      treino={treino}
       passo={pilha.at(-1)!}
       irPara={(passo) => setPilha((p) => [...p, passo])}
       voltar={() => setPilha((p) => p.slice(0, -1))}
@@ -1091,5 +1093,121 @@ describe("Resultado de Salvar treino (regras 75 e 150)", () => {
     await irParaFichas(u);
     await fichaCompleta(u, "Peito");
     expect(new Set(rpc.mock.calls.map(([f]) => f))).toEqual(new Set(["search_exercises"]));
+  });
+});
+
+describe("Editar o treino ativo (regras 6, 76, 111 e 150 (2))", () => {
+  const supino = novoExercicio(
+    { id: "ex-supino", nome: "Supino reto", medida: "reps" },
+    { series: 4, reps: "10", descanso: 90, observacao: "" },
+  );
+  const treino = (): TreinoParaEditar => ({
+    id: "w1",
+    rascunho: {
+      ...criarRascunho("2026-10-01"),
+      nome: "Hipertrofia",
+      letrasUsadas: 3,
+      fichas: [
+        { id: "d-a", letra: "A", nome: "Peito", exercicios: [supino] },
+        { id: "d-c", letra: "C", nome: "Pernas", exercicios: [supino] },
+      ],
+    },
+  });
+
+  function abrirEdicao() {
+    render(
+      <ToastProvider>
+        <Caminho aluno={JULIANA} treino={treino()} />
+      </ToastProvider>,
+    );
+    return userEvent.setup();
+  }
+
+  it("abre nas fichas, com as letras do banco e os textos de editar", () => {
+    abrirEdicao();
+    expect(screen.getByRole("heading", { name: "Editar treino" })).toBeVisible();
+    expect(
+      screen.getByText("Juliana Costa · Hipertrofia. Você altera o treino ativo, sem criar outro."),
+    ).toBeVisible();
+    expect(linha("Ficha A · Peito")).toBeVisible();
+    expect(linha("Ficha C · Pernas")).toBeVisible();
+    expect(botao("Salvar alterações")).toBeVisible();
+  });
+
+  it("salva o mesmo treino, com início e semanas iguais, e volta com o toast", async () => {
+    salvar = () => "w1";
+    const u = abrirEdicao();
+    await u.click(botao("Salvar alterações"));
+    await screen.findByText("Alterações salvas.");
+    const args = chamadasDeSalvar()[0]![1] as unknown as {
+      p_workout_id: string;
+      p_data: { start_date: string; weeks: number; days: { id: string | null }[] };
+    };
+    expect(args.p_workout_id).toBe("w1");
+    expect(args.p_data).toMatchObject({ start_date: "2026-10-01", weeks: 8 });
+    expect(args.p_data.days.map((d) => d.id)).toEqual(["d-a", "d-c"]);
+    expect(navegar).toHaveBeenCalledWith({ ...SAIU, replace: true });
+  });
+
+  it("remover ficha do banco pergunta e só vale ao salvar", async () => {
+    salvar = () => "w1";
+    const u = abrirEdicao();
+    await u.click(linha("Ficha C · Pernas"));
+    await u.click(botao("Remover esta ficha"));
+    const folha = screen.getByRole("dialog", { name: "Remover a Ficha C?" });
+    expect(within(folha).getByText("As marcações antigas continuam")).toBeVisible();
+
+    await u.click(within(folha).getByRole("button", { name: "Manter ficha" }));
+    expect(screen.getByRole("heading", { name: "Ficha C" })).toBeVisible();
+
+    await u.click(botao("Remover esta ficha"));
+    await u.click(
+      within(screen.getByRole("dialog", { name: "Remover a Ficha C?" })).getByRole("button", {
+        name: "Remover ficha",
+      }),
+    );
+    expect(screen.queryByRole("button", { name: comecaCom("Ficha C") })).not.toBeInTheDocument();
+    expect(chamadasDeSalvar()).toEqual([]);
+
+    await u.click(botao("Salvar alterações"));
+    await screen.findByText("Alterações salvas.");
+    const args = chamadasDeSalvar()[0]![1] as unknown as { p_data: { days: { id: string }[] } };
+    expect(args.p_data.days.map((d) => d.id)).toEqual(["d-a"]);
+  });
+
+  it("ficha nova ganha a próxima letra e sai sem perguntar", async () => {
+    const u = abrirEdicao();
+    await u.click(botao("Adicionar ficha"));
+    expect(screen.getByRole("heading", { name: "Ficha D" })).toBeVisible();
+    await u.click(botao("Remover esta ficha"));
+    expect(screen.queryByRole("dialog", { name: /^Remover/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Editar treino" })).toBeVisible();
+  });
+
+  it("remover todas e salvar mostra o erro, sem gravar", async () => {
+    const u = abrirEdicao();
+    for (const nome of ["Ficha A · Peito", "Ficha C · Pernas"]) {
+      await u.click(linha(nome));
+      await u.click(botao("Remover esta ficha"));
+      await u.click(screen.getByRole("button", { name: "Remover ficha" }));
+    }
+    await u.click(botao("Salvar alterações"));
+    expect(screen.getByText("Adicione pelo menos uma ficha")).toBeVisible();
+    expect(chamadasDeSalvar()).toEqual([]);
+  });
+
+  it("voltar sem alteração sai direto; com alteração, pergunta com o texto de editar", async () => {
+    const u = abrirEdicao();
+    await u.click(botao("Voltar"));
+    semFolhaDescartar();
+    expect(navegar).toHaveBeenCalledWith(SAIU);
+
+    navegar.mockClear();
+    await u.click(linha("Ficha A · Peito"));
+    await u.type(screen.getByLabelText("Nome da ficha"), " e ombro");
+    await u.click(botao("Salvar ficha"));
+    await u.click(botao("Voltar"));
+    expect(within(folhaDescartar()).getByText("O treino atual continua como está")).toBeVisible();
+    expect(navegar).not.toHaveBeenCalled();
   });
 });
