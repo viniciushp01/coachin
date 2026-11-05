@@ -2,15 +2,15 @@
 
 Aplicativo de treinos de academia gerenciado por um professor (MVP: apenas musculação).
 
-Antes de qualquer trabalho de produto, design ou código, leia `docs/contexto/contexto-produto.md`: ele consolida o modelo de dados, as regras de negócio (numeradas), as telas, os fluxos e a priorização MVP x Depois, atualizado até a 28ª rodada de decisões (28/10/2026). A fonte original é o board do Figma (https://www.figma.com/board/JNuuAUgUlhLvia1HZ5X3xO/Aplicativo-de-treinos---MVP).
+Antes de trabalhar, leia em `docs/contexto/contexto-produto.md` **só as regras da etapa** (busque pelo número): ele consolida o modelo de dados, as regras de negócio numeradas, as telas, os fluxos e a priorização, e é grande demais para ler inteiro a cada sessão.
 
-- Siga as regras do `docs/contexto/contexto-produto.md`; não invente regras novas sem confirmar.
+- Siga as regras do `docs/contexto/contexto-produto.md`; não invente regra de negócio sem confirmar. Textos e estados pequenos: proponha e anote na lista da etapa (`docs/WORKFLOW.md`, seção 7).
 - Se algo conflitar ou estiver nos "Pontos em aberto", pergunte antes de implementar.
 - Respostas e textos do app em português (pt-BR).
 
 ## Como trabalhamos
 
-Leia `docs/WORKFLOW.md` antes de planejar trabalho novo: papéis, fases, ciclo de cada fatia, trabalho em paralelo e sincronização dos documentos. Resumo: o repositório é a fonte da verdade, só o Claude Code aplica migrations, e ninguém inventa regra de negócio.
+Leia `docs/WORKFLOW.md` antes de planejar trabalho novo, sobretudo o **plano até o piloto** (seção 4) e o ciclo enxuto (seção 5): uma sessão por etapa, sem paralelo, Sonnet como padrão, merge automático com CI verde exceto em banco, autenticação e permissões. O repositório é a fonte da verdade, só o Claude Code aplica migrations, e ninguém inventa regra de negócio.
 
 ## Economia de tokens (vale para toda tarefa)
 
@@ -37,7 +37,7 @@ Decidida em `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel, 
 - `prompts-lotes-3-e-4.md`: prompts usados nos lotes 3 e 4 do design (referência histórica).
 - `rodada-19`, `rodada-22`, `rodada-23` e `rodada-24` (as rodadas 25 e 26 são só regras, 122 e 123 a 125, sem mapa do Figma; a 28ª (regras 127 a 131) tem a seção 12 de "Aluno · Entrada"; a 27ª, regra 126, tem as telas na página "Aluno · Ficha e painel do dia" e "Professor · Treino"): mapa do Figma e pendências de cada rodada de casos de borda (as regras em si estão no `contexto-produto.md`).
 
-O **repositório é a fonte da verdade**: edite em `docs/contexto/` e espelhe no Project "Coach In" do claude.ai ao fim de cada rodada (no Project os caminhos são `claude/...`). Detalhes em `docs/WORKFLOW.md`, seção 8.
+O **repositório é a fonte da verdade**: edite em `docs/contexto/`. O Project do claude.ai não é mais espelhado (`docs/WORKFLOW.md`, seção 8).
 
 ## Agent skills
 

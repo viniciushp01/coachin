@@ -2,13 +2,13 @@
 
 Como produto, design e código andam juntos. Leia este arquivo antes de planejar trabalho novo. Ele não repete regras de negócio (vivem em `docs/contexto/contexto-produto.md`) nem o desenho do banco (`docs/schema-coach-in.md`).
 
-Última verificação do estado: 28/10/2026.
+Última verificação do estado: 05/11/2026.
 
 ## 1. Princípios
 
-1. **O repositório é a fonte da verdade.** O Project "Coach In" no claude.ai é um espelho para os chats de produto e design. Sincroniza-se numa direção só: repositório → Project, ao fim de cada rodada (seção 8).
+1. **O repositório é a fonte da verdade.** Desde 05/11/2026, o Project do claude.ai não é mais espelhado (seção 8).
 2. **Documento, não conversa.** Cada agente começa do zero e só sabe o que está em arquivo. Decisão que não foi escrita não existe.
-3. **Ninguém inventa regra de negócio.** Dúvida vira pergunta; decisão vira regra numerada em `contexto-produto.md`.
+3. **Ninguém inventa regra de negócio.** Dúvida de negócio vira pergunta; decisão vira regra numerada em `contexto-produto.md`. Textos e estados pequenos não viram regra (seção 7).
 4. **Só o Claude Code aplica migrations.** Os chats de produto desenham, revisam e testam, mas não aplicam. Migration aplicada nunca se edita: cria-se uma nova.
 5. **Tela e banco da mesma fatia andam juntos.** Nada de tabela sem tela que a use, nem tela sem teste de acesso (RLS) por trás.
 6. **Um único dono para o que é compartilhado** (componentes base, migrations, numeração de regras). Isso evita cinco botões diferentes e dois `0007`.
@@ -17,15 +17,15 @@ Como produto, design e código andam juntos. Leia este arquivo antes de planejar
 
 | Quem | Faz | Não faz |
 |---|---|---|
-| **Você** | Decide produto, aprova entregas, conversa com o jurídico, renomeia o Project | Aplicar migration à mão |
-| **Claude no app (chats do Project)** | Decide e registra regras, desenha no Figma, escreve e revisa schema, responde dúvidas de produto | Aplicar migration; editar código do app |
+| **Você** | Decide produto, aprova entregas, conversa com o jurídico | Aplicar migration à mão |
+| **Claude no app (chats)** | Decide e registra regras, desenha no Figma, escreve e revisa schema, responde dúvidas de produto | Aplicar migration; editar código do app |
 | **Claude Code (repositório)** | Código do app, migrations, testes, tipos, PRs, deploy | Inventar regra; mudar design sem registrar |
 
 Os dois lados conversam por **arquivos**: pendências voltam para `contexto-produto.md` (seção "Pontos em aberto") e para issues.
 
-## 3. Estado atual (28/10/2026)
+## 3. Estado atual (05/11/2026)
 
-- **Produto:** regras 1 a 147 (29ª rodada e decisões de 30/10). Nenhum ponto bloqueando o MVP. Pendências menores na seção 8 do `contexto-produto.md`.
+- **Produto:** regras 1 a 155. Nenhum ponto bloqueando o piloto. Pendências menores na seção 8 do `contexto-produto.md`.
 - **Banco:** migrations 0001 a 0010 e 0012 aplicadas no Supabase (`kfjjiajxgbsqpuskxbzb`) e iguais às do repositório (a 0007 e a 0012 entraram pelo SQL Editor; ver `docs/schema-coach-in.md`); a 0011 está reservada para o #94. 336 verificações passando (PGlite). Administrador criado. Edge Functions `ativar-professor` e `enviar-convite` publicadas (pasta `supabase/functions`, testes em Deno no CI).
 - **Design:** Figma completo até a 24ª rodada. Faltam no FigJam original as seções 19 a 24.
 - **App:** **Fase 0 concluída** em 28/10/2026 (PR #1). Produção em https://coachin.vercel.app. Stack: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Tokens em `src/styles/tokens.css`; componentes base em `src/ui` (catálogo em `/dev/componentes`); camada Supabase em `src/lib` (`supabase.ts`, `rpc.ts`, `erros.ts`); roteamento por papel (`src/lib/destino.ts` e `sessao.ts`, rotas `/entrar`, `/admin`, `/professor`, `/aluno`, `/sem-professor`, `/primeiro-acesso`, `/bloqueado`); CI em `.github/workflows/ci.yml`. `main` protegida (PR obrigatório e os dois jobs do CI verdes). Projeto `coachin` na Vercel com preview por PR.
@@ -34,6 +34,25 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 - **Fatia 3 (Professor: lista de alunos) concluída** em 03/11/2026 (spec #74, PRs #81, #83 e #84): `/professor` deixa de ser provisória e vira a Lista de alunos (resumo, busca sem acento e sem maiúsculas, lista vazia, "Sair" sem a fila local), com os convites (detalhe com as datas, abre a tela do aluno com convite) e os alunos vinculados (chip de status, detalhe "treinou hoje"/último treino com a ficha, chip "Pediu treino"). Migration 0010 (`last_done_letter` na view `teacher_student_list`). Regras 146 e 147. À parte, o #80 (PR #82) fechou os dois casos do convite que ficaram do #49. A tela do aluno vinculado chega com as fatias 4 e 7; a área do aluno continua provisória até a 5.
 
 ## 4. Fases
+
+### Plano até o piloto (decidido em 05/11/2026)
+
+**Objetivo:** um professor real monta o treino, e 2 ou 3 alunos reais fazem esse treino pelo app durante 2 semanas. O resto se decide com base nesse uso. Vale sobre a ordem da tabela da Fase 1.
+
+| Etapa | O que entra |
+|---|---|
+| 1. Fechar a fatia 4 | PRs #108 (#92) e #109 (#93), #96 (editar treino ativo), regra da barra de progresso |
+| 2. Fatia 5 reduzida | Início com semana e "Ficha de hoje", ficha com exercícios e descanso, marcar como feito, desfazer, marcar dia passado, registrar carga. Menu só com o que existe, e um jeito de sair da conta |
+| 3. Fatia 8 | PWA e fila offline (regras 38 e 116) |
+| 4. Piloto | Teste de ponta a ponta dos três papéis, iPhone e Android com o app instalado, 2 semanas de uso |
+
+**Adiados até o piloto responder:**
+
+- **#97 (treino agendado):** no piloto, o professor usa sempre início hoje. Antes do piloto, confirmar como ele troca um treino ativo por outro; se não houver caminho, a parte de "Agendar novo treino" volta.
+- **#98** (treino antes do aceite) e **#94/#95** (ajustar medida e carga).
+- **Fatias 6, 7 e 10** e, na fatia 5, o aviso de treinar além da frequência, a sugestão de descanso e o pop-up de treino novo.
+
+**Antes de abrir para o público, continuam obrigatórios:** a fatia 9 e a Fase 2. No piloto, combinar o uso dos dados com os participantes e atender à exclusão de conta manualmente, se alguém pedir.
 
 ### Fase 0 · Fundação (sequencial, um agente só)
 
@@ -65,7 +84,7 @@ Cada fatia = telas + funções do banco que ela usa + testes. Ordem sugerida pel
 | 9 | Conta: excluir, bloquear professor, tela de aluno bloqueado | 2 | 94, 95, 119, 120 |
 | 10 | Cardio na ficha: colunas em `workout_days`, seção na edição da ficha e cartão na ficha do aluno | 4 e 5 | 126 |
 
-As fatias 3 e 4 (professor) e 5 e 6 (aluno) são independentes entre si depois de 2, e podem andar em paralelo. A 8 só começa depois que a 5 estiver estável.
+A 8 só começa depois que a 5 estiver estável.
 
 ### Fase 2 · Antes do lançamento
 
@@ -76,60 +95,53 @@ As fatias 3 e 4 (professor) e 5 e 6 (aluno) são independentes entre si depois d
 
 ## 5. Ciclo de cada fatia
 
-Para cada fatia, nesta ordem. As skills já instaladas em `.claude/skills/` cobrem os passos.
+Para cada etapa, em uma sessão só:
 
-1. **Mapa e tickets.** `/wayfinder` (se a fatia for grande) ou `/to-spec` e `/to-tickets` para quebrar em tickets com dependências no GitHub Issues. Cada ticket cita as regras pelo número.
-2. **Conferir design.** O ticket aponta as páginas do Figma (`docs/contexto/figma-paginas.md`). Falta tela ou componente? Volta para o chat de design (seção 7), não se improvisa.
-3. **Implementar com testes primeiro.** `/implement` com `/tdd`. Banco: teste de RLS e de função antes da migration.
-4. **Mudou o banco?** Nova migration → `node supabase/tests/pglite/run.mjs` → só então aplicar via MCP → `generate_typescript_types` → rodar Security Advisor → atualizar `docs/schema-coach-in.md`.
-5. **Revisar.** `/code-review` contra as regras numeradas e o `design.md`. Para trabalho sensível (RLS, auth, exclusão de conta), um revisor separado, que não viu a implementação.
-6. **PR.** `/pr`, com as regras atendidas, as telas do Figma e o resultado dos testes.
-7. **Fechar.** Merge, preview conferido no celular, issues fechadas, docs atualizados (seção 8).
+1. **Spec curta.** Uma issue por etapa, citando as regras pelo número. Sem quebrar em vários tickets nem escrever o texto exato de cada tela: a sessão usa as telas que existem no Figma e propõe o que faltar.
+2. **Implementar com testes primeiro** (`/tdd`). Banco: teste de RLS e de função antes da migration.
+3. **Mudou o banco?** Nova migration → `node supabase/tests/pglite/run.mjs` → aplicar via MCP → `generate_typescript_types` → Security Advisor → atualizar `docs/schema-coach-in.md`.
+4. **Revisar.** `/code-review` completo só em banco, autenticação e permissões, com revisor separado. Nos demais casos, testes e CI bastam.
+5. **PR.** `/pr`. Merge automático com CI verde, sem esperar aprovação, **exceto em banco, autenticação e permissões**, que aguardam o ok do Vinicius.
+6. **Fechar a etapa.** Um preview do Vinicius, no celular, com a lista de textos e estados propostos para revisar.
 
-Problema durante o caminho: `/diagnosing-bugs`. Fim de fatia: `/retro`. Contexto grande demais para uma sessão: `/handoff`.
+Modelo: Sonnet como padrão; Opus só em migration, autenticação e permissões. A sessão lê só as regras da etapa, não o `contexto-produto.md` inteiro.
+
+Problema durante o caminho: `/diagnosing-bugs`. Contexto grande demais para uma sessão: `/handoff`.
 
 ## 6. Trabalho em paralelo
 
-- **Um agente por ticket, um worktree por agente** (`git worktree` ou o recurso de worktree do Claude Code), branch `fatia-N/ticket`. Ninguém trabalha na `main` direto.
-- **Migrations:** reservar o número antes de começar (issue "migration 0007 reservada para #N"). Só um agente aplica por vez, e quem aplica roda os testes inteiros depois.
-- **Componentes base:** pertencem à Fase 0. Precisa de um novo? Ticket próprio, feito por um agente, mergeado antes de quem depende dele.
-- **Numeração de regras e rodadas:** quem decide produto reserva a faixa. Hoje a próxima regra é a **132** e a próxima rodada é a **29ª**. Dois chats de produto ao mesmo tempo precisam combinar faixas antes (foi o que quase colidiu nos lotes 3 e 4).
-- **Revisor de consistência** ao fim de cada onda paralela: confere cada entrega contra as regras e o design system, e só o que passa chega a você.
+- **Sem paralelo e sem sessão coordenadora:** uma etapa de cada vez, em worktree próprio. Ninguém trabalha na `main` direto.
+- **Migrations:** uma por vez, com o número conferido antes de começar. Quem aplica roda os testes inteiros depois.
+- **Componentes base:** a sessão da etapa cria o que precisar em `src/ui`, seguindo o `design.md`.
+- **Numeração de regras:** a próxima é a **156**.
 
 ## 7. Quando uma regra de negócio muda ou aparece
 
-1. Quem encontrou a dúvida abre um issue `needs-info` com o trecho da regra e a pergunta (nunca decide sozinho).
-2. **Chat de produto** (Project) conversa com você e fecha a decisão.
-3. A decisão vira regra numerada em `contexto-produto.md` (nova rodada, com data), e os pontos afetados nas seções 2 a 7 do mesmo arquivo são ajustados.
-4. Design: telas novas ou alteradas no Figma, componentes novos registrados na Parte 2 do `design.md`, mapa em `figma-paginas.md` ou num `rodada-NN`.
-5. Banco: `docs/schema-coach-in.md` + migration nova, se houver.
-6. Código: ticket novo ou existente atualizado.
-7. Sincronizar com o Project (seção 8).
+1. **Regra de negócio:** quem encontrou a dúvida pergunta ao Vinicius (issue `needs-info` ou na própria sessão), sem decidir sozinho. A decisão vira regra numerada em `contexto-produto.md`, com data.
+2. **Texto ou estado pequeno:** a sessão propõe, anota na lista da etapa e segue. Só vira regra se mudar o comportamento do negócio.
+3. **Efeitos:** ajustar o que a decisão atingir (`design.md`, `docs/schema-coach-in.md` e migration nova, código).
 
 ## 8. Sincronizar os documentos
 
-- **Edição:** sempre no repositório (`docs/contexto/`). No Project, os caminhos aparecem como `claude/...`; no repositório, como `docs/contexto/...`.
-- **Espelho no Project:** ao fim de cada rodada, copiar `docs/contexto/*.md` para o Project trocando `docs/contexto/` por `claude/`. Quem fez a rodada faz a cópia e confere a data de cabeçalho.
-- **Figma e FigJam:** uma seção "Decisões - NNª rodada" por rodada. Pendente hoje: replicar as seções 19 a 24 no board original (`JNuuAUgUlhLvia1HZ5X3xO`).
-- **Nunca** deixar o Project à frente do repositório: se alguém editar lá por engano, trazer a mudança para o repositório antes da próxima rodada.
+- **Edição:** sempre no repositório (`docs/contexto/`).
+- **Project do claude.ai:** não é mais espelhado. O que estiver lá pode estar desatualizado; decisão tomada lá precisa entrar no repositório para valer.
+- **Figma:** referência visual, sem obrigação de desenhar cada caso raro. Mudança de texto decidida no código não exige atualização imediata.
 
 ## 9. Definição de pronto (qualquer ticket)
 
 - [ ] Atende às regras citadas, sem regra nova inventada.
-- [ ] Igual ao Figma (tokens, componentes, um botão laranja por tela, textos em pt-BR, tom acolhedor).
+- [ ] Segue o `design.md` e as telas que existem no Figma (tokens, componentes, um botão laranja por tela, textos em pt-BR, tom acolhedor).
 - [ ] Testes passando; mudança de banco com migration nova, testada e aplicada pelo Claude Code.
 - [ ] Security Advisor sem alerta novo.
 - [ ] Tipos do banco regerados, se o banco mudou.
 - [ ] Docs atualizados (`contexto-produto.md`, `design.md`, `schema-coach-in.md`, conforme o caso).
-- [ ] PR revisado e preview conferido no celular.
+- [ ] CI verde. Preview no celular uma vez por etapa (seção 5).
 
 ## 10. Pendências conhecidas
 
-- Abrir os tickets da fatia 4 (montar treino; catálogo já aplicado, regras 123, 124 e 148) e da 9 (conta), liberadas pelas fatias 3 e 2. Da fatia 4: falta função para o professor mudar carga e medida de um exercício dele (regra 123). Sem caso real ainda: ocultar exercício do catálogo para todos (regra 148; `exercise_hidden` é por professor).
+- Sem caso real ainda: ocultar exercício do catálogo para todos (regra 148; `exercise_hidden` é por professor).
 - O nome do job do banco no CI ainda diz "239 verificações".
 - Fatia 1: links de confirmação enviados antes do PR #31 voltam para `/entrar` e entram direto (só contas de teste); SMTP do Gmail a trocar por provedor transacional antes do lançamento (Fase 2).
 - Figma: o frame "Login · 2 Erro de credenciais" diz "E-mail ou senha incorretos"; o texto decidido é "E-mail ou senha não conferem." (corrigir no Figma).
-- Renomear o Project de "Gym App" para "Coach In" (só você consegue).
-- FigJam original: replicar seções 19 a 24.
 - Figma: página "↳ Fluxo · Conta e privacidade" com frames antigos sobrepostos; toques numerados e raia própria para os frames novos da 24ª rodada.
 - Jurídico (Fase 2).
