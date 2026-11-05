@@ -3,6 +3,7 @@ import {
   avisoDoInicio,
   criarRascunho,
   esquemaDoExercicio,
+  fichaComMedida,
   fichaMudou,
   fimDoTreino,
   letraDaFicha,
@@ -17,6 +18,7 @@ import {
   reordenarExercicios,
   reordenarFichas,
   salvarExercicio,
+  rascunhoComMedida,
   salvarFicha,
   tituloDaFicha,
   validarDados,
@@ -214,6 +216,24 @@ describe("fichaMudou (regras 107 e 156 (2))", () => {
     expect(fichaMudou(r, novaFicha())).toBe(false);
     expect(fichaMudou(r, { ...novaFicha(), nome: "Costas" })).toBe(true);
     expect(fichaMudou(r, { ...novaFicha(), exercicios: [supino] })).toBe(true);
+  });
+});
+
+describe("Medida ajustada na biblioteca (regra 123)", () => {
+  const remada = { ...supino, id: "e2", exercicioId: "uuid-remada", nome: "Remada" };
+
+  it("muda só o exercício ajustado, em todas as fichas, e mantém as repetições", () => {
+    const r = comFichas(["Peito", "Costas"]);
+    const ajustado = rascunhoComMedida(r, "uuid-supino", "time");
+    expect(ajustado.fichas.map((f) => f.exercicios[0]!.medida)).toEqual(["time", "time"]);
+    expect(ajustado.fichas[0]!.exercicios[0]!.reps).toBe("10");
+    expect(r.fichas[0]!.exercicios[0]!.medida).toBe("reps");
+  });
+
+  it("não encosta nos outros exercícios da ficha", () => {
+    const ficha = { ...novaFicha(), exercicios: [supino, remada] };
+    const ajustada = fichaComMedida(ficha, "uuid-supino", "time");
+    expect(ajustada.exercicios.map((e) => e.medida)).toEqual(["time", "reps"]);
   });
 });
 

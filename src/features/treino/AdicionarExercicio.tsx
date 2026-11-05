@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { erroDaResposta } from "@/lib/erros";
 import { BackButton, SearchField, SectionRow, Tela, TextButton, useToast } from "@/ui";
+import { AjustarExercicio } from "./AjustarExercicio";
 import { buscarExercicios, type ExercicioDaBusca } from "./biblioteca";
 import { ExerciciosOcultosTela } from "./ExerciciosOcultosTela";
 import { CriarExercicio } from "./CriarExercicio";
 import { procurarParecido, type ExercicioParecido } from "./exercicioNovo";
 import { FolhaDoExercicio } from "./FolhaDoExercicio";
 import { FolhaOcultar } from "./FolhaOcultar";
+import { FolhaOpcoesDoExercicio } from "./FolhaOpcoesDoExercicio";
+import type { Medida } from "./medida";
 import { useOcultos } from "./ocultos";
 import { novoExercicio, tituloDaFicha, type ExercicioDoRascunho, type Ficha } from "./rascunho";
 
@@ -21,6 +24,11 @@ type AdicionarExercicioProps = {
   /** O passo "novo-exercicio": a criação fica na rota para o "voltar" do aparelho. */
   criando: boolean;
   aoCriar: () => void;
+  /** O passo "ajustar-exercicio": também fica na rota. */
+  ajustando: boolean;
+  aoAjustar: () => void;
+  /** Exercício ajustado: o que já está nas fichas abertas passa a usar a medida nova. */
+  aoMudarMedida: (exercicioId: string, medida: Medida) => void;
   aoVoltar: () => void;
   aoAdicionar: (exercicio: ExercicioDoRascunho) => void;
 };
@@ -33,6 +41,9 @@ export function AdicionarExercicio({
   aoVerOcultos,
   criando,
   aoCriar,
+  ajustando,
+  aoAjustar,
+  aoMudarMedida,
   aoVoltar,
   aoAdicionar,
 }: AdicionarExercicioProps) {
@@ -41,6 +52,8 @@ export function AdicionarExercicio({
   const [resultados, setResultados] = useState<ExercicioDaBusca[]>([]);
   const [escolhido, setEscolhido] = useState<ExercicioDaBusca | null>(null);
   const [paraOcultar, setParaOcultar] = useState<ExercicioDaBusca | null>(null);
+  const [comOpcoes, setComOpcoes] = useState<ExercicioDaBusca | null>(null);
+  const [paraAjustar, setParaAjustar] = useState<ExercicioDaBusca | null>(null);
   const [criacao, setCriacao] = useState<{
     nome: string;
     parecido: ExercicioParecido | null;
@@ -112,6 +125,22 @@ export function AdicionarExercicio({
     );
   }
 
+  if (ajustando && paraAjustar) {
+    return (
+      <AjustarExercicio
+        key={paraAjustar.id}
+        exercicio={paraAjustar}
+        aoVoltar={aoVoltar}
+        aoSalvar={(ajustado) => {
+          setResultados((lista) => lista.map((r) => (r.id === ajustado.id ? ajustado : r)));
+          aoMudarMedida(ajustado.id, ajustado.medida);
+          mostrarToast("success", "Alterações salvas.");
+          aoVoltar();
+        }}
+      />
+    );
+  }
+
   // Some da lista junto com o aumento de N, sem esperar a busca refeita.
   const visiveis = resultados.filter((r) => !ocultos.some((o) => o.id === r.id));
 
@@ -142,7 +171,9 @@ export function AdicionarExercicio({
               type="button"
               aria-label={`Opções de ${exercicio.nome}`}
               className="absolute inset-y-0 right-0 w-[56px] rounded-tile"
-              onClick={() => setParaOcultar(exercicio)}
+              onClick={() =>
+                exercicio.proprio ? setComOpcoes(exercicio) : setParaOcultar(exercicio)
+              }
             />
           </li>
         ))}
@@ -160,6 +191,22 @@ export function AdicionarExercicio({
         <TextButton tom="muted" className="self-start" onClick={aoVerOcultos}>
           Exercícios ocultos ({ocultos.length})
         </TextButton>
+      )}
+      {comOpcoes && (
+        <FolhaOpcoesDoExercicio
+          key={comOpcoes.id}
+          nome={comOpcoes.nome}
+          aoFechar={() => setComOpcoes(null)}
+          aoAjustar={() => {
+            setParaAjustar(comOpcoes);
+            setComOpcoes(null);
+            aoAjustar();
+          }}
+          aoOcultar={() => {
+            setParaOcultar(comOpcoes);
+            setComOpcoes(null);
+          }}
+        />
       )}
       {paraOcultar && (
         <FolhaOcultar

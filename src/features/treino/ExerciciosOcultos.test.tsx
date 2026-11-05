@@ -69,6 +69,9 @@ function Caminho() {
       letra="A"
       criando={false}
       aoCriar={() => {}}
+      ajustando={false}
+      aoAjustar={() => {}}
+      aoMudarMedida={() => {}}
       emOcultos={emOcultos}
       aoVerOcultos={() => setEmOcultos(true)}
       aoVoltar={() => setEmOcultos(false)}
@@ -156,6 +159,8 @@ describe("Ocultar da busca", () => {
   it("vale também para o exercício do próprio professor", async () => {
     const u = abrir();
     await u.click(await opcoes("Meu supino"));
+    // O dele tem duas opções (#94): primeiro a escolha, depois a mesma confirmação.
+    await u.click(screen.getByRole("button", { name: "Ocultar da busca" }));
     await u.click(screen.getByRole("button", { name: "Ocultar da busca" }));
 
     expect(await linhaDeOcultos(1)).toBeVisible();

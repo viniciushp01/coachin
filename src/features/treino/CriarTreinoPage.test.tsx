@@ -79,13 +79,21 @@ const CATALOGO = [
 // teste deixar.
 let ocultos: Set<string>;
 let salvar: (args: unknown) => unknown;
-type ArgsDoRpc = { p_hidden_only?: boolean; p_exercise_id?: string };
+type ArgsDoRpc = {
+  p_hidden_only?: boolean;
+  p_exercise_id?: string;
+  p_measure?: string;
+  p_load_mode?: string;
+};
 const rpc = vi.fn((funcao: string, args: ArgsDoRpc) =>
   Promise.resolve().then(() => {
     if (funcao === "search_exercises") {
       return CATALOGO.filter((e) => ocultos.has(e.id) === Boolean(args.p_hidden_only));
     }
     if (funcao === "set_exercise_hidden") return void ocultos.add(args.p_exercise_id!);
+    if (funcao === "set_exercise_settings") {
+      return { measure: args.p_measure, load_mode: args.p_load_mode };
+    }
     return salvar(args);
   }),
 );
@@ -98,6 +106,7 @@ vi.mock("@/lib/supabase", () => ({
         select: () => passo,
         eq: () => passo,
         in: () => passo,
+        is: () => passo,
         then: (ok: (r: unknown) => unknown) =>
           Promise.resolve({
             error: null,
@@ -220,7 +229,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("Passo na URL e rascunho na memória (regra 107)", () => {
-  it.each(["fichas", "ficha", "adicionar", "ocultos"] as const)(
+  it.each(["fichas", "ficha", "adicionar", "ajustar-exercicio", "ocultos"] as const)(
     "recarregar em %s perde o rascunho e recomeça em Dados",
     (passo) => {
       render(
@@ -1252,5 +1261,89 @@ describe("Editar o treino ativo (regras 6, 76, 111 e 150 (2))", () => {
     await u.click(botao("Voltar"));
     expect(within(folhaDescartar()).getByText("O treino atual continua como está")).toBeVisible();
     expect(navegar).not.toHaveBeenCalled();
+  });
+});
+
+describe("Ajustar a medida de um exercício que já está na ficha (regras 123 e 124)", () => {
+  async function ajustarParaTempo(u: UserEvent) {
+    await u.click(botao("Adicionar exercício"));
+    await u.click(await screen.findByRole("button", { name: "Opções de Meu supino" }));
+    await u.click(botao("Ajustar medida e carga"));
+    await screen.findByRole("heading", { name: "Ajustar medida e carga" });
+    await u.click(screen.getByRole("radio", { name: "Tempo" }));
+    await u.click(botao("Salvar"));
+    await screen.findByRole("heading", { name: "Adicionar exercício" });
+    await u.click(botao("Voltar"));
+  }
+
+  it("a linha e a folha da ficha aberta passam a tempo, e as repetições não mudam", async () => {
+    const u = abrir();
+    await irParaFichas(u);
+    await abrirFichaNova(u, "Peito");
+    await adicionarExercicio(u, "Meu supino", { series: "3", reps: "10" });
+    expect(linha("Meu supino")).toHaveTextContent("3 séries · 10 reps");
+
+    await ajustarParaTempo(u);
+
+    expect(linha("Meu supino")).toHaveTextContent("3 séries · 10 s");
+    await u.click(linha("Meu supino"));
+    const folha = screen.getByRole("dialog", { name: "Meu supino" });
+    expect(within(folha).getByLabelText("Tempo")).toHaveValue("10");
+    await u.click(within(folha).getByRole("button", { name: "Salvar exercício" }));
+
+    await u.click(botao("Salvar ficha"));
+    await u.click(botao("Salvar treino"));
+    await screen.findByRole("heading", { name: "Treino salvo" });
+    expect(JSON.stringify(chamadasDeSalvar())).toContain('"reps":"10"');
+  });
+
+  it("não conta como alteração do treino: voltar não pede para descartar", async () => {
+    render(
+      <ToastProvider>
+        <Caminho
+          aluno={JULIANA}
+          treino={{
+            id: "w1",
+            rascunho: {
+              nome: "Hipertrofia",
+              inicio: "2026-10-01",
+              semanas: 8,
+              frequencia: "",
+              letrasUsadas: 1,
+              fichas: [
+                {
+                  id: "d1",
+                  letra: "A",
+                  nome: "Peito",
+                  exercicios: [
+                    {
+                      id: "l1",
+                      exercicioId: "ex-meu",
+                      nome: "Meu supino",
+                      medida: "reps",
+                      series: 3,
+                      reps: "10",
+                      descanso: 0,
+                      observacao: "",
+                    },
+                  ],
+                },
+              ],
+            },
+          }}
+        />
+      </ToastProvider>,
+    );
+    const u = userEvent.setup();
+    await u.click(linha("Ficha A"));
+    await ajustarParaTempo(u);
+    expect(linha("Meu supino")).toHaveTextContent("3 séries · 10 s");
+
+    await u.click(botao("Voltar"));
+    semFolhaDescartar();
+    await screen.findByRole("heading", { name: "Editar treino" });
+    await u.click(botao("Voltar"));
+    semFolhaDescartar();
+    expect(navegar).toHaveBeenCalledWith(SAIU);
   });
 });

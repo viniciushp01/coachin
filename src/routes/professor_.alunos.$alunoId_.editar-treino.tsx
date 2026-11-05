@@ -8,6 +8,7 @@ const PASSOS: readonly PassoDoTreino[] = [
   "ficha",
   "adicionar",
   "novo-exercicio",
+  "ajustar-exercicio",
   "ocultos",
 ];
 

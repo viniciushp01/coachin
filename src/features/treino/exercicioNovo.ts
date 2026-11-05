@@ -28,6 +28,8 @@ export async function procurarParecido(nome: string): Promise<ExercicioParecido 
     id: parecido.id,
     nome: parecido.name,
     medida: parecido.measure as Medida,
+    carga: parecido.load_mode as ModoDeCarga,
+    proprio: parecido.owner_id !== null,
     detalhe: parecido.owner_id ? SEU_EXERCICIO : (parecido.muscle_group ?? ""),
     mesmoNome: parecido.name_normalized === normalizarNome(nome),
   };
@@ -48,6 +50,8 @@ export async function criarExercicio(novo: {
     id: criado.id,
     nome: criado.name,
     medida: criado.measure as Medida,
+    carga: criado.load_mode as ModoDeCarga,
+    proprio: true,
     detalhe: SEU_EXERCICIO,
   };
 }

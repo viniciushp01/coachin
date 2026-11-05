@@ -1,12 +1,16 @@
 import { erroDaResposta } from "@/lib/erros";
 import { rpc } from "@/lib/rpc";
 import { supabase } from "@/lib/supabase";
+import type { ModoDeCarga } from "./exercicioNovo";
 import type { Medida } from "./medida";
 
 export type ExercicioDaBusca = {
   id: string;
   nome: string;
   medida: Medida;
+  carga: ModoDeCarga;
+  /** Criado pelo professor: só esses podem ser ajustados (regra 148). */
+  proprio: boolean;
   /** "Peito · barra reta" ou "Seu exercício" (regra 151 (2)). */
   detalhe: string;
 };
@@ -36,7 +40,42 @@ export async function buscarExercicios(termo: string): Promise<ExercicioDaBusca[
       id: e.id,
       nome: e.name,
       medida: e.measure as Medida,
+      carga: e.load_mode as ModoDeCarga,
+      proprio: e.owner_id !== null,
       detalhe: e.owner_id ? "Seu exercício" : partes.join(" · "),
     };
   });
+}
+
+/** Em quantas fichas não removidas o exercício está; repetido na mesma ficha conta uma vez. */
+export async function contarFichasDoExercicio(exercicioId: string) {
+  const resposta = await supabase
+    .from("workout_exercises")
+    .select("day_id, workout_days!inner(removed_at)")
+    .eq("exercise_id", exercicioId)
+    .is("workout_days.removed_at", null);
+  if (resposta.error) throw erroDaResposta(resposta.error);
+  return new Set(resposta.data.map((l) => l.day_id)).size;
+}
+
+/** Só muda o exercício: repetições das fichas, carga e histórico ficam como estão (regra 123). */
+export async function ajustarExercicio({
+  exercicio,
+  medida,
+  carga,
+}: {
+  exercicio: ExercicioDaBusca;
+  medida: Medida;
+  carga: ModoDeCarga;
+}): Promise<ExercicioDaBusca> {
+  const ajustado = await rpc("set_exercise_settings", {
+    p_exercise_id: exercicio.id,
+    p_load_mode: carga,
+    p_measure: medida,
+  });
+  return {
+    ...exercicio,
+    medida: ajustado.measure as Medida,
+    carga: ajustado.load_mode as ModoDeCarga,
+  };
 }
