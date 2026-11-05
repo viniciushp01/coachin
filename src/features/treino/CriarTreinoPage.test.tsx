@@ -208,6 +208,16 @@ async function escolherExercicio(u: UserEvent, nome: string) {
   return screen.getByRole("dialog", { name: nome });
 }
 
+/** Atalho de descanso (30, 45, 60, 90 ou 120); outro valor passa por "Outro" (regra 159 (4)). */
+async function escolherDescanso(u: UserEvent, folha: ReturnType<typeof within>, segundos: string) {
+  if (["30", "45", "60", "90", "120"].includes(segundos)) {
+    await u.click(folha.getByRole("button", { name: `${segundos} s` }));
+    return;
+  }
+  await u.click(folha.getByRole("button", { name: "Outro" }));
+  await u.type(folha.getByLabelText("Descanso, em segundos"), segundos);
+}
+
 async function adicionarExercicio(
   u: UserEvent,
   nome: string,
@@ -215,8 +225,13 @@ async function adicionarExercicio(
 ) {
   const folha = await escolherExercicio(u, nome);
   await u.type(within(folha).getByLabelText("Séries"), series);
-  await u.type(within(folha).getByLabelText(/^(Repetições|Tempo)$/), reps);
-  if (descanso) await u.type(within(folha).getByLabelText("Descanso (informativo)"), descanso);
+  const [minimo, maximo] = reps.split("-");
+  await u.type(within(folha).getByLabelText(/^(Repetições|Tempo)$/), minimo!);
+  if (maximo) {
+    await u.click(within(folha).getByRole("button", { name: "Usar faixa" }));
+    await u.type(within(folha).getByLabelText(/, máximo$/), maximo);
+  }
+  if (descanso) await escolherDescanso(u, within(folha), descanso);
   await u.click(within(folha).getByRole("button", { name: "Salvar exercício" }));
 }
 
@@ -563,11 +578,12 @@ describe("Editar exercício (regras 124 e 149 (4))", () => {
     const folha = within(await abrirFolha(u, "Supino reto"));
     expect(folha.getByLabelText("Séries")).toHaveValue("");
     expect(folha.getByLabelText("Séries")).toHaveAttribute("placeholder", "Ex.: 4");
-    expect(folha.getByLabelText("Repetições")).toHaveAttribute("placeholder", "Ex.: 10 ou 8-12");
-    expect(folha.getByLabelText("Descanso (informativo)")).toHaveAttribute(
-      "placeholder",
-      "Ex.: 60 s (opcional)",
-    );
+    expect(folha.getByLabelText("Repetições")).toHaveAttribute("placeholder", "Ex.: 10");
+    expect(folha.getByLabelText("Repetições")).toHaveAttribute("inputmode", "numeric");
+    expect(folha.getByLabelText("Séries")).toHaveAttribute("inputmode", "numeric");
+    for (const atalho of ["30 s", "45 s", "60 s", "90 s", "120 s", "Outro"]) {
+      expect(folha.getByRole("button", { name: atalho })).toHaveAttribute("aria-pressed", "false");
+    }
     expect(folha.getByLabelText("Observação (opcional)")).toHaveAttribute(
       "placeholder",
       "Ex.: Controle a descida",
@@ -579,14 +595,14 @@ describe("Editar exercício (regras 124 e 149 (4))", () => {
   it("tempo: campo Tempo, com o exemplo 30 s, e 30 aparece como 30 s", async () => {
     const u = abrir();
     const folha = within(await abrirFolha(u, "Prancha frontal"));
-    expect(folha.getByLabelText("Tempo")).toHaveAttribute("placeholder", "Ex.: 30 s");
+    expect(folha.getByLabelText("Tempo")).toHaveAttribute("placeholder", "Ex.: 30");
     expect(folha.queryByLabelText("Repetições")).not.toBeInTheDocument();
     await u.click(folha.getByRole("button", { name: "Salvar exercício" }));
     expect(folha.getByText("Digite o tempo.")).toBeVisible();
 
     await u.type(folha.getByLabelText("Séries"), "3");
     await u.type(folha.getByLabelText("Tempo"), "30");
-    await u.type(folha.getByLabelText("Descanso (informativo)"), "45");
+    await escolherDescanso(u, folha, "45");
     await u.click(folha.getByRole("button", { name: "Salvar exercício" }));
     expect(linha("Prancha frontal")).toHaveTextContent("3 séries · 30 s · descanso 45 s");
   });
@@ -600,17 +616,127 @@ describe("Editar exercício (regras 124 e 149 (4))", () => {
 
     await u.type(folha.getByLabelText("Séries"), "21");
     await u.type(folha.getByLabelText("Repetições"), "10");
-    await u.type(folha.getByLabelText("Descanso (informativo)"), "601");
+    await escolherDescanso(u, folha, "601");
     await u.click(folha.getByRole("button", { name: "Salvar exercício" }));
     expect(folha.getByText("Digite o número de séries (de 1 a 20).")).toBeVisible();
     expect(folha.getByText("Confira o tempo de descanso.")).toBeVisible();
     expect(screen.getByRole("dialog", { name: "Supino reto" })).toBeVisible();
   });
 
-  it("repetições não passam de 20 caracteres", async () => {
+  it("outro formato: texto livre de até 20 caracteres, e voltar para número", async () => {
     const u = abrir();
     const folha = within(await abrirFolha(u, "Supino reto"));
-    expect(folha.getByLabelText("Repetições")).toHaveAttribute("maxlength", "20");
+    await u.type(folha.getByLabelText("Repetições"), "12");
+    await u.click(folha.getByRole("button", { name: "Outro formato" }));
+    const texto = folha.getByLabelText("Repetições");
+    expect(texto).toHaveAttribute("maxlength", "20");
+    expect(texto).not.toHaveAttribute("inputmode", "numeric");
+    expect(texto).toHaveValue("12");
+    await u.clear(texto);
+    await u.type(texto, "Até a falha");
+    expect(folha.queryByRole("button", { name: "Usar faixa" })).not.toBeInTheDocument();
+    await u.type(folha.getByLabelText("Séries"), "3");
+    await u.click(folha.getByRole("button", { name: "Salvar exercício" }));
+    expect(linha("Supino reto")).toHaveTextContent("3 séries · Até a falha");
+
+    await u.click(linha("Supino reto"));
+    const reaberta = within(screen.getByRole("dialog", { name: "Supino reto" }));
+    expect(reaberta.getByLabelText("Repetições")).toHaveValue("Até a falha");
+    await u.click(reaberta.getByRole("button", { name: "Voltar para número" }));
+    expect(reaberta.getByLabelText("Repetições")).toHaveValue("");
+    expect(reaberta.getByLabelText("Repetições")).toHaveAttribute("inputmode", "numeric");
+  });
+
+  it("faixa: grava 8-12, erro se o máximo não passa o mínimo e reabre como faixa", async () => {
+    const u = abrir();
+    const folha = within(await abrirFolha(u, "Supino reto"));
+    await u.type(folha.getByLabelText("Séries"), "4");
+    await u.type(folha.getByLabelText("Repetições"), "8");
+    await u.click(folha.getByRole("button", { name: "Usar faixa" }));
+    expect(folha.getByLabelText("Repetições, mínimo")).toHaveValue("8");
+    expect(folha.getByLabelText("Repetições, mínimo")).toHaveAttribute("inputmode", "numeric");
+
+    await u.click(folha.getByRole("button", { name: "Salvar exercício" }));
+    expect(folha.getByText("O máximo precisa ser maior que o mínimo.")).toBeVisible();
+    await u.type(folha.getByLabelText("Repetições, máximo"), "8");
+    await u.click(folha.getByRole("button", { name: "Salvar exercício" }));
+    expect(folha.getByText("O máximo precisa ser maior que o mínimo.")).toBeVisible();
+
+    await u.clear(folha.getByLabelText("Repetições, máximo"));
+    await u.type(folha.getByLabelText("Repetições, máximo"), "12");
+    expect(folha.queryByText("O máximo precisa ser maior que o mínimo.")).not.toBeInTheDocument();
+    await u.click(folha.getByRole("button", { name: "Salvar exercício" }));
+    expect(linha("Supino reto")).toHaveTextContent("4 séries · 8-12 reps");
+
+    await u.click(linha("Supino reto"));
+    const reaberta = within(screen.getByRole("dialog", { name: "Supino reto" }));
+    expect(reaberta.getByLabelText("Repetições, mínimo")).toHaveValue("8");
+    expect(reaberta.getByLabelText("Repetições, máximo")).toHaveValue("12");
+    await u.click(reaberta.getByRole("button", { name: "Número fixo" }));
+    expect(reaberta.getByLabelText("Repetições")).toHaveValue("8");
+  });
+
+  it("tempo em faixa grava 30-45 s", async () => {
+    const u = abrir();
+    const folha = within(await abrirFolha(u, "Prancha frontal"));
+    await u.type(folha.getByLabelText("Séries"), "3");
+    await u.click(folha.getByRole("button", { name: "Usar faixa" }));
+    await u.type(folha.getByLabelText("Tempo, mínimo"), "30");
+    await u.type(folha.getByLabelText("Tempo, máximo"), "45");
+    await u.click(folha.getByRole("button", { name: "Salvar exercício" }));
+    expect(linha("Prancha frontal")).toHaveTextContent("3 séries · 30-45 s");
+  });
+
+  it("descanso: um atalho por vez, tocar no escolhido limpa e vazio grava 0", async () => {
+    const u = abrir();
+    const folha = within(await abrirFolha(u, "Supino reto"));
+    const atalho = (nome: string) => folha.getByRole("button", { name: nome });
+    await u.click(atalho("60 s"));
+    await u.click(atalho("90 s"));
+    expect(atalho("60 s")).toHaveAttribute("aria-pressed", "false");
+    expect(atalho("90 s")).toHaveAttribute("aria-pressed", "true");
+    await u.click(atalho("90 s"));
+    expect(atalho("90 s")).toHaveAttribute("aria-pressed", "false");
+
+    await u.type(folha.getByLabelText("Séries"), "3");
+    await u.type(folha.getByLabelText("Repetições"), "10");
+    await u.click(folha.getByRole("button", { name: "Salvar exercício" }));
+    expect(linha("Supino reto")).not.toHaveTextContent("descanso");
+  });
+
+  it("descanso Outro: campo em segundos; valor de atalho marca o atalho; passou de 600 dá erro", async () => {
+    const u = abrir();
+    const folha = within(await abrirFolha(u, "Supino reto"));
+    await u.click(folha.getByRole("button", { name: "Outro" }));
+    expect(folha.getByRole("button", { name: "Outro" })).toHaveAttribute("aria-pressed", "true");
+    const campo = folha.getByLabelText("Descanso, em segundos");
+    expect(campo).toHaveAttribute("inputmode", "numeric");
+    await u.type(campo, "100");
+    expect(folha.getByRole("button", { name: "Outro" })).toHaveAttribute("aria-pressed", "true");
+    await u.clear(campo);
+    await u.type(campo, "60");
+    expect(folha.getByRole("button", { name: "60 s" })).toHaveAttribute("aria-pressed", "true");
+    expect(folha.getByRole("button", { name: "Outro" })).toHaveAttribute("aria-pressed", "false");
+
+    await u.clear(campo);
+    await u.type(campo, "601");
+    await u.type(folha.getByLabelText("Séries"), "3");
+    await u.type(folha.getByLabelText("Repetições"), "10");
+    await u.click(folha.getByRole("button", { name: "Salvar exercício" }));
+    expect(folha.getByText("Confira o tempo de descanso.")).toBeVisible();
+  });
+
+  it("reabrir: descanso que não bate com atalho abre Outro com o valor", async () => {
+    const u = abrir();
+    await irParaFichas(u);
+    await abrirFichaNova(u, "Peito");
+    await adicionarExercicio(u, "Supino reto", { descanso: "100" });
+    expect(linha("Supino reto")).toHaveTextContent("descanso 100 s");
+
+    await u.click(linha("Supino reto"));
+    const folha = within(screen.getByRole("dialog", { name: "Supino reto" }));
+    expect(folha.getByRole("button", { name: "Outro" })).toHaveAttribute("aria-pressed", "true");
+    expect(folha.getByLabelText("Descanso, em segundos")).toHaveValue("100");
   });
 
   it("abrir de novo traz os valores, com 90 s; salvar troca e Remover tira, sem confirmar", async () => {
@@ -623,7 +749,7 @@ describe("Editar exercício (regras 124 e 149 (4))", () => {
     const folha = within(screen.getByRole("dialog", { name: "Supino reto" }));
     expect(folha.getByLabelText("Séries")).toHaveValue("4");
     expect(folha.getByLabelText("Repetições")).toHaveValue("10");
-    expect(folha.getByLabelText("Descanso (informativo)")).toHaveValue("90 s");
+    expect(folha.getByRole("button", { name: "90 s" })).toHaveAttribute("aria-pressed", "true");
     await u.clear(folha.getByLabelText("Séries"));
     await u.type(folha.getByLabelText("Séries"), "5");
     await u.click(folha.getByRole("button", { name: "Salvar exercício" }));

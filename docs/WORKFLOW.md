@@ -112,7 +112,7 @@ Problema durante o caminho: `/diagnosing-bugs`. Contexto grande demais para uma 
 - **Sem paralelo e sem sessão coordenadora:** uma etapa de cada vez, em worktree próprio. Ninguém trabalha na `main` direto.
 - **Migrations:** uma por vez, com o número conferido antes de começar. Quem aplica roda os testes inteiros depois.
 - **Componentes base:** a sessão da etapa cria o que precisar em `src/ui`, seguindo o `design.md`.
-- **Numeração de regras:** a próxima é a **159**.
+- **Numeração de regras:** a próxima é a **160**.
 
 ## 7. Quando uma regra de negócio muda ou aparece
 

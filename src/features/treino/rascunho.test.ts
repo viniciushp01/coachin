@@ -321,14 +321,23 @@ describe("validarTreino (regra 104)", () => {
   });
 });
 
-describe("esquemaDoExercicio (regras 124 e 149 (4))", () => {
+describe("esquemaDoExercicio (regras 124, 149 (4) e 159)", () => {
   const ler = (
     medida: "reps" | "time",
-    campos: Partial<{ series: string; reps: string; descanso: string; observacao: string }>,
+    campos: Partial<{
+      series: string;
+      modo: "fixo" | "faixa" | "outro";
+      reps: string;
+      repsMax: string;
+      descanso: string;
+      observacao: string;
+    }>,
   ) => {
     const resultado = esquemaDoExercicio(medida).safeParse({
       series: "",
+      modo: "fixo",
       reps: "",
+      repsMax: "",
       descanso: "",
       observacao: "",
       ...campos,
@@ -363,12 +372,46 @@ describe("esquemaDoExercicio (regras 124 e 149 (4))", () => {
     expect(ler("reps", { series, reps: "10" }).dados!.series).toBe(Number(series));
   });
 
-  it("repetições: até 20 caracteres, depois de tirar os espaços das pontas", () => {
+  it("outro formato: texto livre de até 20 caracteres, sem os espaços das pontas", () => {
     const vinte = "x".repeat(20);
-    expect(ler("reps", { series: "3", reps: ` ${vinte} ` }).dados!.reps).toBe(vinte);
-    expect(ler("reps", { series: "3", reps: `${vinte}x` }).erros).toEqual({
+    const base = { series: "3", modo: "outro" as const };
+    expect(ler("reps", { ...base, reps: ` ${vinte} ` }).dados!.reps).toBe(vinte);
+    expect(ler("reps", { ...base, reps: `${vinte}x` }).erros).toEqual({
       reps: "Confira as repetições.",
     });
+    expect(ler("reps", { ...base, reps: "Até a falha" }).dados!.reps).toBe("Até a falha");
+    expect(ler("reps", { ...base, reps: "  " }).erros).toEqual({ reps: "Digite as repetições." });
+    expect(ler("time", { ...base, reps: "" }).erros).toEqual({ reps: "Digite o tempo." });
+  });
+
+  it("número fixo grava só o número, também em exercício de tempo", () => {
+    expect(ler("reps", { series: "3", reps: "10" }).dados!.reps).toBe("10");
+    expect(ler("reps", { series: "3", reps: " 012 " }).dados!.reps).toBe("12");
+    expect(ler("time", { series: "3", reps: "45" }).dados!.reps).toBe("45");
+  });
+
+  it('faixa grava "8-12"; em tempo, "30-45 s"', () => {
+    const faixa = { series: "3", modo: "faixa" as const };
+    expect(ler("reps", { ...faixa, reps: "8", repsMax: "12" }).dados!.reps).toBe("8-12");
+    expect(ler("time", { ...faixa, reps: "30", repsMax: "45" }).dados!.reps).toBe("30-45 s");
+  });
+
+  it("faixa: mínimo e máximo obrigatórios, e o máximo maior que o mínimo", () => {
+    const faixa = { series: "3", modo: "faixa" as const };
+    const maior = "O máximo precisa ser maior que o mínimo.";
+    expect(ler("reps", { ...faixa }).erros).toEqual({ reps: "Digite as repetições." });
+    expect(ler("time", { ...faixa }).erros).toEqual({ reps: "Digite o tempo." });
+    expect(ler("reps", { ...faixa, reps: "8" }).erros).toEqual({ reps: maior });
+    expect(ler("reps", { ...faixa, reps: "8", repsMax: "8" }).erros).toEqual({ reps: maior });
+    expect(ler("reps", { ...faixa, reps: "12", repsMax: "8" }).erros).toEqual({ reps: maior });
+    expect(ler("reps", { ...faixa, repsMax: "12" }).erros).toEqual({
+      reps: "Digite as repetições.",
+    });
+  });
+
+  it("o texto gravado sempre cabe nos 20 caracteres de save_workout", () => {
+    const faixa = { series: "3", modo: "faixa" as const, reps: "100", repsMax: "999" };
+    expect(ler("time", faixa).dados!.reps.length).toBeLessThanOrEqual(20);
   });
 
   it.each([

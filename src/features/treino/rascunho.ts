@@ -269,14 +269,19 @@ export function validarTreino(r: Pick<Rascunho, "fichas" | "letrasUsadas">): Err
 }
 
 /**
- * Os campos da folha "Editar exercício" → valores do rascunho (regras 124 e 149 (4)). Os erros de
- * limite de repetições e de descanso não têm texto próprio na regra: usam os de `save_workout`.
+ * Os campos da folha "Editar exercício" → valores do rascunho (regras 124, 149 (4) e 159). O que
+ * grava não mudou: número fixo "10", faixa "8-12" ("30-45 s" em exercício de tempo) ou o texto
+ * livre como digitado. Os erros de limite de repetições e de descanso não têm texto próprio na
+ * regra: usam os de `save_workout`.
  */
 export function esquemaDoExercicio(medida: Medida) {
+  const tempo = medida === "time";
   return z
     .object({
       series: z.string(),
+      modo: z.enum(["fixo", "faixa", "outro"]),
       reps: z.string(),
+      repsMax: z.string(),
       descanso: z.string(),
       observacao: z.string(),
     })
@@ -290,9 +295,20 @@ export function esquemaDoExercicio(medida: Medida) {
         erro("series", "Digite o número de séries (de 1 a 20).");
       }
 
-      const reps = v.reps.trim();
-      if (!reps) erro("reps", medida === "time" ? "Digite o tempo." : "Digite as repetições.");
-      else if (reps.length > REPS_MAX_CARACTERES) erro("reps", MENSAGENS.reps_invalid);
+      let reps = v.reps.trim();
+      if (v.modo === "outro") {
+        if (!reps) erro("reps", tempo ? "Digite o tempo." : "Digite as repetições.");
+        else if (reps.length > REPS_MAX_CARACTERES) erro("reps", MENSAGENS.reps_invalid);
+      } else {
+        const minimo = /^\d+$/.test(reps) ? Number(reps) : NaN;
+        reps = String(minimo);
+        if (Number.isNaN(minimo)) erro("reps", tempo ? "Digite o tempo." : "Digite as repetições.");
+        else if (v.modo === "faixa") {
+          const maximo = /^\d+$/.test(v.repsMax.trim()) ? Number(v.repsMax.trim()) : NaN;
+          if (!(maximo > minimo)) erro("reps", "O máximo precisa ser maior que o mínimo.");
+          else reps = `${minimo}-${maximo}${tempo ? " s" : ""}`;
+        }
+      }
 
       const descansoLido = /^(\d{1,3})\s*s?$/i.exec(v.descanso.trim());
       const descanso = v.descanso.trim() ? Number(descansoLido?.[1] ?? NaN) : 0;
