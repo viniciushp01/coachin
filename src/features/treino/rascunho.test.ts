@@ -1,16 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
-  adicionarFicha,
   avisoDoInicio,
   criarRascunho,
   esquemaDoExercicio,
+  fichaMudou,
   fimDoTreino,
   letraDaFicha,
   mudou,
+  novaFicha,
   novoExercicio,
   paraSaveWorkout,
   removerExercicio,
   removerFicha,
+  reordenarExercicios,
+  reordenarFichas,
   salvarExercicio,
   salvarFicha,
   tituloDaFicha,
@@ -36,15 +39,15 @@ const supino: ExercicioDoRascunho = {
 
 /** Rascunho com fichas de nomes dados, cada uma com um supino se `comExercicio`. */
 function comFichas(nomes: string[], comExercicio = true): Rascunho {
-  return nomes.reduce((r, nome) => {
-    const novo = adicionarFicha(r);
-    const ficha = novo.fichas.at(-1)!;
-    return salvarFicha(novo, {
-      ...ficha,
-      nome,
-      exercicios: comExercicio ? [supino] : [],
-    });
-  }, criarRascunho(HOJE));
+  return nomes.reduce(
+    (r, nome) =>
+      salvarFicha(r, {
+        ...novaFicha(),
+        nome,
+        exercicios: comExercicio ? [supino] : [],
+      }),
+    criarRascunho(HOJE),
+  );
 }
 
 describe("fimDoTreino (regra 73)", () => {
@@ -120,16 +123,17 @@ describe("Letras acompanham a posição até o primeiro salvamento (regra 149 (3
   });
 
   it("ficha sem nome mostra só a letra", () => {
-    const r = adicionarFicha(criarRascunho(HOJE));
-    expect(tituloDaFicha(r.fichas[0]!, 0)).toBe("Ficha A");
+    expect(tituloDaFicha(novaFicha(), 0)).toBe("Ficha A");
   });
 });
 
 describe("Fichas e exercícios no rascunho", () => {
-  it("adicionar dá ids diferentes e mantém a ordem", () => {
-    const r = adicionarFicha(adicionarFicha(criarRascunho(HOJE)));
-    expect(r.fichas).toHaveLength(2);
-    expect(r.fichas[0]!.id).not.toBe(r.fichas[1]!.id);
+  it("ficha nova vem vazia, com id próprio, e entra no fim só ao salvar (regra 156 (2))", () => {
+    const [a, b] = [novaFicha(), novaFicha()];
+    expect(a).toMatchObject({ nome: "", exercicios: [] });
+    expect(a.id).not.toBe(b.id);
+    const r = salvarFicha(comFichas(["Peito"]), { ...a, nome: "Costas" });
+    expect(r.fichas.map((f) => f.nome)).toEqual(["Peito", "Costas"]);
   });
 
   it("salvar ficha troca só a ficha certa e não muda o original", () => {
@@ -174,6 +178,74 @@ describe("Saber se mudou (regra 107)", () => {
     expect(mudou(r, { ...r, nome: "Novo" })).toBe(true);
     expect(mudou(r, removerFicha(r, r.fichas[0]!.id))).toBe(true);
   });
+
+  it("reordenar muda; voltar à ordem de antes não muda", () => {
+    const r = comFichas(["Peito", "Costas"]);
+    const invertido = reordenarFichas(r, [...r.fichas].reverse());
+    expect(mudou(r, invertido)).toBe(true);
+    expect(mudou(r, reordenarFichas(invertido, [...invertido.fichas].reverse()))).toBe(false);
+  });
+
+  it("depois de salvar uma ficha, o treino continua diferente do começo", () => {
+    expect(mudou(criarRascunho(HOJE), comFichas(["Peito"]))).toBe(true);
+  });
+
+  it("salvar um exercício com os mesmos valores não muda a ficha", () => {
+    const { fichas } = comFichas(["Peito"]);
+    const ficha = fichas[0]!;
+    expect(mudou(ficha, salvarExercicio(ficha, { ...supino, series: 4 }))).toBe(false);
+  });
+});
+
+describe("fichaMudou (regras 107 e 156 (2))", () => {
+  const r = comFichas(["Peito"]);
+  const salva = r.fichas[0]!;
+
+  it("ficha salva: compara com a do rascunho", () => {
+    expect(fichaMudou(r, structuredClone(salva))).toBe(false);
+    expect(fichaMudou(r, { ...salva, nome: "Costas" })).toBe(true);
+    expect(fichaMudou(r, { ...salva, exercicios: [] })).toBe(true);
+  });
+
+  it("ficha nova: só muda se tiver nome ou exercício", () => {
+    expect(fichaMudou(r, novaFicha())).toBe(false);
+    expect(fichaMudou(r, { ...novaFicha(), nome: "Costas" })).toBe(true);
+    expect(fichaMudou(r, { ...novaFicha(), exercicios: [supino] })).toBe(true);
+  });
+});
+
+describe("Reordenar (regras 66 e 149 (3))", () => {
+  it("a letra acompanha a posição e a ordem nova vai em p_data", () => {
+    const r = comFichas(["Peito", "Costas", "Pernas"]);
+    const [peito, costas, pernas] = r.fichas;
+    const novo = reordenarFichas(r, [pernas!, peito!, costas!]);
+    expect(novo.fichas.map(tituloDaFicha)).toEqual([
+      "Ficha A · Pernas",
+      "Ficha B · Peito",
+      "Ficha C · Costas",
+    ]);
+    expect(paraSaveWorkout(novo).days.map((d) => d.name)).toEqual(["Pernas", "Peito", "Costas"]);
+  });
+
+  it("exercícios: a ordem nova vai em p_data, com o mesmo exercício duas vezes", () => {
+    const r = comFichas(["Peito"]);
+    const ficha = salvarExercicio(r.fichas[0]!, {
+      ...supino,
+      id: "e2",
+      exercicioId: "uuid-crucifixo",
+    });
+    const repetido = { ...supino, id: "e3" };
+    const completa = salvarExercicio(ficha, repetido);
+    const [primeiro, segundo, terceiro] = completa.exercicios;
+    const nova = reordenarExercicios(completa, [segundo!, terceiro!, primeiro!]);
+    expect(nova.exercicios.map((e) => e.id)).toEqual(["e2", "e3", "e1"]);
+    const dias = paraSaveWorkout(salvarFicha(r, nova)).days;
+    expect(dias[0]!.exercises.map((e) => e.exercise_id)).toEqual([
+      "uuid-crucifixo",
+      "uuid-supino",
+      "uuid-supino",
+    ]);
+  });
 });
 
 describe("validarDados (regras 105 e 154)", () => {
@@ -213,8 +285,7 @@ describe("validarTreino (regra 104)", () => {
   });
 
   it("aponta a primeira ficha sem exercício pela letra", () => {
-    const r = comFichas(["Peito"]);
-    const comVazias = adicionarFicha(adicionarFicha(r));
+    const comVazias = salvarFicha(salvarFicha(comFichas(["Peito"]), novaFicha()), novaFicha());
     expect(validarTreino(comVazias)).toEqual({
       tipo: "ficha_sem_exercicio",
       letra: "B",
