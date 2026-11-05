@@ -101,12 +101,18 @@ export function tituloDaFicha(ficha: Pick<Ficha, "nome">, indice: number) {
 
 // Fichas e exercícios -------------------------------------------------------------------------
 
-export function adicionarFicha(r: Rascunho): Rascunho {
-  return { ...r, fichas: [...r.fichas, { id: novoId(), nome: "", exercicios: [] }] };
+/** A ficha aberta por "Adicionar ficha": só entra no rascunho em "Salvar ficha" (regra 156 (2)). */
+export function novaFicha(): Ficha {
+  return { id: novoId(), nome: "", exercicios: [] };
 }
 
+/** Troca a ficha de mesmo id; sem ela no rascunho, entra no fim. */
 export function salvarFicha(r: Rascunho, ficha: Ficha): Rascunho {
-  return { ...r, fichas: r.fichas.map((f) => (f.id === ficha.id ? ficha : f)) };
+  const existe = r.fichas.some((f) => f.id === ficha.id);
+  return {
+    ...r,
+    fichas: existe ? r.fichas.map((f) => (f.id === ficha.id ? ficha : f)) : [...r.fichas, ficha],
+  };
 }
 
 export function removerFicha(r: Rascunho, fichaId: string): Rascunho {
@@ -158,6 +164,12 @@ export function removerExercicio(ficha: Ficha, exercicioId: string): Ficha {
 /** Houve alteração em relação a `original`? (regra 107) */
 export function mudou<T>(original: T, atual: T) {
   return JSON.stringify(original) !== JSON.stringify(atual);
+}
+
+/** A ficha aberta difere da salva no rascunho ou, se é nova, de uma ficha vazia? (regra 107) */
+export function fichaMudou(r: Pick<Rascunho, "fichas">, ficha: Ficha) {
+  const salva = r.fichas.find((f) => f.id === ficha.id);
+  return mudou(salva ?? { ...ficha, nome: "", exercicios: [] }, ficha);
 }
 
 // Validação -----------------------------------------------------------------------------------

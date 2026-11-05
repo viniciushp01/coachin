@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
-  adicionarFicha,
   avisoDoInicio,
   criarRascunho,
   esquemaDoExercicio,
+  fichaMudou,
   fimDoTreino,
   letraDaFicha,
   mudou,
+  novaFicha,
   novoExercicio,
   paraSaveWorkout,
   removerExercicio,
@@ -38,15 +39,15 @@ const supino: ExercicioDoRascunho = {
 
 /** Rascunho com fichas de nomes dados, cada uma com um supino se `comExercicio`. */
 function comFichas(nomes: string[], comExercicio = true): Rascunho {
-  return nomes.reduce((r, nome) => {
-    const novo = adicionarFicha(r);
-    const ficha = novo.fichas.at(-1)!;
-    return salvarFicha(novo, {
-      ...ficha,
-      nome,
-      exercicios: comExercicio ? [supino] : [],
-    });
-  }, criarRascunho(HOJE));
+  return nomes.reduce(
+    (r, nome) =>
+      salvarFicha(r, {
+        ...novaFicha(),
+        nome,
+        exercicios: comExercicio ? [supino] : [],
+      }),
+    criarRascunho(HOJE),
+  );
 }
 
 describe("fimDoTreino (regra 73)", () => {
@@ -122,16 +123,17 @@ describe("Letras acompanham a posição até o primeiro salvamento (regra 149 (3
   });
 
   it("ficha sem nome mostra só a letra", () => {
-    const r = adicionarFicha(criarRascunho(HOJE));
-    expect(tituloDaFicha(r.fichas[0]!, 0)).toBe("Ficha A");
+    expect(tituloDaFicha(novaFicha(), 0)).toBe("Ficha A");
   });
 });
 
 describe("Fichas e exercícios no rascunho", () => {
-  it("adicionar dá ids diferentes e mantém a ordem", () => {
-    const r = adicionarFicha(adicionarFicha(criarRascunho(HOJE)));
-    expect(r.fichas).toHaveLength(2);
-    expect(r.fichas[0]!.id).not.toBe(r.fichas[1]!.id);
+  it("ficha nova vem vazia, com id próprio, e entra no fim só ao salvar (regra 156 (2))", () => {
+    const [a, b] = [novaFicha(), novaFicha()];
+    expect(a).toMatchObject({ nome: "", exercicios: [] });
+    expect(a.id).not.toBe(b.id);
+    const r = salvarFicha(comFichas(["Peito"]), { ...a, nome: "Costas" });
+    expect(r.fichas.map((f) => f.nome)).toEqual(["Peito", "Costas"]);
   });
 
   it("salvar ficha troca só a ficha certa e não muda o original", () => {
@@ -192,6 +194,23 @@ describe("Saber se mudou (regra 107)", () => {
     const { fichas } = comFichas(["Peito"]);
     const ficha = fichas[0]!;
     expect(mudou(ficha, salvarExercicio(ficha, { ...supino, series: 4 }))).toBe(false);
+  });
+});
+
+describe("fichaMudou (regras 107 e 156 (2))", () => {
+  const r = comFichas(["Peito"]);
+  const salva = r.fichas[0]!;
+
+  it("ficha salva: compara com a do rascunho", () => {
+    expect(fichaMudou(r, structuredClone(salva))).toBe(false);
+    expect(fichaMudou(r, { ...salva, nome: "Costas" })).toBe(true);
+    expect(fichaMudou(r, { ...salva, exercicios: [] })).toBe(true);
+  });
+
+  it("ficha nova: só muda se tiver nome ou exercício", () => {
+    expect(fichaMudou(r, novaFicha())).toBe(false);
+    expect(fichaMudou(r, { ...novaFicha(), nome: "Costas" })).toBe(true);
+    expect(fichaMudou(r, { ...novaFicha(), exercicios: [supino] })).toBe(true);
   });
 });
 
@@ -266,8 +285,7 @@ describe("validarTreino (regra 104)", () => {
   });
 
   it("aponta a primeira ficha sem exercício pela letra", () => {
-    const r = comFichas(["Peito"]);
-    const comVazias = adicionarFicha(adicionarFicha(r));
+    const comVazias = salvarFicha(salvarFicha(comFichas(["Peito"]), novaFicha()), novaFicha());
     expect(validarTreino(comVazias)).toEqual({
       tipo: "ficha_sem_exercicio",
       letra: "B",

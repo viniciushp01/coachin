@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ErroApp, MENSAGENS } from "@/lib/erros";
 import { ToastProvider } from "@/ui";
 import { CriarTreinoPage, type PassoDoTreino } from "./CriarTreinoPage";
+import { FichasDoTreino } from "./FichasDoTreino";
+import { criarRascunho, novaFicha, novoExercicio, reordenarFichas, salvarFicha } from "./rascunho";
 
 // Fluxos longos, digitando de verdade: com a máquina ocupada, 5 s não bastam.
 vi.setConfig({ testTimeout: 30_000 });
@@ -167,7 +169,7 @@ async function irParaFichas(u: UserEvent, nome = "Hipertrofia · Fase 3") {
   await u.click(botao("Continuar"));
 }
 
-async function novaFicha(u: UserEvent, nome: string) {
+async function abrirFichaNova(u: UserEvent, nome: string) {
   await u.click(botao("Adicionar ficha"));
   await u.type(screen.getByLabelText("Nome da ficha"), nome);
 }
@@ -191,7 +193,7 @@ async function adicionarExercicio(
 }
 
 async function fichaCompleta(u: UserEvent, nome: string) {
-  await novaFicha(u, nome);
+  await abrirFichaNova(u, nome);
   await adicionarExercicio(u, "Supino reto", { descanso: "90" });
   await u.click(botao("Salvar ficha"));
 }
@@ -330,27 +332,59 @@ describe("Fichas (regras 104 e 149 (3))", () => {
     );
     expect(chamadasDeSalvar()).toEqual([]);
   });
+});
 
-  it("ficha sem exercício: aponta a letra e destaca a linha, sem gravar", async () => {
-    const u = abrir();
-    await irParaFichas(u);
-    await fichaCompleta(u, "Peito e tríceps");
-    await u.click(botao("Adicionar ficha"));
-    await u.click(botao("Voltar"));
-    expect(linha("Ficha A · Peito e tríceps")).toHaveTextContent("1 exercício");
+describe("Ficha sem exercício: rede de segurança (regras 104 e 156 (2))", () => {
+  // O fluxo de criar não deixa chegar aqui: "Salvar ficha" exige exercício. A tela ainda se defende.
+  const supino = novoExercicio(
+    { id: "ex-supino", nome: "Supino reto", medida: "reps" },
+    { series: 4, reps: "10", descanso: 0, observacao: "" },
+  );
+
+  function FichasComVazia({ aoSalvar }: { aoSalvar: () => void }) {
+    const [rascunho, setRascunho] = useState(() => {
+      const base = { ...criarRascunho("2026-10-29"), nome: "Hipertrofia" };
+      const comPeito = salvarFicha(base, { ...novaFicha(), nome: "Peito", exercicios: [supino] });
+      return salvarFicha(comPeito, novaFicha());
+    });
+    return (
+      <FichasDoTreino
+        rascunho={rascunho}
+        salvando={false}
+        aoVoltar={() => {}}
+        aoAbrirFicha={() => {}}
+        aoAdicionarFicha={() => {}}
+        aoReordenar={(fichas) => setRascunho((r) => reordenarFichas(r, fichas))}
+        aoSalvar={aoSalvar}
+      />
+    );
+  }
+
+  it("aponta a letra e destaca a linha, sem salvar", async () => {
+    const aoSalvar = vi.fn();
+    render(<FichasComVazia aoSalvar={aoSalvar} />);
     expect(linha("Ficha B")).toHaveTextContent("Sem exercícios");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 
-    await u.click(botao("Salvar treino"));
+    await userEvent.click(botao("Salvar treino"));
     expect(screen.getByRole("alert")).toHaveTextContent("Falta exercício na Ficha B");
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Cada ficha precisa de pelo menos um exercício. Toque nela para adicionar.",
     );
     expect(linha("Ficha B").closest("li")).toHaveClass("border-border-danger");
-    expect(linha("Ficha A · Peito e tríceps").closest("li")).not.toHaveClass(
-      "border-border-danger",
-    );
-    expect(chamadasDeSalvar()).toEqual([]);
+    expect(linha("Ficha A · Peito").closest("li")).not.toHaveClass("border-border-danger");
+    expect(aoSalvar).not.toHaveBeenCalled();
+  });
+
+  it("o aviso acompanha a letra depois de reordenar", async () => {
+    render(<FichasComVazia aoSalvar={() => {}} />);
+    await userEvent.click(botao("Salvar treino"));
+    expect(screen.getByRole("alert")).toHaveTextContent("Falta exercício na Ficha B");
+
+    inverterLista();
+    expect(screen.getByRole("alert")).toHaveTextContent("Falta exercício na Ficha A");
+    expect(linha("Ficha A").closest("li")).toHaveClass("border-border-danger");
+    expect(linha("Ficha B · Peito").closest("li")).not.toHaveClass("border-border-danger");
   });
 });
 
@@ -384,7 +418,7 @@ describe("Editar ficha (regras 104, 107 e 149)", () => {
   it("mostra a linha da regra 149 (5), com e sem descanso", async () => {
     const u = abrir();
     await irParaFichas(u);
-    await novaFicha(u, "Peito");
+    await abrirFichaNova(u, "Peito");
     await adicionarExercicio(u, "Supino reto", { descanso: "90" });
     await adicionarExercicio(u, "Meu supino", { series: "3", reps: "8-12" });
     expect(linha("Supino reto")).toHaveTextContent("4 séries · 10 reps · descanso 90 s");
@@ -416,7 +450,7 @@ describe("Editar ficha (regras 104, 107 e 149)", () => {
 describe("Adicionar exercício (regras 74 e 151 (2))", () => {
   async function abrirBusca(u: UserEvent) {
     await irParaFichas(u);
-    await novaFicha(u, "Peito e tríceps");
+    await abrirFichaNova(u, "Peito e tríceps");
     await u.click(botao("Adicionar exercício"));
   }
 
@@ -458,7 +492,7 @@ describe("Adicionar exercício (regras 74 e 151 (2))", () => {
 describe("Editar exercício (regras 124 e 149 (4))", () => {
   async function abrirFolha(u: UserEvent, nome: string) {
     await irParaFichas(u);
-    await novaFicha(u, "Peito");
+    await abrirFichaNova(u, "Peito");
     return escolherExercicio(u, nome);
   }
 
@@ -520,7 +554,7 @@ describe("Editar exercício (regras 124 e 149 (4))", () => {
   it("abrir de novo traz os valores, com 90 s; salvar troca e Remover tira, sem confirmar", async () => {
     const u = abrir();
     await irParaFichas(u);
-    await novaFicha(u, "Peito");
+    await abrirFichaNova(u, "Peito");
     await adicionarExercicio(u, "Supino reto", { descanso: "90" });
 
     await u.click(linha("Supino reto"));
@@ -593,25 +627,10 @@ describe("Reordenar (regras 66, 73 e 149 (3))", () => {
     expect(screen.getByLabelText("Nome da ficha")).toHaveValue("Costas");
   });
 
-  it("o aviso de ficha sem exercício acompanha a letra depois de reordenar", async () => {
-    const u = abrir();
-    await irParaFichas(u);
-    await fichaCompleta(u, "Peito");
-    await u.click(botao("Adicionar ficha"));
-    await u.click(botao("Voltar"));
-    await u.click(botao("Salvar treino"));
-    expect(screen.getByRole("alert")).toHaveTextContent("Falta exercício na Ficha B");
-
-    inverterLista();
-    expect(screen.getByRole("alert")).toHaveTextContent("Falta exercício na Ficha A");
-    expect(linha("Ficha A").closest("li")).toHaveClass("border-border-danger");
-    expect(linha("Ficha B · Peito").closest("li")).not.toHaveClass("border-border-danger");
-  });
-
   it("exercícios: a ordem nova só vale em Salvar ficha e vai em p_data", async () => {
     const u = abrir();
     await irParaFichas(u);
-    await novaFicha(u, "Peito");
+    await abrirFichaNova(u, "Peito");
     await adicionarExercicio(u, "Supino reto");
     await adicionarExercicio(u, "Meu supino");
     inverterLista();
@@ -765,19 +784,68 @@ describe("Descartar alterações em Editar ficha (regras 107 e 149 (1))", () => 
     expect(within(folhaDescartar()).getByText("O treino não será salvo")).toBeVisible();
   });
 
-  it("ficha nova sem nada digitado volta direto e fica na lista (regra 104)", async () => {
+  it("ficha nova sem nada digitado volta direto e não deixa linha (regra 156 (2))", async () => {
     const u = abrir();
     await irParaFichas(u);
+    await fichaCompleta(u, "Peito");
     await u.click(botao("Adicionar ficha"));
+    expect(screen.getByRole("heading", { name: "Ficha B" })).toBeVisible();
     await u.click(botao("Voltar"));
     semFolhaDescartar();
-    expect(linha("Ficha A")).toHaveTextContent("Sem exercícios");
+    expect(screen.getAllByRole("listitem")).toHaveLength(1);
+    expect(screen.queryByText("Sem exercícios")).not.toBeInTheDocument();
+  });
+
+  it("ficha nova com alteração: pergunta; Descartar some com ela (regra 156 (2))", async () => {
+    const u = abrir();
+    await irParaFichas(u);
+    await abrirFichaNova(u, "Peito");
+    await adicionarExercicio(u, "Supino reto");
+    await u.click(botao("Voltar"));
+    expect(within(folhaDescartar()).getByText("O que mudou nesta ficha se perde")).toBeVisible();
+
+    await continuarEditando(u);
+    expect(screen.getByLabelText("Nome da ficha")).toHaveValue("Peito");
+    expect(linha("Supino reto")).toBeVisible();
+
+    await u.click(botao("Voltar"));
+    await descartar(u);
+    expect(screen.getByRole("heading", { name: "Fichas" })).toBeVisible();
+    expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
+    expect(screen.queryByText("Arraste para reordenar.")).not.toBeInTheDocument();
+
+    await u.click(botao("Salvar treino"));
+    expect(screen.getByRole("alert")).toHaveTextContent("Adicione pelo menos uma ficha");
+  });
+
+  it("ficha nova entra no fim da lista só em Salvar ficha, e a letra segue a posição", async () => {
+    const u = abrir();
+    await irParaFichas(u);
+    await fichaCompleta(u, "Peito");
+    await abrirFichaNova(u, "Costas");
+    expect(screen.getByRole("heading", { name: "Ficha B" })).toBeVisible();
+    await adicionarExercicio(u, "Meu supino");
+    await u.click(botao("Salvar ficha"));
+    expect(screen.getAllByRole("listitem").map((l) => l.textContent)).toEqual([
+      expect.stringContaining("Ficha A · Peito"),
+      expect.stringContaining("Ficha B · Costas"),
+    ]);
+  });
+
+  it("Remover esta ficha numa ficha nova volta sem deixar linha", async () => {
+    const u = abrir();
+    await irParaFichas(u);
+    await abrirFichaNova(u, "Peito");
+    await u.click(botao("Remover esta ficha"));
+    semFolhaDescartar();
+    expect(screen.getByRole("heading", { name: "Fichas" })).toBeVisible();
+    expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
   });
 
   it("reordenar exercícios é alteração; voltar à ordem de antes, não", async () => {
     const u = abrir();
     await irParaFichas(u);
-    await novaFicha(u, "Peito");
+    await abrirFichaNova(u, "Peito");
     await adicionarExercicio(u, "Supino reto");
     await adicionarExercicio(u, "Meu supino");
     await u.click(botao("Salvar ficha"));
@@ -829,7 +897,7 @@ describe("Voltar do aparelho (regra 107)", () => {
   it("Editar ficha com alteração: segura e abre a folha da ficha", async () => {
     const u = abrir();
     await irParaFichas(u);
-    await novaFicha(u, "Peito");
+    await abrirFichaNova(u, "Peito");
     expect(voltarDoAparelho({ routeId: ROTA, search: { passo: "fichas" } })).toBe(true);
     expect(within(folhaDescartar()).getByText("O que mudou nesta ficha se perde")).toBeVisible();
   });
@@ -845,7 +913,7 @@ describe("Voltar do aparelho (regra 107)", () => {
   it("da busca de exercício para a ficha: passa, o que mudou continua lá", async () => {
     const u = abrir();
     await irParaFichas(u);
-    await novaFicha(u, "Peito");
+    await abrirFichaNova(u, "Peito");
     await u.click(botao("Adicionar exercício"));
     expect(voltarDoAparelho({ routeId: ROTA, search: { passo: "ficha" } })).toBe(false);
     semFolhaDescartar();

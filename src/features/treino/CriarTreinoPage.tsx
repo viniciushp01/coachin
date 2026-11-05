@@ -10,9 +10,10 @@ import { EditarFicha } from "./EditarFicha";
 import { FichasDoTreino } from "./FichasDoTreino";
 import { FolhaDescartar } from "./FolhaDescartar";
 import {
-  adicionarFicha,
   criarRascunho,
+  fichaMudou,
   mudou,
+  novaFicha,
   paraSaveWorkout,
   removerFicha,
   reordenarFichas,
@@ -61,16 +62,18 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
   const [salvo, setSalvo] = useState<Rascunho | null>(null);
   const [descarte, setDescarte] = useState<"ficha" | "treino" | null>(null);
 
-  const indice = edicao ? rascunho.fichas.findIndex((f) => f.id === edicao.id) : -1;
-  const editandoFicha = dadosConfirmados && indice >= 0 && passo === "ficha";
-  const fichaMudou = editandoFicha && mudou(rascunho.fichas[indice], edicao);
+  // A ficha nova ainda não está no rascunho: a posição dela é depois da última.
+  const salvaEm = edicao ? rascunho.fichas.findIndex((f) => f.id === edicao.id) : -1;
+  const indice = salvaEm >= 0 ? salvaEm : rascunho.fichas.length;
+  const editandoFicha = dadosConfirmados && edicao !== null && passo === "ficha";
+  const alterouFicha = editandoFicha && fichaMudou(rascunho, edicao);
   const treinoMudou = mudou(inicial, rascunho);
 
   const sair = () =>
     void navegar({ to: "/professor/alunos/$alunoId", params: { alunoId: aluno.id } });
 
   function voltarDaFicha() {
-    if (fichaMudou) setDescarte("ficha");
+    if (alterouFicha) setDescarte("ficha");
     else voltar();
   }
 
@@ -79,13 +82,13 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
     else sair();
   }
 
-  // O "voltar" do aparelho faz a mesma pergunta. Os botões da tela não passam por aqui.
+  // O "voltar" do aparelho faz a mesma pergunta (regra 156 (1)). Os botões da tela não passam aqui.
   useBlocker({
     disabled: salvo !== null,
     enableBeforeUnload: false,
     shouldBlockFn: ({ action, current, next }) => {
       if (action === "PUSH" || action === "REPLACE") return false;
-      if (fichaMudou && (next.search as { passo?: PassoDoTreino }).passo !== "adicionar") {
+      if (alterouFicha && (next.search as { passo?: PassoDoTreino }).passo !== "adicionar") {
         setDescarte("ficha");
         return true;
       }
@@ -130,12 +133,6 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
     irPara("ficha");
   }
 
-  function criarFicha() {
-    const novo = adicionarFicha(rascunho);
-    setRascunho(novo);
-    abrirFicha(novo.fichas.at(-1)!);
-  }
-
   // Depois de salvo, nem o "voltar" do aparelho reabre o formulário: salvar de novo daria erro.
   if (salvo) return <TreinoSalvo aluno={aluno} rascunho={salvo} aoVoltar={sair} />;
 
@@ -156,7 +153,7 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
       );
     }
 
-    if (edicao && indice >= 0 && passo === "adicionar") {
+    if (edicao && passo === "adicionar") {
       return (
         <AdicionarExercicio
           ficha={edicao}
@@ -184,6 +181,7 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
           }}
           aoRemover={() => {
             setRascunho(removerFicha(rascunho, edicao.id));
+            setEdicao(null);
             voltar();
           }}
         />
@@ -196,7 +194,7 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
         salvando={salvando}
         aoVoltar={sairDoFluxo}
         aoAbrirFicha={abrirFicha}
-        aoAdicionarFicha={criarFicha}
+        aoAdicionarFicha={() => abrirFicha(novaFicha())}
         aoReordenar={(fichas) => setRascunho((r) => reordenarFichas(r, fichas))}
         aoSalvar={() => void salvarTreino()}
       />
