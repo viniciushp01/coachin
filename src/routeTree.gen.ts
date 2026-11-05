@@ -28,6 +28,7 @@ import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
 import { Route as DevComponentesRouteImport } from './routes/dev.componentes'
 import { Route as ProfessorCadastrarAlunoRouteImport } from './routes/professor_.cadastrar-aluno'
 import { Route as AdminConviteConviteIdRouteImport } from './routes/admin_.convite.$conviteId'
+import { Route as AlunoFichaDiaIdRouteImport } from './routes/aluno_.ficha.$diaId'
 import { Route as ProfessorAlunosAlunoIdRouteImport } from './routes/professor_.alunos.$alunoId'
 import { Route as ProfessorAlunosAlunoIdCriarTreinoRouteImport } from './routes/professor_.alunos.$alunoId_.criar-treino'
 import { Route as ProfessorAlunosAlunoIdEditarTreinoRouteImport } from './routes/professor_.alunos.$alunoId_.editar-treino'
@@ -127,6 +128,11 @@ const AdminConviteConviteIdRoute = AdminConviteConviteIdRouteImport.update({
   path: '/admin/convite/$conviteId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AlunoFichaDiaIdRoute = AlunoFichaDiaIdRouteImport.update({
+  id: '/aluno_/ficha/$diaId',
+  path: '/aluno/ficha/$diaId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfessorAlunosAlunoIdRoute = ProfessorAlunosAlunoIdRouteImport.update({
   id: '/professor_/alunos/$alunoId',
   path: '/professor/alunos/$alunoId',
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/dev/componentes': typeof DevComponentesRoute
   '/professor/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
   '/admin/convite/$conviteId': typeof AdminConviteConviteIdRoute
+  '/aluno/ficha/$diaId': typeof AlunoFichaDiaIdRoute
   '/professor/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
   '/professor/alunos/$alunoId/criar-treino': typeof ProfessorAlunosAlunoIdCriarTreinoRoute
   '/professor/alunos/$alunoId/editar-treino': typeof ProfessorAlunosAlunoIdEditarTreinoRoute
@@ -189,6 +196,7 @@ export interface FileRoutesByTo {
   '/dev/componentes': typeof DevComponentesRoute
   '/professor/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
   '/admin/convite/$conviteId': typeof AdminConviteConviteIdRoute
+  '/aluno/ficha/$diaId': typeof AlunoFichaDiaIdRoute
   '/professor/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
   '/professor/alunos/$alunoId/criar-treino': typeof ProfessorAlunosAlunoIdCriarTreinoRoute
   '/professor/alunos/$alunoId/editar-treino': typeof ProfessorAlunosAlunoIdEditarTreinoRoute
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/dev/componentes': typeof DevComponentesRoute
   '/professor_/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
   '/admin_/convite/$conviteId': typeof AdminConviteConviteIdRoute
+  '/aluno_/ficha/$diaId': typeof AlunoFichaDiaIdRoute
   '/professor_/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
   '/professor_/alunos/$alunoId_/criar-treino': typeof ProfessorAlunosAlunoIdCriarTreinoRoute
   '/professor_/alunos/$alunoId_/editar-treino': typeof ProfessorAlunosAlunoIdEditarTreinoRoute
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
     | '/dev/componentes'
     | '/professor/cadastrar-aluno'
     | '/admin/convite/$conviteId'
+    | '/aluno/ficha/$diaId'
     | '/professor/alunos/$alunoId'
     | '/professor/alunos/$alunoId/criar-treino'
     | '/professor/alunos/$alunoId/editar-treino'
@@ -264,6 +274,7 @@ export interface FileRouteTypes {
     | '/dev/componentes'
     | '/professor/cadastrar-aluno'
     | '/admin/convite/$conviteId'
+    | '/aluno/ficha/$diaId'
     | '/professor/alunos/$alunoId'
     | '/professor/alunos/$alunoId/criar-treino'
     | '/professor/alunos/$alunoId/editar-treino'
@@ -288,6 +299,7 @@ export interface FileRouteTypes {
     | '/dev/componentes'
     | '/professor_/cadastrar-aluno'
     | '/admin_/convite/$conviteId'
+    | '/aluno_/ficha/$diaId'
     | '/professor_/alunos/$alunoId'
     | '/professor_/alunos/$alunoId_/criar-treino'
     | '/professor_/alunos/$alunoId_/editar-treino'
@@ -313,6 +325,7 @@ export interface RootRouteChildren {
   DevComponentesRoute: typeof DevComponentesRoute
   ProfessorCadastrarAlunoRoute: typeof ProfessorCadastrarAlunoRoute
   AdminConviteConviteIdRoute: typeof AdminConviteConviteIdRoute
+  AlunoFichaDiaIdRoute: typeof AlunoFichaDiaIdRoute
   ProfessorAlunosAlunoIdRoute: typeof ProfessorAlunosAlunoIdRoute
   ProfessorAlunosAlunoIdCriarTreinoRoute: typeof ProfessorAlunosAlunoIdCriarTreinoRoute
   ProfessorAlunosAlunoIdEditarTreinoRoute: typeof ProfessorAlunosAlunoIdEditarTreinoRoute
@@ -453,6 +466,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminConviteConviteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/aluno_/ficha/$diaId': {
+      id: '/aluno_/ficha/$diaId'
+      path: '/aluno/ficha/$diaId'
+      fullPath: '/aluno/ficha/$diaId'
+      preLoaderRoute: typeof AlunoFichaDiaIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/professor_/alunos/$alunoId': {
       id: '/professor_/alunos/$alunoId'
       path: '/professor/alunos/$alunoId'
@@ -497,6 +517,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevComponentesRoute: DevComponentesRoute,
   ProfessorCadastrarAlunoRoute: ProfessorCadastrarAlunoRoute,
   AdminConviteConviteIdRoute: AdminConviteConviteIdRoute,
+  AlunoFichaDiaIdRoute: AlunoFichaDiaIdRoute,
   ProfessorAlunosAlunoIdRoute: ProfessorAlunosAlunoIdRoute,
   ProfessorAlunosAlunoIdCriarTreinoRoute:
     ProfessorAlunosAlunoIdCriarTreinoRoute,
