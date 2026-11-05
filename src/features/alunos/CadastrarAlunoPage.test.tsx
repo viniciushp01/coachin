@@ -129,7 +129,7 @@ describe("Convite gerado (regras 46 e 57)", () => {
       ),
     ).toBeVisible();
     await usuario.click(screen.getByRole("button", { name: "Copiar link" }));
-    expect(copiar).toHaveBeenCalledWith(`${window.location.origin}/convite/tok-123`);
+    expect(copiar).toHaveBeenCalledWith(`${window.location.origin}/c/tok-123`);
     expect(await screen.findByText("Link copiado.")).toBeVisible();
     await usuario.click(screen.getByRole("button", { name: "Voltar à lista" }));
     expect(navegar).toHaveBeenCalledWith({ to: "/professor" });

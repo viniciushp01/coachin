@@ -54,7 +54,7 @@ export function ConviteGerado({
 
   async function copiar() {
     try {
-      await navigator.clipboard.writeText(urlDoApp(`/convite/${link.token}`));
+      await navigator.clipboard.writeText(urlDoApp(`/c/${link.token}`));
       mostrarToast("success", LINK_COPIADO);
     } catch {
       mostrarToast("error", COPIA_FALHOU);
