@@ -1,7 +1,9 @@
 import { queryOptions, type QueryClient } from "@tanstack/react-query";
 import { redirect } from "@tanstack/react-router";
 import { destinoDaSessao, type Destino, type EstadoSessao } from "./destino";
-import { erroDaResposta } from "./erros";
+import { falhaDeRede, contaAtual } from "./conta";
+import { ErroApp, erroDaResposta } from "./erros";
+import { guardarCopia, lerCopia } from "./filaLocal";
 import { lerUltimoUso, registrarUso, sessaoVencida } from "./inatividade";
 import { supabase } from "./supabase";
 
@@ -59,10 +61,35 @@ function sessaoInvalida(erro: { code?: string; status?: number } | null) {
 export async function carregarEstadoSessao(): Promise<EstadoSessao> {
   const {
     data: { session },
+    error,
   } = await supabase.auth.getSession();
-  if (!session || !(await aplicarRegraDosTrintaDias())) return anonimo();
-  const id = session.user.id;
+  if (!session) {
+    // Sem rede e com o token vencido não há sessão para ler, mas ela não acabou (regra 116).
+    const conta = falhaDeRede(error) ? await contaAtual() : null;
+    return (conta && (await lerEstadoGuardado(conta))) || anonimo();
+  }
+  if (!(await aplicarRegraDosTrintaDias())) return anonimo();
+  try {
+    const estado = await lerEstadoNoServidor(session.user.id, session.user.email ?? "");
+    void guardarCopia(CHAVE_DO_ESTADO + session.user.id, estado).catch(() => undefined);
+    return estado;
+  } catch (erro) {
+    // Abrir sem conexão: vale o que foi lido da última vez com conexão (regra 116).
+    if (erro instanceof ErroApp && erro.codigo === "sem_conexao") {
+      const guardado = await lerEstadoGuardado(session.user.id);
+      if (guardado) return guardado;
+    }
+    throw erro;
+  }
+}
 
+const CHAVE_DO_ESTADO = "sessao:";
+
+function lerEstadoGuardado(conta: string) {
+  return lerCopia<EstadoSessao>(CHAVE_DO_ESTADO + conta).catch(() => null);
+}
+
+async function lerEstadoNoServidor(id: string, email: string): Promise<EstadoSessao> {
   const perfil = await supabase
     .from("profiles")
     .select("role, status, full_name")
@@ -81,7 +108,7 @@ export async function carregarEstadoSessao(): Promise<EstadoSessao> {
     papel: perfil.data.role,
     bloqueado: perfil.data.status === "blocked",
     nome: perfil.data.full_name,
-    email: session.user.email ?? "",
+    email,
     temProfessor: false,
     avisoAceito: false,
     perfilConcluido: false,

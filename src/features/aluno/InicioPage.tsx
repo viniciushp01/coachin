@@ -15,7 +15,8 @@ import {
   Tela,
   useToast,
 } from "@/ui";
-import { desfazerMarcacao, marcarComoFeito } from "./acoes";
+import { desfazerMarcacao, marcarComoFeito, type SituacaoDoEnvio } from "./acoes";
+import { AVISO_GUARDADO, registrosAguardando } from "./textos";
 import type { DadosDoAluno, TreinoDoAluno } from "./dados";
 import {
   dataPorExtenso,
@@ -87,12 +88,12 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
   const { treino } = dados;
   const primeiroNome = nome.trim().split(/\s+/)[0] || nome;
 
-  async function agir(acao: () => Promise<unknown>, sucesso: string) {
+  async function agir(acao: () => Promise<SituacaoDoEnvio>, sucesso: string) {
     setOcupado(true);
     try {
-      await acao();
+      const situacao = await acao();
       await router.invalidate();
-      mostrarToast("success", sucesso);
+      mostrarToast("success", situacao === "guardado" ? AVISO_GUARDADO : sucesso);
     } catch (erro) {
       mostrarToast("error", erro instanceof ErroApp ? erro.message : "Não foi possível salvar.");
     } finally {
@@ -115,6 +116,17 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
         <p className="text-caption text-text-secondary">{dataPorExtenso(dados.hoje)}</p>
         <h1 className="text-title-screen">Olá, {primeiroNome}</h1>
       </div>
+
+      {dados.offline ? (
+        <Notice tom="neutral" titulo="Sem conexão">
+          Mostrando o treino salvo neste aparelho.
+          {dados.pendentes ? ` ${registrosAguardando(dados.pendentes)}.` : ""}
+        </Notice>
+      ) : dados.pendentes ? (
+        <Notice tom="neutral" titulo="Aguardando envio">
+          {registrosAguardando(dados.pendentes)}. Eles saem assim que a conexão permitir.
+        </Notice>
+      ) : null}
 
       {!treino ? (
         <EmptyState icone="fitness_center" titulo="Sem treino por enquanto">

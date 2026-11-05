@@ -1,10 +1,11 @@
-import { useRouter, type ErrorComponentProps } from "@tanstack/react-router";
+import { useRouter, useRouterState, type ErrorComponentProps } from "@tanstack/react-router";
 import { ErroApp } from "@/lib/erros";
 import { BarraFixa, Button, EmptyState, Tela } from "@/ui";
 
 /** Falha ao carregar uma rota (ex.: sem internet ao abrir): tom neutro, nunca vermelho. */
 export function ErroDeRota({ error }: ErrorComponentProps) {
   const router = useRouter();
+  const pagina = useRouterState({ select: (s) => s.location.pathname });
   const semConexao = error instanceof ErroApp && error.codigo === "sem_conexao";
   return (
     <Tela barra="um">
@@ -13,7 +14,11 @@ export function ErroDeRota({ error }: ErrorComponentProps) {
         titulo={semConexao ? "Sem conexão" : "Algo deu errado"}
         className="flex-1 justify-center"
       >
-        {semConexao ? "Confira sua internet e tente de novo." : "Tente de novo em instantes."}
+        {semConexao
+          ? pagina.startsWith("/aluno")
+            ? "Abra o app com internet ao menos uma vez para guardar seu treino neste aparelho."
+            : "Confira sua internet e tente de novo."
+          : "Tente de novo em instantes."}
       </EmptyState>
       <BarraFixa>
         <Button onClick={() => router.invalidate()}>Tentar de novo</Button>

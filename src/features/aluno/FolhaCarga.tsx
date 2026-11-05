@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Button, FormField, Sheet } from "@/ui";
 import type { CargaDoExercicio } from "./dados";
+import { APOIO_DA_CARGA, APOIO_DA_CARGA_SEM_CONEXAO } from "./textos";
 import { diaDaEdicao, lerCarga, textoDaCarga } from "./logica";
 
 type FolhaCargaProps = {
   /** O exercício aberto; nulo = fechada. */
   exercicio: { nome: string; carga: CargaDoExercicio | undefined } | null;
   ocupado: boolean;
+  /** Sem conexão: a carga vai para a fila (regra 116). */
+  offline?: boolean;
   aoFechar: () => void;
   aoSalvar: (kg: number) => void;
 };
@@ -15,7 +18,13 @@ type FolhaCargaProps = {
  * Folha "Carga" (Figma "Ficha · 2 Editar carga", regras 26 a 28). Editar a carga não marca o
  * treino como feito.
  */
-export function FolhaCarga({ exercicio, ocupado, aoFechar, aoSalvar }: FolhaCargaProps) {
+export function FolhaCarga({
+  exercicio,
+  ocupado,
+  offline = false,
+  aoFechar,
+  aoSalvar,
+}: FolhaCargaProps) {
   const [texto, setTexto] = useState(exercicio?.carga ? textoDaCarga(exercicio.carga.kg) : "");
   const [erro, setErro] = useState<string>();
   const carga = exercicio?.carga;
@@ -56,7 +65,7 @@ export function FolhaCarga({ exercicio, ocupado, aoFechar, aoSalvar }: FolhaCarg
           inputMode="decimal"
           value={texto}
           erro={erro}
-          dica="Editar a carga não marca o treino como feito."
+          dica={offline ? APOIO_DA_CARGA_SEM_CONEXAO : APOIO_DA_CARGA}
           onChange={(e) => {
             setTexto(e.target.value);
             setErro(undefined);
