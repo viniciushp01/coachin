@@ -1,6 +1,6 @@
 # Coach In · Desenho do banco de dados (para revisão)
 
-Estado: **aplicado no Supabase** (0001 a 0005 em 27/10/2026, 0006 em 28/10/2026, 0008 em 29/10/2026, 0009 em 30/10/2026, 0010 e 0007 em 03/11/2026, 0012 em 04/11/2026; a 0007 entrou depois da 0010; ver "Resultado da aplicação" no fim). As migrations foram testadas num Postgres 17 (PGlite) com a camada de autenticação do Supabase simulada (247 verificações, todas passando). Base de regras: `contexto-produto.md` (regras 1 a 122) e as decisões de 27/10 (arquivar na troca de professor, exercícios e cargas seguem o aluno).
+Estado: **aplicado no Supabase** (0001 a 0005 em 27/10/2026, 0006 em 28/10/2026, 0008 em 29/10/2026, 0009 em 30/10/2026, 0010 e 0007 em 03/11/2026, 0012 em 04/11/2026, 0013 em 05/11/2026; a 0007 entrou depois da 0010; ver "Resultado da aplicação" no fim). As migrations foram testadas num Postgres 17 (PGlite) com a camada de autenticação do Supabase simulada (247 verificações, todas passando). Base de regras: `contexto-produto.md` (regras 1 a 122) e as decisões de 27/10 (arquivar na troca de professor, exercícios e cargas seguem o aluno).
 
 Arquivos (em `supabase/`):
 
@@ -17,7 +17,8 @@ Arquivos (em `supabase/`):
 | `migrations/20261103174813_teacher_list_last_done_letter.sql` | 0010 · Regra 147 (1) (#79, feita no #77): coluna `last_done_letter` no fim da view `teacher_student_list`, a letra da ficha da marcação mais recente (empate no mesmo dia: `marked_at` mais recente) |
 | `migrations/20261103190000_exercise_catalog.sql` | 0007 · Catálogo de exercícios: 249 pré-definidos (os 149 da 0004 renomeados no lugar, mesmo id), grupos musculares, equipamentos, apelidos, carga e medida; busca por apelido |
 | `migrations/20261104110318_save_workout_limits.sql` | 0012 · Regras 149 (4) e 154 (2) (#100): `save_workout` valida semanas de 1 a 104, séries de 1 a 20, repetições ou tempo até 20 caracteres e descanso de 0 a 600; número gigante vira o código, não erro cru de inteiro; descanso em branco grava 0. **Ainda não aplicada no Supabase** (aplicar depois do merge) |
-| `tests/` | Simulação do Supabase, 336 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
+| `migrations/20261105121922_similar_exercises_order_hidden.sql` | 0013 · Regra 157 (6) e (7) (#93): `similar_exercises` ordena por nome igual, apelido igual, similaridade e nome, e ignora o que quem chama ocultou |
+| `tests/` | Simulação do Supabase, 342 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
 
 ## 1. Como o banco funciona (5 ideias)
 
@@ -68,7 +69,7 @@ Conta **bloqueada** perde acesso a tudo, mas ainda lê o próprio perfil (para m
 
 **Convites e conta:** `get_invite_preview` (aceita sem login), `create_student_with_invite`, `create_teacher_invite`, `reissue_invite` (reenviar, gerar novo, corrigir e-mail), `accept_student_invite` (exige confirmar a troca se já tem professor), `accept_teacher_invite`, `decline_invite`, `claim_invite_email` (só a Edge Function `enviar-convite` chama, com o JWT de quem envia), `set_teacher_status` (bloquear/desbloquear, encerra as sessões), `admin_teacher_student_counts`, `accept_data_notice`, `save_student_profile`, `delete_my_account`.
 
-**Biblioteca:** `search_exercises` e `similar_exercises` (olham o nome e, desde a 0007, os apelidos), `create_exercise` (desde a 0007 com 4 parâmetros: nome, grupo, `load_mode`, `measure`; o grupo precisa estar em `muscle_groups`), `set_exercise_hidden`.
+**Biblioteca:** `search_exercises` e `similar_exercises` (olham o nome e, desde a 0007, os apelidos; desde a 0013, `similar_exercises` ordena por nome igual, apelido igual, similaridade e nome, e ignora o que quem chama ocultou), `create_exercise` (desde a 0007 com 4 parâmetros: nome, grupo, `load_mode`, `measure`; o grupo precisa estar em `muscle_groups`), `set_exercise_hidden`.
 
 **Treino:** `save_workout` (cria ou edita o treino inteiro de uma vez; desde a 0012 confere os limites: semanas de 1 a 104, séries de 1 a 20, repetições ou tempo até 20 caracteres, descanso de 0 a 600), `cancel_scheduled_workout`.
 
@@ -116,7 +117,7 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 2. Rodar o **Security Advisor** do Supabase depois (alertas de RLS ou de função sem `search_path`).
 3. Criar o administrador conforme o comentário no fim da migration 0001.
 
-**Ordem de aplicação:** os arquivos de `supabase/migrations/`, em ordem numérica (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link, 0008 invite_preview_teacher_unavailable, 0009 invite_email_claim, 0010 teacher_list_last_done_letter, 0007 exercise_catalog, que roda depois da 0010, 0012 save_workout_limits), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
+**Ordem de aplicação:** os arquivos de `supabase/migrations/`, em ordem numérica (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link, 0008 invite_preview_teacher_unavailable, 0009 invite_email_claim, 0010 teacher_list_last_done_letter, 0007 exercise_catalog, que roda depois da 0010, 0012 save_workout_limits, 0013 similar_exercises_order_hidden), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
 
 **Rodar os testes:** `supabase/tests/run.sh` (precisa de Postgres 16 instalado e Linux/WSL/macOS; sobe e derruba um banco descartável) ou, sem Postgres (Windows), `npm --prefix supabase/tests/pglite install` e `node supabase/tests/pglite/run.mjs` (Postgres 17.5 em WebAssembly, PGlite 0.4.6, banco em memória, um comando por transação como o `psql -f`; `--sem-pgcrypto` troca `digest` e `gen_random_bytes` por equivalentes nativos só no harness). Os dois devem terminar com "TODOS OS TESTES PASSARAM".
 
@@ -177,6 +178,16 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 - **Advisor:** sem alerta novo (as mesmas 24 RPCs `security definer` para `authenticated`, `get_invite_preview` para `anon` e os dois avisos do Auth).
 - **Tipos:** regerados; `exercises` com as colunas novas, `equipment`, `exercise_equipment`, `muscle_groups` e `create_exercise` novo em `database.types.ts`.
 - **Efeito visível:** 61 exercícios mudam de nome e 11 de grupo (ids iguais). Não há fichas reais ainda.
+
+### Resultado da aplicação da 0013 (05/11/2026, issue #93)
+
+- **O que muda:** só o corpo de `similar_exercises` (`create or replace`, mesma assinatura e grants; continua `security invoker`).
+- **Testes (PGlite, Postgres 17.5):** **342 verificações**; o de apelido exato falha sem a migration.
+- **Aplicação:** pelo `apply_migration` do MCP, versão `20261105121922` (nome do arquivo). Conferido no banco: `security invoker`, execução para `authenticated` e não para `anon`, filtro de ocultos presente.
+- **Tipos:** a assinatura não mudou; `database.types.ts` fica igual.
+- **Security Advisor:** nenhum alerta novo sobre esta função.
+- **Revisão:** em agente separado, antes de aplicar, sem problema bloqueante.
+- **Não testado no projeto real:** chamar a função como professor logado (só nos testes do PGlite).
 
 ### Resultado da aplicação da 0012 (04/11/2026, issue #100)
 

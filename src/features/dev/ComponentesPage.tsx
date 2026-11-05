@@ -17,6 +17,7 @@ import {
   SectionRow,
   Sheet,
   StepIndicator,
+  SegmentedControl,
   Stepper,
   StudentRow,
   TextAreaField,
@@ -29,6 +30,16 @@ import { ListaReordenavel, ReorderRow } from "@/ui/ReorderRow";
 import { FolhaSair } from "@/features/acesso/FolhaSair";
 
 // Catálogo dos componentes base (Fase 0, item 3) para conferir com a página Componentes do Figma.
+
+const OPCOES_DE_MEDIDA = [
+  { valor: "Repetições", rotulo: "Repetições" },
+  { valor: "Tempo", rotulo: "Tempo" },
+];
+const OPCOES_DE_CARGA = [
+  { valor: "Sim", rotulo: "Sim" },
+  { valor: "Opcional", rotulo: "Opcional" },
+  { valor: "Não", rotulo: "Não" },
+];
 
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
@@ -106,6 +117,8 @@ const FICHAS_EXEMPLO = [
 function Demonstracoes() {
   const mostrarToast = useToast();
   const [numeroDeSemanas, setNumeroDeSemanas] = useState(8);
+  const [medida, setMedida] = useState("Repetições");
+  const [carga, setCarga] = useState("Sim");
   const [inicio, setInicio] = useState(HOJE_EXEMPLO);
   const [fichas, setFichas] = useState(FICHAS_EXEMPLO);
   const [folha, setFolha] = useState(false);
@@ -231,6 +244,21 @@ function Demonstracoes() {
           rotulo="Telefone (WhatsApp)"
           defaultValue="(31) 98765-43"
           erro="Digite um telefone com DDD, como (31) 91234-5678."
+        />
+      </Secao>
+
+      <Secao titulo="SegmentedControl">
+        <SegmentedControl
+          rotulo="Medida"
+          opcoes={OPCOES_DE_MEDIDA}
+          valor={medida}
+          aoMudar={setMedida}
+        />
+        <SegmentedControl
+          rotulo="Modo de carga"
+          opcoes={OPCOES_DE_CARGA}
+          valor={carga}
+          aoMudar={setCarga}
         />
       </Secao>
 

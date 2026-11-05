@@ -25,7 +25,7 @@ import {
 import { TreinoSalvo } from "./TreinoSalvo";
 
 /** As telas cheias do fluxo, que a rota guarda no histórico para o "voltar" do aparelho. */
-export type PassoDoTreino = "dados" | "fichas" | "ficha" | "adicionar";
+export type PassoDoTreino = "dados" | "fichas" | "ficha" | "adicionar" | "novo-exercicio";
 
 // Figma "Criar treino · 13 e 14". Dados usa a mesma folha de Fichas (regra 107).
 const DESCARTAR_FICHA = {
@@ -153,11 +153,13 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
       );
     }
 
-    if (edicao && passo === "adicionar") {
+    if (edicao && (passo === "adicionar" || passo === "novo-exercicio")) {
       return (
         <AdicionarExercicio
           ficha={edicao}
           indice={indice}
+          criando={passo === "novo-exercicio"}
+          aoCriar={() => irPara("novo-exercicio")}
           aoVoltar={voltar}
           aoAdicionar={(exercicio) => {
             setEdicao(salvarExercicio(edicao, exercicio));
