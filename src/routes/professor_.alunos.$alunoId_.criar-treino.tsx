@@ -9,6 +9,7 @@ const PASSOS: readonly PassoDoTreino[] = [
   "ficha",
   "adicionar",
   "novo-exercicio",
+  "ocultos",
 ];
 
 // Criar treino (regra 73). O passo fica na URL para o "voltar" do aparelho andar um passo em vez de

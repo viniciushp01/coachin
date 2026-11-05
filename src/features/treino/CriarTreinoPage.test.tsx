@@ -73,12 +73,21 @@ const CATALOGO = [
   { id: "ex-meu", name: "Meu supino", measure: "reps", muscle_group: null, owner_id: "p1" },
 ];
 
-// O servidor de mentira: busca responde o catálogo; `save_workout`, o que cada teste deixar.
+// O servidor de mentira: busca responde o catálogo menos os ocultos; `save_workout`, o que cada
+// teste deixar.
+let ocultos: Set<string>;
 let salvar: (args: unknown) => unknown;
-const rpc = vi.fn((funcao: string, args: unknown) =>
-  Promise.resolve().then(() => (funcao === "search_exercises" ? CATALOGO : salvar(args))),
+type ArgsDoRpc = { p_hidden_only?: boolean; p_exercise_id?: string };
+const rpc = vi.fn((funcao: string, args: ArgsDoRpc) =>
+  Promise.resolve().then(() => {
+    if (funcao === "search_exercises") {
+      return CATALOGO.filter((e) => ocultos.has(e.id) === Boolean(args.p_hidden_only));
+    }
+    if (funcao === "set_exercise_hidden") return void ocultos.add(args.p_exercise_id!);
+    return salvar(args);
+  }),
 );
-vi.mock("@/lib/rpc", () => ({ rpc: (f: string, a: unknown) => rpc(f, a) }));
+vi.mock("@/lib/rpc", () => ({ rpc: (f: string, a: ArgsDoRpc) => rpc(f, a) }));
 
 vi.mock("@/lib/supabase", () => ({
   supabase: {
@@ -202,11 +211,12 @@ beforeEach(() => {
   navegar.mockReset();
   rpc.mockClear();
   salvar = () => "w-novo";
+  ocultos = new Set();
 });
 afterEach(cleanup);
 
 describe("Passo na URL e rascunho na memória (regra 107)", () => {
-  it.each(["fichas", "ficha", "adicionar"] as const)(
+  it.each(["fichas", "ficha", "adicionar", "ocultos"] as const)(
     "recarregar em %s perde o rascunho e recomeça em Dados",
     (passo) => {
       render(
@@ -475,10 +485,43 @@ describe("Adicionar exercício (regras 74 e 151 (2))", () => {
   });
 
   it("falha na busca vira toast em pt-BR", async () => {
-    rpc.mockImplementationOnce(() => Promise.reject(new ErroApp("forbidden")));
+    // A primeira leitura ao abrir é a dos ocultos; a busca vem depois da espera.
+    rpc
+      .mockImplementationOnce(() => Promise.resolve([]))
+      .mockImplementationOnce(() => Promise.reject(new ErroApp("forbidden")));
     const u = abrir();
     await abrirBusca(u);
     expect(await screen.findByText(MENSAGENS.forbidden)).toBeVisible();
+  });
+
+  it("ocultar não mexe na ficha: o exercício segue no rascunho e no treino salvo (regra 113)", async () => {
+    const u = abrir();
+    await irParaFichas(u);
+    await abrirFichaNova(u, "Peito");
+    await adicionarExercicio(u, "Supino reto");
+
+    await u.click(botao("Adicionar exercício"));
+    await u.click(await screen.findByRole("button", { name: "Opções de Supino reto" }));
+    await u.click(botao("Ocultar da busca"));
+    expect(await screen.findByRole("button", { name: "Exercícios ocultos (1)" })).toBeVisible();
+    await u.click(botao("Voltar"));
+
+    expect(linha("Supino reto")).toBeVisible();
+    await u.click(botao("Salvar ficha"));
+    await u.click(botao("Salvar treino"));
+    await screen.findByRole("heading", { name: "Treino salvo" });
+    expect(JSON.stringify(chamadasDeSalvar())).toContain('"exercise_id":"ex-supino"');
+  });
+
+  it("o passo de ocultos entra no histórico: voltar cai na busca", async () => {
+    ocultos.add("ex-prancha");
+    const u = abrir();
+    await abrirBusca(u);
+    await u.click(await screen.findByRole("button", { name: "Exercícios ocultos (1)" }));
+    expect(screen.getByRole("heading", { name: "Exercícios ocultos" })).toBeVisible();
+
+    await u.click(botao("Voltar"));
+    expect(screen.getByRole("heading", { name: "Adicionar exercício" })).toBeVisible();
   });
 
   it("voltar retorna à ficha, sem perder o nome", async () => {
