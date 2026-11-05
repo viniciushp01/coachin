@@ -28,6 +28,9 @@ export function FolhaOpcoesDoExercicio({
           <Button variante="secondary" onClick={aoOcultar}>
             Ocultar da busca
           </Button>
+          <Button variante="secondary" onClick={aoFechar}>
+            Cancelar
+          </Button>
         </>
       }
     />

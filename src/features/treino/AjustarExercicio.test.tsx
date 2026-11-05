@@ -151,6 +151,14 @@ describe("O ⋯ da busca (regras 148 e 151 (4))", () => {
     expect(screen.getByRole("dialog", { name: "Ocultar da busca?" })).toBeVisible();
     expect(rpc.mock.calls.filter(([f]) => f === "set_exercise_hidden")).toEqual([]);
   });
+
+  it("Cancelar fecha as opções e fica na busca", async () => {
+    const u = abrir();
+    await u.click(await opcoes("Prancha com elevação"));
+    await u.click(botao("Cancelar"));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Adicionar exercício" })).toBeVisible();
+  });
 });
 
 describe("Ajustar medida e carga (regras 123 e 151 (4))", () => {
