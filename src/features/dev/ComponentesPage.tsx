@@ -13,7 +13,9 @@ import {
   IconButton,
   NavBar,
   Notice,
+  NumberField,
   PhoneField,
+  QuickPick,
   SectionRow,
   Sheet,
   StepIndicator,
@@ -28,6 +30,7 @@ import {
 } from "@/ui";
 import { ListaReordenavel, ReorderRow } from "@/ui/ReorderRow";
 import { FolhaSair } from "@/features/acesso/FolhaSair";
+import { FolhaDoExercicio } from "@/features/treino/FolhaDoExercicio";
 
 // Catálogo dos componentes base (Fase 0, item 3) para conferir com a página Componentes do Figma.
 
@@ -119,10 +122,12 @@ function Demonstracoes() {
   const [numeroDeSemanas, setNumeroDeSemanas] = useState(8);
   const [medida, setMedida] = useState("Repetições");
   const [carga, setCarga] = useState("Sim");
+  const [descanso, setDescanso] = useState<number | null>(90);
   const [inicio, setInicio] = useState(HOJE_EXEMPLO);
   const [fichas, setFichas] = useState(FICHAS_EXEMPLO);
   const [folha, setFolha] = useState(false);
   const [folhaSair, setFolhaSair] = useState(false);
+  const [folhaExercicio, setFolhaExercicio] = useState<"reps" | "time" | null>(null);
   const [aba, setAba] = useState<AbaAluno>("inicio");
   const [codigo, setCodigo] = useState("+55");
 
@@ -262,6 +267,34 @@ function Demonstracoes() {
         />
       </Secao>
 
+      <Secao titulo="QuickPick">
+        <div className="flex gap-8">
+          {[30, 45, 60, 90, 120].map((segundos) => (
+            <QuickPick
+              key={segundos}
+              selecionado={descanso === segundos}
+              onClick={() => setDescanso(descanso === segundos ? null : segundos)}
+            >
+              {segundos} s
+            </QuickPick>
+          ))}
+          <QuickPick selecionado={false}>Outro</QuickPick>
+        </div>
+      </Secao>
+
+      <Secao titulo="NumberField">
+        <div className="grid grid-cols-2 gap-16">
+          <NumberField aria-label="Séries" placeholder="Ex.: 4" />
+          <NumberField aria-label="Tempo" formato="suffix" defaultValue="45" />
+        </div>
+        <div className="flex items-center gap-8">
+          <NumberField aria-label="Mínimo" formato="center" defaultValue="8" />
+          <span aria-hidden="true">a</span>
+          <NumberField aria-label="Máximo" formato="center" defaultValue="12" />
+        </div>
+        <NumberField aria-label="Com erro" invalido defaultValue="601" />
+      </Secao>
+
       <Secao titulo="Stepper">
         <Stepper
           rotulo="Número de semanas"
@@ -376,6 +409,24 @@ function Demonstracoes() {
         >
           Você vai precisar entrar de novo com e-mail e senha.
         </Sheet>
+      </Secao>
+
+      <Secao titulo="Folha Editar exercício (regra 159)">
+        <Button variante="secondary" onClick={() => setFolhaExercicio("reps")}>
+          Abrir (repetições)
+        </Button>
+        <Button variante="secondary" onClick={() => setFolhaExercicio("time")}>
+          Abrir (tempo)
+        </Button>
+        {folhaExercicio && (
+          <FolhaDoExercicio
+            nome={folhaExercicio === "time" ? "Prancha frontal" : "Supino reto"}
+            medida={folhaExercicio}
+            aoFechar={() => setFolhaExercicio(null)}
+            aoSalvar={() => setFolhaExercicio(null)}
+            aoRemover={() => setFolhaExercicio(null)}
+          />
+        )}
       </Secao>
 
       <Secao titulo="FolhaSair (Perfil, regra 121)">

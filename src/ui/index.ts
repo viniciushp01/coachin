@@ -12,6 +12,8 @@ export { BackButton, IconButton } from "./IconButton";
 export { Logo } from "./Logo";
 export { ESPACO_NAVBAR, NavBar, type AbaAluno } from "./NavBar";
 export { Notice } from "./Notice";
+export { NumberField, type FormatoDoNumero } from "./NumberField";
+export { QuickPick } from "./QuickPick";
 // ReorderRow fica fora deste índice: importe de "@/ui/ReorderRow". Daqui, a biblioteca de arrastar
 // entraria no pacote de todas as telas.
 export { SearchField } from "./SearchField";
