@@ -13,7 +13,8 @@ type AjustarExercicioProps = {
 
 /**
  * Medida e modo de carga do exercício do professor (regras 123 e 151 (4); Biblioteca · 6). O nome é só
- * leitura. O aviso de fichas não bloqueia, e voltar não pergunta nada (regra 157 (3)).
+ * leitura. O aviso de fichas é só de repetições para tempo e não bloqueia; voltar não pergunta nada
+ * (regra 157 (3)).
  */
 export function AjustarExercicio({ exercicio, aoVoltar, aoSalvar }: AjustarExercicioProps) {
   const mostrarToast = useToast();
@@ -22,7 +23,12 @@ export function AjustarExercicio({ exercicio, aoVoltar, aoSalvar }: AjustarExerc
   const [fichas, setFichas] = useState(0);
   const [salvando, setSalvando] = useState(false);
 
+  const vaiParaTempo = exercicio.medida === "reps" && medida === "time";
+  // De tempo para repetições nunca há aviso: nem precisa ler.
+  const podeAvisar = exercicio.medida === "reps";
+
   useEffect(() => {
+    if (!podeAvisar) return;
     let valida = true;
     contarFichasDoExercicio(exercicio.id).then(
       (total) => {
@@ -35,7 +41,7 @@ export function AjustarExercicio({ exercicio, aoVoltar, aoSalvar }: AjustarExerc
     return () => {
       valida = false;
     };
-  }, [exercicio.id, mostrarToast]);
+  }, [exercicio.id, podeAvisar, mostrarToast]);
 
   async function salvar() {
     setSalvando(true);
@@ -58,7 +64,7 @@ export function AjustarExercicio({ exercicio, aoVoltar, aoSalvar }: AjustarExerc
         aoMudarMedida={setMedida}
         aoMudarCarga={setCarga}
       />
-      {fichas > 0 && (
+      {vaiParaTempo && fichas > 0 && (
         <Notice tom="info" titulo={`Este exercício está em ${plural(fichas, "ficha", "fichas")}`}>
           Os valores ficam iguais: um “10” passa a aparecer como “10 s”. Ajuste as fichas depois, na
           edição.

@@ -110,7 +110,13 @@ vi.mock("@/lib/supabase", () => ({
         then: (ok: (r: unknown) => unknown) =>
           Promise.resolve({
             error: null,
-            data: [{ exercise_id: "ex-supino", equipment: { name: "Barra reta" } }],
+            data: [
+              {
+                exercise_id: "ex-supino",
+                equipment: { name: "Barra reta" },
+                workout_days: { workout_id: "w1" },
+              },
+            ],
           }).then(ok),
       };
       return passo;

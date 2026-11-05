@@ -47,15 +47,27 @@ export async function buscarExercicios(termo: string): Promise<ExercicioDaBusca[
   });
 }
 
-/** Em quantas fichas não removidas o exercício está; repetido na mesma ficha conta uma vez. */
+/**
+ * Em quantas fichas não removidas de treino ativo ou agendado o exercício está (regra 151 (4)):
+ * treino encerrado fica de fora, porque não dá mais para editar. Repetido na ficha conta uma vez.
+ */
 export async function contarFichasDoExercicio(exercicioId: string) {
-  const resposta = await supabase
-    .from("workout_exercises")
-    .select("day_id, workout_days!inner(removed_at)")
-    .eq("exercise_id", exercicioId)
-    .is("workout_days.removed_at", null);
-  if (resposta.error) throw erroDaResposta(resposta.error);
-  return new Set(resposta.data.map((l) => l.day_id)).size;
+  const [alunos, fichas] = await Promise.all([
+    supabase.from("teacher_student_list").select("current_workout_id, scheduled_workout_id"),
+    supabase
+      .from("workout_exercises")
+      .select("day_id, workout_days!inner(workout_id)")
+      .eq("exercise_id", exercicioId)
+      .is("workout_days.removed_at", null),
+  ]);
+  if (alunos.error) throw erroDaResposta(alunos.error);
+  if (fichas.error) throw erroDaResposta(fichas.error);
+  const vigentes = new Set(
+    alunos.data.flatMap((a) => [a.current_workout_id, a.scheduled_workout_id]),
+  );
+  return new Set(
+    fichas.data.filter((l) => vigentes.has(l.workout_days.workout_id)).map((l) => l.day_id),
+  ).size;
 }
 
 /** Só muda o exercício: repetições das fichas, carga e histórico ficam como estão (regra 123). */

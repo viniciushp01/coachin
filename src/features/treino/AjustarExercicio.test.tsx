@@ -29,11 +29,24 @@ const CATALOGO = [
     muscle_group: null,
     owner_id: "p1",
   },
+  {
+    id: "ex-tempo",
+    name: "Isometria minha",
+    measure: "time",
+    load_mode: "none",
+    muscle_group: null,
+    owner_id: "p1",
+  },
 ];
 
-// O servidor de mentira: cada teste decide as linhas de `workout_exercises` e o que o ajuste faz.
-type LinhaDeFicha = { day_id: string };
-let linhasDeFicha: () => { data: LinhaDeFicha[] | null; error: unknown };
+// O servidor de mentira: cada teste decide as linhas de `workout_exercises`, os treinos ativo e
+// agendado de `teacher_student_list` e o que o ajuste faz.
+const ficha = (dia: string, treino = "w-ativo") => ({
+  day_id: dia,
+  workout_days: { workout_id: treino },
+});
+let linhasDeFicha: () => { data: ReturnType<typeof ficha>[] | null; error: unknown };
+let vigentes: () => { data: Record<string, string | null>[] | null; error: unknown };
 let ajustar: (args: Record<string, unknown>) => unknown;
 const consultas: unknown[][] = [];
 const rpc = vi.fn((funcao: string, args: Record<string, unknown>) =>
@@ -58,7 +71,11 @@ vi.mock("@/lib/supabase", () => ({
         is: (...args: unknown[]) => (consultas.push([tabela, "is", ...args]), passo),
         then: (ok: (r: unknown) => unknown) =>
           Promise.resolve(
-            tabela === "workout_exercises" ? linhasDeFicha() : { error: null, data: [] },
+            tabela === "workout_exercises"
+              ? linhasDeFicha()
+              : tabela === "teacher_student_list"
+                ? vigentes()
+                : { error: null, data: [] },
           ).then(ok),
       };
       return passo;
@@ -110,8 +127,8 @@ const botao = (name: string) => screen.getByRole("button", { name });
 const opcoes = (nome: string) => screen.findByRole("button", { name: `Opções de ${nome}` });
 const chamadasDeAjustar = () => rpc.mock.calls.filter(([f]) => f === "set_exercise_settings");
 
-async function abrirAjuste(u: ReturnType<typeof userEvent.setup>) {
-  await u.click(await opcoes("Prancha com elevação"));
+async function abrirAjuste(u: ReturnType<typeof userEvent.setup>, nome = "Prancha com elevação") {
+  await u.click(await opcoes(nome));
   await u.click(
     within(screen.getByRole("dialog")).getByRole("button", { name: "Ajustar medida e carga" }),
   );
@@ -123,6 +140,13 @@ beforeEach(() => {
   aoMudarMedida.mockClear();
   consultas.length = 0;
   linhasDeFicha = () => ({ data: [], error: null });
+  vigentes = () => ({
+    data: [
+      { current_workout_id: "w-ativo", scheduled_workout_id: "w-agendado" },
+      { current_workout_id: null, scheduled_workout_id: null },
+    ],
+    error: null,
+  });
   ajustar = (args) => ({ measure: args.p_measure, load_mode: args.p_load_mode });
 });
 afterEach(cleanup);
@@ -178,22 +202,32 @@ describe("Ajustar medida e carga (regras 123 e 151 (4))", () => {
     expect(botao("Cancelar")).toBeVisible();
   });
 
-  it("sem ficha, sem aviso; a leitura filtra pelo exercício e tira as fichas removidas", async () => {
+  it("a leitura filtra pelo exercício e tira as fichas removidas", async () => {
     const u = abrir();
     await abrirAjuste(u);
     await waitFor(() => expect(consultas.length).toBeGreaterThan(0));
     expect(consultas).toContainEqual(["workout_exercises", "eq", "exercise_id", "ex-meu"]);
     expect(consultas).toContainEqual(["workout_exercises", "is", "workout_days.removed_at", null]);
+  });
+
+  it("sem ficha, sem aviso, mesmo mudando para tempo", async () => {
+    const u = abrir();
+    await abrirAjuste(u);
+    await u.click(screen.getByRole("radio", { name: "Tempo" }));
+    await waitFor(() => expect(consultas.length).toBeGreaterThan(0));
+    await new Promise((fim) => setTimeout(fim, 50));
     expect(screen.queryByText(/^Este exercício está em/)).toBeNull();
   });
 
-  it("com fichas, avisa com N, sem contar duas vezes a mesma ficha, e não bloqueia", async () => {
+  it("de repetições para tempo, avisa com N, sem repetir ficha, e não bloqueia", async () => {
     linhasDeFicha = () => ({
-      data: [{ day_id: "a" }, { day_id: "a" }, { day_id: "b" }, { day_id: "c" }],
+      data: [ficha("a"), ficha("a"), ficha("b"), ficha("c")],
       error: null,
     });
     const u = abrir();
     await abrirAjuste(u);
+    expect(screen.queryByText(/^Este exercício está em/)).toBeNull();
+    await u.click(screen.getByRole("radio", { name: "Tempo" }));
     expect(await screen.findByText("Este exercício está em 3 fichas")).toBeVisible();
     expect(
       screen.getByText(
@@ -204,15 +238,70 @@ describe("Ajustar medida e carga (regras 123 e 151 (4))", () => {
     await waitFor(() => expect(chamadasDeAjustar()).toHaveLength(1));
   });
 
-  it("com uma ficha, o aviso fica no singular", async () => {
-    linhasDeFicha = () => ({ data: [{ day_id: "a" }], error: null });
+  it("voltar para Repetições antes de salvar tira o aviso", async () => {
+    linhasDeFicha = () => ({ data: [ficha("a")], error: null });
     const u = abrir();
     await abrirAjuste(u);
-    expect(await screen.findByText("Este exercício está em 1 ficha")).toBeVisible();
+    await u.click(screen.getByRole("radio", { name: "Tempo" }));
+    await screen.findByText("Este exercício está em 1 ficha");
+    await u.click(screen.getByRole("radio", { name: "Repetições" }));
+    expect(screen.queryByText(/^Este exercício está em/)).toBeNull();
+  });
+
+  it("mudar só o modo de carga não avisa", async () => {
+    linhasDeFicha = () => ({ data: [ficha("a")], error: null });
+    const u = abrir();
+    await abrirAjuste(u);
+    await u.click(screen.getByRole("radio", { name: "Não" }));
+    await waitFor(() => expect(consultas.length).toBeGreaterThan(0));
+    await new Promise((fim) => setTimeout(fim, 50));
+    expect(screen.queryByText(/^Este exercício está em/)).toBeNull();
+    // A conta já chegou: o aviso só depende da medida.
+    await u.click(screen.getByRole("radio", { name: "Tempo" }));
+    expect(screen.getByText("Este exercício está em 1 ficha")).toBeVisible();
+  });
+
+  it("de tempo para repetições não avisa", async () => {
+    linhasDeFicha = () => ({ data: [ficha("a")], error: null });
+    const u = abrir();
+    await abrirAjuste(u, "Isometria minha");
+    expect(screen.getByRole("radio", { name: "Tempo" })).toBeChecked();
+    await u.click(screen.getByRole("radio", { name: "Repetições" }));
+    await new Promise((fim) => setTimeout(fim, 50));
+    expect(screen.queryByText(/^Este exercício está em/)).toBeNull();
+  });
+
+  it("conta ativo e agendado; encerrado fica de fora", async () => {
+    linhasDeFicha = () => ({
+      data: [ficha("a"), ficha("b", "w-agendado"), ficha("c", "w-encerrado")],
+      error: null,
+    });
+    const u = abrir();
+    await abrirAjuste(u);
+    await u.click(screen.getByRole("radio", { name: "Tempo" }));
+    expect(await screen.findByText("Este exercício está em 2 fichas")).toBeVisible();
+  });
+
+  it("só em treino encerrado, sem aviso", async () => {
+    linhasDeFicha = () => ({ data: [ficha("c", "w-encerrado")], error: null });
+    const u = abrir();
+    await abrirAjuste(u);
+    await u.click(screen.getByRole("radio", { name: "Tempo" }));
+    await waitFor(() => expect(consultas.length).toBeGreaterThan(0));
+    await new Promise((fim) => setTimeout(fim, 50));
+    expect(screen.queryByText(/^Este exercício está em/)).toBeNull();
   });
 
   it("falha ao contar as fichas vira toast e a tela segue funcionando", async () => {
     linhasDeFicha = () => ({ data: null, error: new ErroApp("forbidden") });
+    const u = abrir();
+    await abrirAjuste(u);
+    expect(await screen.findByText(MENSAGENS.forbidden)).toBeVisible();
+    expect(botao("Salvar")).toBeEnabled();
+  });
+
+  it("falha ao ler os treinos vigentes também vira toast", async () => {
+    vigentes = () => ({ data: null, error: new ErroApp("forbidden") });
     const u = abrir();
     await abrirAjuste(u);
     expect(await screen.findByText(MENSAGENS.forbidden)).toBeVisible();

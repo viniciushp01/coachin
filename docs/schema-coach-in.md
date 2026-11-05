@@ -20,7 +20,7 @@ Arquivos (em `supabase/`):
 | `migrations/20261104110318_save_workout_limits.sql` | 0012 · Regras 149 (4) e 154 (2) (#100): `save_workout` valida semanas de 1 a 104, séries de 1 a 20, repetições ou tempo até 20 caracteres e descanso de 0 a 600; número gigante vira o código, não erro cru de inteiro; descanso em branco grava 0. **Ainda não aplicada no Supabase** (aplicar depois do merge) |
 | `migrations/20261105121922_similar_exercises_order_hidden.sql` | 0013 · Regra 157 (6) e (7) (#93): `similar_exercises` ordena por nome igual, apelido igual, similaridade e nome, e ignora o que quem chama ocultou |
 | `migrations/20261105200000_set_exercise_settings.sql` | 0011 · Regras 123 e 148 (#94): `set_exercise_settings` ajusta medida e modo de carga do exercício do próprio professor; não toca em carga nem histórico. O número foi reservado no #95; o que vale é a ordem pelo timestamp. **Ainda não aplicada no Supabase** (aplicar depois do merge) |
-| `tests/` | Simulação do Supabase, 370 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
+| `tests/` | Simulação do Supabase, 373 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
 
 ## 1. Como o banco funciona (5 ideias)
 

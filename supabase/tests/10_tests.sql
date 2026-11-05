@@ -1230,13 +1230,21 @@ begin
                'ajuste: sem execução para anon; com execução para authenticated');
 end $$;
 
--- O "N" do aviso: a mesma leitura do app, sob a RLS (regra 151 (4)).
+-- O "N" do aviso: a mesma leitura do app, sob a RLS (regra 151 (4)): só treino ativo e agendado.
+create function t.fichas_do_aviso(p_exercise uuid) returns integer language sql stable as $$
+  select count(distinct e.day_id)::integer
+    from public.workout_exercises e
+    join public.workout_days d on d.id = e.day_id
+   where e.exercise_id = p_exercise and d.removed_at is null
+     and d.workout_id in (select current_workout_id from public.teacher_student_list
+                          union select scheduled_workout_id from public.teacher_student_list)
+$$;
+
 do $$
 declare
   v_id uuid;
   v_s  uuid;
   v_w  uuid;
-  v_n  integer;
   v_item jsonb;
   v_dia_a uuid;
 begin
@@ -1253,21 +1261,30 @@ begin
     )));
   v_dia_a := t.dayid(v_w, 'A');
 
-  select count(distinct e.day_id) into v_n
-    from public.workout_exercises e
-    join public.workout_days d on d.id = e.day_id
-   where e.exercise_id = v_id and d.removed_at is null;
-  perform t.ok(v_n = 2, 'aviso: conta fichas, não linhas, e só as que têm o exercício');
+  perform t.ok(t.fichas_do_aviso(v_id) = 2, 'aviso: conta fichas, não linhas, e só as que têm o exercício');
 
   -- Ficha removida sai da conta.
   perform public.save_workout(v_s, v_w, jsonb_build_object(
     'name', 'Aviso', 'start_date', t.today(), 'weeks', 8,
     'days', jsonb_build_array(t.day(v_dia_a, 'Com o exercício duas vezes', array[v_item, v_item]))));
-  select count(distinct e.day_id) into v_n
-    from public.workout_exercises e
-    join public.workout_days d on d.id = e.day_id
-   where e.exercise_id = v_id and d.removed_at is null;
-  perform t.ok(v_n = 1, 'aviso: ficha removida não conta');
+  perform t.ok(t.fichas_do_aviso(v_id) = 1, 'aviso: ficha removida não conta');
+
+  -- Um treino novo encerra o anterior: a ficha continua lá, mas sai da conta.
+  perform t.su();
+  update public.workouts set start_date = t.today() - 30 where id = v_w;
+  perform t.login('t1');
+  perform public.save_workout(v_s, null, jsonb_build_object(
+    'name', 'Novo', 'start_date', t.today(), 'weeks', 8,
+    'days', jsonb_build_array(t.day(null, 'Sem o exercício', array[t.item('Supino reto com barra', 3, '10')]))));
+  perform t.ok(exists (select 1 from public.workout_exercises e where e.exercise_id = v_id),
+               'aviso: a ficha do treino encerrado continua existindo');
+  perform t.ok(t.fichas_do_aviso(v_id) = 0, 'aviso: treino encerrado não conta');
+
+  -- Treino agendado conta.
+  perform public.save_workout(v_s, null, jsonb_build_object(
+    'name', 'Agendado', 'start_date', t.today() + 7, 'weeks', 8,
+    'days', jsonb_build_array(t.day(null, 'Com o exercício', array[v_item]))));
+  perform t.ok(t.fichas_do_aviso(v_id) = 1, 'aviso: treino agendado conta');
 
   -- Outro professor não enxerga as fichas deste.
   perform t.login('t2');
