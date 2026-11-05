@@ -1,10 +1,17 @@
 import { useState, type FormEvent } from "react";
 import { MENSAGENS } from "@/lib/erros";
-import { plural } from "@/lib/listas";
+import { plural, primeiroNome } from "@/lib/listas";
 import { BackButton, BarraFixa, Button, DateField, FormField, Notice, Stepper, Tela } from "@/ui";
 import { formatarData } from "@/ui/datas";
 import type { AlunoDoTreino } from "./alunoDoTreino";
-import { avisoDoInicio, fimDoTreino, SEMANAS_MAX, validarDados, type Rascunho } from "./rascunho";
+import {
+  avisoDoConvite,
+  avisoDoInicio,
+  fimDoTreino,
+  SEMANAS_MAX,
+  validarDados,
+  type Rascunho,
+} from "./rascunho";
 
 type DadosDoTreinoProps = {
   aluno: AlunoDoTreino;
@@ -25,6 +32,12 @@ export function DadosDoTreino({
   const { nome, inicio, semanas, frequencia } = rascunho;
   const [erroNome, setErroNome] = useState<string>();
   const [semanasValidas, setSemanasValidas] = useState(true);
+  const convite = avisoDoConvite({
+    convite: aluno.convite,
+    nome: primeiroNome(aluno.nome),
+    inicio,
+    hoje: aluno.hoje,
+  });
 
   function continuar(evento: FormEvent) {
     evento.preventDefault();
@@ -75,6 +88,11 @@ export function DadosDoTreino({
             temTreinoAtual: aluno.temTreinoAtual,
           })}
         </Notice>
+        {convite && (
+          <Notice tom="info" titulo={convite.titulo}>
+            {convite.texto}
+          </Notice>
+        )}
         <FormField
           rotulo="Frequência sugerida (opcional)"
           placeholder="Ex.: 5x por semana"

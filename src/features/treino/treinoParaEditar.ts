@@ -1,4 +1,5 @@
 import { acoesDoRodape, lerFuso } from "@/features/alunos/alunoVinculado";
+import { conviteDaLista } from "@/features/alunos/conviteDoAluno";
 import { hojeDoAluno } from "@/lib/diaDoAluno";
 import { erroDaResposta } from "@/lib/erros";
 import { supabase } from "@/lib/supabase";
@@ -63,7 +64,7 @@ export function rascunhoDoTreino(treino: TreinoLido, fichas: FichaLida[]): Rascu
 
 /**
  * O treino ativo do aluno, pronto para editar. Nulo se o rodapé da tela dele não oferece "Editar
- * treino" (regras 6 e 76); aluno com convite é o #98.
+ * treino" (regras 6 e 76); aluno com convite também (regra 122).
  */
 export async function lerTreinoParaEditar(
   alunoId: string,
@@ -72,7 +73,7 @@ export async function lerTreinoParaEditar(
   const resposta = await supabase
     .from("teacher_student_list")
     .select(
-      "user_id, name, link_status, current_workout_id, scheduled_workout_id, has_open_request",
+      "user_id, name, link_status, list_status, current_workout_id, scheduled_workout_id, has_open_request",
     )
     .eq("student_id", alunoId)
     .neq("link_status", "archived")
@@ -80,7 +81,7 @@ export async function lerTreinoParaEditar(
   if (resposta.error) throw erroDaResposta(resposta.error);
   const vinculo = resposta.data;
   const treinoId = vinculo?.current_workout_id;
-  if (!vinculo || !treinoId || vinculo.link_status === "invited") return null;
+  if (!vinculo || !treinoId) return null;
 
   const acoes = acoesDoRodape({
     ativo: true,
@@ -115,6 +116,7 @@ export async function lerTreinoParaEditar(
       nome: vinculo.name ?? "",
       hoje: hojeDoAluno(fuso, agora),
       temTreinoAtual: true,
+      convite: vinculo.link_status === "invited" ? conviteDaLista(vinculo.list_status) : null,
     },
     treino: { id: treinoId, rascunho: rascunhoDoTreino(treino.data, fichas.data) },
   };

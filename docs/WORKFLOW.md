@@ -48,7 +48,7 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 
 **Adiados até o piloto responder:**
 
-- **#97 (treino agendado):** no piloto, o professor usa sempre início hoje. Antes do piloto, confirmar como ele troca um treino ativo por outro; se não houver caminho, a parte de "Agendar novo treino" volta.
+- **#94/#95** (ajustar medida e carga). O #98 (treino antes do aceite) foi feito antes do piloto, a pedido (regras 122 e 153), sem o botão "Agendar novo treino", que segue no #97.
 - **#98** (treino antes do aceite) e **#94/#95** (ajustar medida e carga).
 - **Fatias 6, 7 e 10** e, na fatia 5, o aviso de treinar além da frequência, a sugestão de descanso e o pop-up de treino novo.
 
@@ -76,7 +76,7 @@ Cada fatia = telas + funções do banco que ela usa + testes. Ordem sugerida pel
 | 1 | ~~Acesso: criar conta, confirmar e-mail, login, esqueci a senha, sessão, sair~~ Concluída (#8) | Fase 0 | 39, 47 a 51, 78, 83, 88 a 90, 100, 121, 127 a 131 |
 | 2 | ~~Convites e vínculo: administrador → professor; professor → aluno; primeiro acesso~~ Concluída (#39) | 1 | 46 a 49, 57, 58, 79, 82, 91 a 98, 102, 132 a 145 |
 | 3 | ~~Professor: lista de alunos (o cadastro entrou na fatia 2)~~ Concluída (#74) | 2 | 54 a 59, 109, 147 |
-| 4 | ~~Professor: montar e editar treino, biblioteca~~ Concluída para o piloto (#86; adiados #94, #95, #97 e #98) | 3 | 73 a 77, 104 a 107, 111, 118, 122 |
+| 4 | ~~Professor: montar e editar treino, biblioteca~~ Concluída para o piloto (#86; adiados #94, #95 e #97; #98 feito para o piloto) | 3 | 73 a 77, 104 a 107, 111, 118, 122 |
 | 5 | Aluno: início, ficha, marcar como feito, carga | 4 | 1 a 29, 43, 110, 117 |
 | 6 | Aluno: Frequência, Progressão, Histórico, Perfil | 5 | 44, 45, 85, 99 |
 | 7 | Professor acompanha, solicitação de novo treino | 5 | 40, 52, 61 a 72, 103 |

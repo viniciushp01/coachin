@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import type { AlunoDoTreino } from "./alunoDoTreino";
 import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
@@ -79,7 +80,13 @@ vi.stubGlobal("IntersectionObserver", ObservadorInerte);
 // Cada caminho atravessa várias telas digitando: em máquina ocupada, passa dos 5 s padrão.
 vi.setConfig({ testTimeout: 20_000 });
 
-const ALUNO = { id: "a1", nome: "Juliana Costa", hoje: "2026-10-29", temTreinoAtual: false };
+const ALUNO: AlunoDoTreino = {
+  id: "a1",
+  nome: "Juliana Costa",
+  hoje: "2026-10-29",
+  temTreinoAtual: false,
+  convite: null,
+};
 
 /** Faz o papel da rota: guarda os passos como o histórico do navegador. */
 function Caminho() {

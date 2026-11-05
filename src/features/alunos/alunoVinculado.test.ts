@@ -97,6 +97,72 @@ describe("lerTelaDoAluno: a tela sai do status do vínculo", () => {
     expect(tela).toMatchObject({ tela: "convite", dados: { aluno: { nome: "Rafael Torres" } } });
   });
 
+  const conviteLido = (extra?: Record<string, unknown>) => ({
+    id: "i1",
+    status: "pending",
+    expires_at: "2026-11-03T12:00:00Z",
+    created_at: "2026-10-27T12:00:00Z",
+    declined_at: null,
+    email_sent_at: null,
+    ...extra,
+  });
+
+  it("aluno com convite e treino salvo: cartão sem treino feito e Editar treino (regras 122 e 153)", async () => {
+    responder({
+      ...vinculo,
+      user_id: null,
+      link_status: "invited",
+      list_status: "convite_pendente",
+      current_start_date: "2026-10-29",
+      current_end_date: "2026-12-23",
+    });
+    respostas.students = {
+      data: { id: "a1", name: "Rafael Torres", email: null, status: "invited" },
+    };
+    respostas.invites = { data: conviteLido() };
+    const tela = await lerTelaDoAluno("a1", AGORA);
+    expect(tela).toMatchObject({
+      tela: "convite",
+      dados: {
+        treino: {
+          cartao: {
+            nome: "Hipertrofia · Fase 2",
+            situacao: "8 semanas",
+            feitos: 0,
+            progresso: 0,
+            inicio: "29/10",
+            fim: "23/12",
+          },
+          agendado: false,
+          acoes: ["editar", "agendar"],
+        },
+      },
+    });
+    // Antes do aceite não há marcação: nem consulta.
+    expect(consultas.some((c) => c.tabela === "completions")).toBe(false);
+  });
+
+  it("aluno com convite recusado e sem treino: Criar treino", async () => {
+    responder({
+      ...vinculo,
+      user_id: null,
+      link_status: "invited",
+      list_status: "convite_recusado",
+      current_workout_id: null,
+      current_start_date: null,
+      current_end_date: null,
+    });
+    respostas.students = {
+      data: { id: "a1", name: "Rafael Torres", email: null, status: "invited" },
+    };
+    respostas.invites = {
+      data: conviteLido({ status: "declined", declined_at: "2026-10-28T12:00:00Z" }),
+    };
+    expect(await lerTelaDoAluno("a1", AGORA)).toMatchObject({
+      dados: { treino: { cartao: null, agendado: false, acoes: ["criar"] } },
+    });
+  });
+
   it("aluno com convite que já não está visível: nenhuma tela", async () => {
     responder({ ...vinculo, link_status: "invited", list_status: "convite_pendente" });
     respostas.students = { data: null };

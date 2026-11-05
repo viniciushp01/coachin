@@ -1,5 +1,6 @@
 import { hojeDoAluno, progressoDoTreino, semanaDoTreino } from "@/lib/diaDoAluno";
 import { erroDaResposta } from "@/lib/erros";
+import { plural } from "@/lib/listas";
 import { supabase } from "@/lib/supabase";
 import { lerAlunoComConvite } from "./alunosComConvite";
 import type { AlunoComConvite } from "./conviteDoAluno";
@@ -80,32 +81,17 @@ export async function lerTelaDoAluno(
   const aluno = resposta.data;
   if (!aluno) return null;
 
-  if (aluno.link_status === "invited") {
+  const convite = aluno.link_status === "invited";
+  if (convite) {
     const dados = await lerAlunoComConvite(alunoId, agora);
-    return dados && { tela: "convite", dados };
+    if (!dados) return null;
+    // O treino montado antes do aceite aparece abaixo do convite (regras 122 e 153).
+    const { cartao, agendado } = await lerCartaoDoTreino(aluno, agora, true);
+    const acoes = acoesDoRodape({ ativo: cartao !== null, agendado, pedido: false });
+    return { tela: "convite", dados: { ...dados, treino: { cartao, agendado, acoes } } };
   }
 
-  const { current_workout_id: treinoId, current_start_date: inicio, current_end_date: fim } = aluno;
-  const agendado = aluno.scheduled_workout_id !== null;
-  let treino: TreinoDoCartao | null = null;
-  if (treinoId && inicio && fim) {
-    const [fuso, feitos] = await Promise.all([
-      lerFuso(aluno.user_id),
-      contarTreinosFeitos(treinoId),
-    ]);
-    const hoje = hojeDoAluno(fuso, agora);
-    const semana = semanaDoTreino(inicio, fim, hoje);
-    treino = {
-      nome: aluno.current_workout_name ?? "",
-      situacao: aluno.current_concluded
-        ? "Treino concluído"
-        : `Semana ${semana.atual} de ${semana.total}`,
-      progresso: aluno.current_concluded ? 1 : progressoDoTreino(inicio, fim, hoje),
-      feitos,
-      inicio: diaEMes(inicio),
-      fim: diaEMes(fim),
-    };
-  }
+  const { cartao: treino, agendado } = await lerCartaoDoTreino(aluno, agora, false);
   return {
     tela: "vinculado",
     dados: {
@@ -121,4 +107,45 @@ export async function lerTelaDoAluno(
       }),
     },
   };
+}
+
+type LinhaDoTreino = {
+  user_id: string | null;
+  current_workout_id: string | null;
+  current_workout_name: string | null;
+  current_start_date: string | null;
+  current_end_date: string | null;
+  current_concluded: boolean | null;
+  scheduled_workout_id: string | null;
+};
+
+/**
+ * O cartão do treino ativo e se há um agendado. Antes do aceite não há conta, então não há fuso
+ * (vale São Paulo, regra 122) nem treino feito (marcação só depois do aceite, regra 79).
+ */
+async function lerCartaoDoTreino(aluno: LinhaDoTreino, agora: Date, semConta: boolean) {
+  const { current_workout_id: treinoId, current_start_date: inicio, current_end_date: fim } = aluno;
+  const agendado = aluno.scheduled_workout_id !== null;
+  let cartao: TreinoDoCartao | null = null;
+  if (treinoId && inicio && fim) {
+    const [fuso, feitos] = await Promise.all([
+      lerFuso(aluno.user_id),
+      semConta ? 0 : contarTreinosFeitos(treinoId),
+    ]);
+    const hoje = hojeDoAluno(fuso, agora);
+    const semana = semanaDoTreino(inicio, fim, hoje);
+    cartao = {
+      nome: aluno.current_workout_name ?? "",
+      situacao: semConta
+        ? plural(semana.total, "semana", "semanas")
+        : aluno.current_concluded
+          ? "Treino concluído"
+          : `Semana ${semana.atual} de ${semana.total}`,
+      progresso: semConta ? 0 : aluno.current_concluded ? 1 : progressoDoTreino(inicio, fim, hoje),
+      feitos,
+      inicio: diaEMes(inicio),
+      fim: diaEMes(fim),
+    };
+  }
+  return { cartao, agendado };
 }

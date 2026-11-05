@@ -43,6 +43,7 @@ describe("lerAlunoDoTreino", () => {
       nome: "Juliana Costa",
       hoje: "2026-10-30",
       temTreinoAtual: false,
+      convite: null,
     });
   });
 
@@ -54,8 +55,26 @@ describe("lerAlunoDoTreino", () => {
   });
 
   it.each([
+    ["convite_pendente", "pendente"],
+    ["convite_expirado", "expirado"],
+    ["convite_recusado", "recusado"],
+  ])(
+    "aluno com convite (%s) também recebe treino antes do aceite (regra 122)",
+    async (lista, convite) => {
+      respostas.teacher_student_list = {
+        data: { ...vinculo, user_id: null, link_status: "invited", list_status: lista },
+      };
+      // Sem conta não há fuso: vale São Paulo (29/10 22:00).
+      expect(await lerAlunoDoTreino("a1", AGORA)).toMatchObject({
+        convite,
+        temTreinoAtual: false,
+        hoje: "2026-10-29",
+      });
+    },
+  );
+
+  it.each([
     ["não existe", null],
-    ["ainda tem convite (#98)", { ...vinculo, link_status: "invited" }],
     ["tem treino ativo sem pedido", { ...vinculo, current_workout_id: "w1" }],
     ["tem treino agendado", { ...vinculo, scheduled_workout_id: "w2" }],
   ])("nulo quando o aluno %s: o rodapé não oferece criar", async (_, data) => {

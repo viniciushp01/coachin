@@ -9,6 +9,8 @@ type ActiveWorkoutCardProps = {
   /** Datas já em "dd/mm". */
   inicio: string;
   fim: string;
+  /** O título do cartão; "Treino salvo" no treino montado antes do aceite (regra 153). */
+  rotulo?: string;
 };
 
 /**
@@ -22,12 +24,13 @@ export function ActiveWorkoutCard({
   feitos,
   inicio,
   fim,
+  rotulo = "Treino ativo",
 }: ActiveWorkoutCardProps) {
   const porcento = progresso * 100;
   return (
     <section className="flex w-full flex-col gap-16 rounded-card bg-bg-surface p-20">
       <div className="flex flex-col gap-4">
-        <p className="text-overline text-text-secondary">Treino ativo</p>
+        <p className="text-overline text-text-secondary">{rotulo}</p>
         <p className="truncate text-title-md text-text-primary">{nome}</p>
       </div>
       <div className="flex items-center justify-between gap-16">

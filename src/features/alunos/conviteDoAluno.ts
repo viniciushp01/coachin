@@ -1,5 +1,6 @@
 import type { Database } from "@db/database.types";
 import type { TomChip } from "@/ui";
+import type { AcaoDoRodape, TreinoDoCartao } from "./alunoVinculado";
 
 /** As colunas do convite que a visão do professor usa (leitura com a RLS dele). */
 export const COLUNAS_DO_CONVITE = "id, status, expires_at, created_at, declined_at, email_sent_at";
@@ -12,6 +13,8 @@ export type ConviteDoAluno = Pick<
 export type AlunoComConvite = {
   aluno: { id: string; nome: string; email: string | null };
   convite: ConviteDoAluno;
+  /** O treino que o professor já montou antes do aceite (regras 122 e 153). */
+  treino?: TreinoDoAlunoComConvite;
 };
 
 export type EstadoDoConvite = "pendente" | "expirado" | "recusado" | "usado" | "substituido";
@@ -59,4 +62,24 @@ export function textoDaRecusa(convite: Pick<ConviteDoAluno, "declined_at">): str
 /** "dd/mm" no fuso do aparelho (ex.: "Convite válido até 03/11"). */
 export function dataCurta(iso: string): string {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
+
+export type TreinoDoAlunoComConvite = {
+  cartao: TreinoDoCartao | null;
+  agendado: boolean;
+  acoes: AcaoDoRodape[];
+};
+
+/** O estado do convite que a Lista informa (`list_status`); nulo para quem já ativou o acesso. */
+export function conviteDaLista(statusDaLista: string | null | undefined): EstadoVisivel | null {
+  switch (statusDaLista) {
+    case "convite_pendente":
+      return "pendente";
+    case "convite_expirado":
+      return "expirado";
+    case "convite_recusado":
+      return "recusado";
+    default:
+      return null;
+  }
 }

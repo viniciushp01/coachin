@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import type { AlunoDoTreino } from "./alunoDoTreino";
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
@@ -131,15 +132,16 @@ class ObservadorInerte {
 vi.stubGlobal("ResizeObserver", ObservadorInerte);
 vi.stubGlobal("IntersectionObserver", ObservadorInerte);
 
-const JULIANA = {
+const JULIANA: AlunoDoTreino = {
   id: "a1",
   nome: "Juliana Costa",
   hoje: "2026-10-29",
   temTreinoAtual: true,
+  convite: null,
 };
 
 /** Faz o papel da rota: guarda os passos como o histórico do navegador. */
-function Caminho({ aluno, treino }: { aluno: typeof JULIANA; treino?: TreinoParaEditar }) {
+function Caminho({ aluno, treino }: { aluno: AlunoDoTreino; treino?: TreinoParaEditar }) {
   const [pilha, setPilha] = useState<PassoDoTreino[]>([treino ? "fichas" : "dados"]);
   return (
     <CriarTreinoPage
@@ -1000,6 +1002,47 @@ describe("Voltar do aparelho (regra 107)", () => {
     await screen.findByRole("heading", { name: "Treino salvo" });
     expect(voltarDoAparelho({ routeId: "/outra", search: {} })).toBe(false);
     semFolhaDescartar();
+  });
+});
+
+describe("Aluno que ainda não aceitou o convite (regras 122 e 153)", () => {
+  const SEM_ACEITE: AlunoDoTreino = { ...JULIANA, temTreinoAtual: false, convite: "pendente" };
+
+  it("Dados avisa que o treino começa a contar antes do aceite, só com início hoje", async () => {
+    const u = abrir(SEM_ACEITE);
+    expect(screen.getByText("Juliana ainda não aceitou o convite")).toBeVisible();
+    expect(
+      screen.getByText("O treino começa a contar na data de início, mesmo antes do aceite."),
+    ).toBeVisible();
+    await u.click(botao("Início: Hoje · 29/10/2026"));
+    await u.click(botao("30 de outubro de 2026"));
+    await u.click(botao("Confirmar início"));
+    expect(screen.queryByText("Juliana ainda não aceitou o convite")).not.toBeInTheDocument();
+  });
+
+  it("convite recusado: o treino fica guardado até um novo convite ser aceito", () => {
+    abrir({ ...SEM_ACEITE, convite: "recusado" });
+    expect(screen.getByText("Juliana recusou o convite")).toBeVisible();
+    expect(
+      screen.getByText("O treino fica guardado até um novo convite ser aceito."),
+    ).toBeVisible();
+  });
+
+  it("aluno com acesso não vê o aviso", () => {
+    abrir();
+    expect(screen.queryByText(/ainda não aceitou/)).not.toBeInTheDocument();
+  });
+
+  it("Treino salvo diz que começa a contar hoje, mesmo antes do aceite", async () => {
+    const u = abrir(SEM_ACEITE);
+    await irParaFichas(u);
+    await fichaCompleta(u, "Peito");
+    await u.click(botao("Salvar treino"));
+    expect(
+      await screen.findByText(
+        "O treino de Juliana já está salvo. Começa a contar hoje, mesmo antes do aceite.",
+      ),
+    ).toBeVisible();
   });
 });
 
