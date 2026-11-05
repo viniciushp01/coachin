@@ -16,6 +16,7 @@ export { Notice } from "./Notice";
 // entraria no pacote de todas as telas.
 export { SearchField } from "./SearchField";
 export { SectionRow } from "./SectionRow";
+export { SegmentedControl } from "./SegmentedControl";
 export { SeletorDeData } from "./SeletorDeData";
 export { Sheet } from "./Sheet";
 export { StepIndicator } from "./StepIndicator";

@@ -7,8 +7,21 @@ export type ModoDeCarga = "required" | "optional" | "none";
 
 const SEU_EXERCICIO = "Seu exercício";
 
-/** O mais parecido com o nome (regra 74: olha nome e apelido); `null` se não houver. */
-export async function procurarParecido(nome: string): Promise<ExercicioDaBusca | null> {
+export type ExercicioParecido = ExercicioDaBusca & {
+  /** Nome igual ao digitado: o servidor recusaria criar (regra 157 (9)); apelido igual não conta. */
+  mesmoNome: boolean;
+};
+
+/**
+ * O mesmo que `private.normalize_name` faz no banco. Se divergir num caractere raro, só cai no aviso
+ * normal, e "Criar exercício" recebe `exercise_exists`.
+ */
+function normalizarNome(nome: string) {
+  return nome.trim().replace(/\s+/g, " ").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+}
+
+/** O primeiro do aviso (regra 157 (6): nome igual, apelido igual, similaridade); `null` se não houver. */
+export async function procurarParecido(nome: string): Promise<ExercicioParecido | null> {
   const [parecido] = await rpc("similar_exercises", { p_name: nome });
   if (!parecido) return null;
   return {
@@ -16,6 +29,7 @@ export async function procurarParecido(nome: string): Promise<ExercicioDaBusca |
     nome: parecido.name,
     medida: parecido.measure as Medida,
     detalhe: parecido.owner_id ? SEU_EXERCICIO : (parecido.muscle_group ?? ""),
+    mesmoNome: parecido.name_normalized === normalizarNome(nome),
   };
 }
 

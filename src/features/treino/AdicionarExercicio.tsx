@@ -3,7 +3,7 @@ import { erroDaResposta } from "@/lib/erros";
 import { BackButton, SearchField, SectionRow, Tela, TextButton, useToast } from "@/ui";
 import { buscarExercicios, type ExercicioDaBusca } from "./biblioteca";
 import { CriarExercicio } from "./CriarExercicio";
-import { procurarParecido } from "./exercicioNovo";
+import { procurarParecido, type ExercicioParecido } from "./exercicioNovo";
 import { FolhaDoExercicio } from "./FolhaDoExercicio";
 import { novoExercicio, tituloDaFicha, type ExercicioDoRascunho, type Ficha } from "./rascunho";
 
@@ -34,7 +34,7 @@ export function AdicionarExercicio({
   const [escolhido, setEscolhido] = useState<ExercicioDaBusca | null>(null);
   const [criacao, setCriacao] = useState<{
     nome: string;
-    parecido: ExercicioDaBusca | null;
+    parecido: ExercicioParecido | null;
   } | null>(null);
   const [procurandoParecido, setProcurandoParecido] = useState(false);
   /** Muda ao voltar da criação: o exercício novo precisa aparecer na busca. */

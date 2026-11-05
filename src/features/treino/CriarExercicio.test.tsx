@@ -11,12 +11,14 @@ import { CriarTreinoPage, type PassoDoTreino } from "./CriarTreinoPage";
 vi.mock("@tanstack/react-router", async (original) => ({
   ...(await original<typeof import("@tanstack/react-router")>()),
   useNavigate: () => vi.fn(),
+  useBlocker: () => {},
 }));
 
 const SUPINO = {
   id: "ex-supino",
   name: "Supino reto",
   measure: "reps",
+  name_normalized: "supino reto",
   muscle_group: "Peito",
   owner_id: null,
 };
@@ -114,7 +116,7 @@ async function tocarEmCriar(texto: string) {
   const u = userEvent.setup();
   await abrirBusca(u);
   await u.type(screen.getByRole("searchbox", { name: "Buscar exercício" }), texto);
-  await u.click(botao(`Criar “${texto.trim()}” como novo exercício`));
+  await u.click(botao(`Criar “${texto.trim().replace(/\s+/g, " ")}” como novo exercício`));
   return u;
 }
 
@@ -224,6 +226,18 @@ describe("Sem parecido (regra 151 (3))", () => {
     expect(screen.getByText("3 séries · 30 s")).toBeVisible();
   });
 
+  it("Cancelar descarta o nome editado: a busca e o Criar voltam ao texto de antes", async () => {
+    const u = await tocarEmCriar("Remada");
+    await titulo("Novo exercício");
+    await u.type(screen.getByLabelText("Nome do exercício"), " baixa");
+    await u.click(botao("Cancelar"));
+    await titulo("Adicionar exercício");
+    expect(screen.getByRole("searchbox", { name: "Buscar exercício" })).toHaveValue("Remada");
+    await u.click(botao("Criar “Remada” como novo exercício"));
+    await titulo("Novo exercício");
+    expect(screen.getByLabelText("Nome do exercício")).toHaveValue("Remada");
+  });
+
   it("o nome ainda pode ser corrigido antes de criar", async () => {
     const u = await tocarEmCriar("Remad");
     await titulo("Novo exercício");
@@ -301,6 +315,52 @@ describe("Já existe um exercício parecido (regras 32, 74 e 151 (3))", () => {
     ).toBeVisible();
   });
 
+  it("nome igual (normalizado) não oferece Criar mesmo assim (regra 157 (9))", async () => {
+    const u = await tocarEmCriar("  SUPÍNO   reto ");
+    await screen.findByText("Esse nome já existe");
+    expect(
+      screen.getByText("Supino reto · Peito. Use o existente ou volte e mude o nome."),
+    ).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Criar mesmo assim" })).toBeNull();
+    expect(screen.queryByText("Já existe um exercício parecido")).toBeNull();
+    await u.click(botao("Usar “Supino reto”"));
+    expect(await screen.findByRole("dialog", { name: "Supino reto" })).toBeVisible();
+    expect(chamadas("create_exercise")).toEqual([]);
+  });
+
+  it("nome igual ao de um exercício próprio mostra Seu exercício, sem Criar mesmo assim", async () => {
+    parecidos = () => [
+      {
+        ...SUPINO,
+        name: "Meu supino",
+        name_normalized: "meu supino",
+        muscle_group: null,
+        owner_id: "p1",
+      },
+    ];
+    await tocarEmCriar("Meu supino");
+    expect(
+      await screen.findByText(
+        "Meu supino · Seu exercício. Use o existente ou volte e mude o nome.",
+      ),
+    ).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Criar mesmo assim" })).toBeNull();
+  });
+
+  it("apelido igual não conta como mesmo nome: segue com Criar mesmo assim", async () => {
+    parecidos = () => [
+      {
+        ...SUPINO,
+        name: "Puxada alta aberta",
+        name_normalized: "puxada alta aberta",
+        muscle_group: "Costas",
+      },
+    ];
+    await tocarEmCriar("Pulley");
+    await screen.findByText("Já existe um exercício parecido");
+    expect(botao("Criar mesmo assim")).toBeVisible();
+  });
+
   it("Usar não cria nada e entra na ficha com a medida do existente", async () => {
     parecidos = () => [{ ...SUPINO, id: "ex-prancha", name: "Prancha frontal", measure: "time" }];
     const u = await tocarEmCriar("Prancha");
@@ -355,9 +415,9 @@ describe("Erros ao criar", () => {
     await waitFor(() => expect(chamadas("create_exercise")).toHaveLength(1));
   }
 
-  it("exercise_exists aparece no nome e não abre a folha", async () => {
+  it("exercise_exists aparece no nome e não abre a folha (regra 157 (8))", async () => {
     await criarComErro("exercise_exists");
-    expect(await screen.findByText(MENSAGENS.exercise_exists)).toBeVisible();
+    expect(await screen.findByText("Esse nome já existe. Confira os ocultos.")).toBeVisible();
     expect(screen.getByLabelText("Nome do exercício")).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByRole("heading", { name: "Novo exercício" })).toBeVisible();
     expect(screen.queryByRole("dialog")).toBeNull();
