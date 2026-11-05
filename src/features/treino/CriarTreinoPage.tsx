@@ -9,9 +9,11 @@ import { DadosDoTreino } from "./DadosDoTreino";
 import { EditarFicha } from "./EditarFicha";
 import { FichasDoTreino } from "./FichasDoTreino";
 import { FolhaDescartar } from "./FolhaDescartar";
+import { FolhaRemoverFicha } from "./FolhaRemoverFicha";
 import {
   criarRascunho,
   fichaMudou,
+  letraDaFichaAberta,
   mudou,
   novaFicha,
   paraSaveWorkout,
@@ -22,6 +24,7 @@ import {
   type Ficha,
   type Rascunho,
 } from "./rascunho";
+import type { TreinoParaEditar } from "./treinoParaEditar";
 import { TreinoSalvo } from "./TreinoSalvo";
 
 /** As telas cheias do fluxo, que a rota guarda no histórico para o "voltar" do aparelho. */
@@ -38,8 +41,16 @@ const DESCARTAR_TREINO = {
   texto: "Se você sair agora, o que montou até aqui se perde.",
 };
 
+// Figma "Editar treino · 4".
+const DESCARTAR_EDICAO = {
+  titulo: "O treino atual continua como está",
+  texto: "As mudanças feitas agora não são salvas.",
+};
+
 type CriarTreinoPageProps = {
   aluno: AlunoDoTreino;
+  /** O treino ativo a editar (regras 6 e 76); sem ele, cria um novo. */
+  treino?: TreinoParaEditar;
   passo: PassoDoTreino;
   irPara: (passo: PassoDoTreino) => void;
   /** Volta um passo no histórico, sem passar pela pergunta de descartar. */
@@ -51,21 +62,20 @@ type CriarTreinoPageProps = {
  * O rascunho só existe aqui, na memória: só "Salvar treino" grava, e voltar com alteração pergunta
  * antes (regra 107). Figma "Professor · Treino", seções 1, 2, 5, 6 e 8.
  */
-export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPageProps) {
+export function CriarTreinoPage({ aluno, treino, passo, irPara, voltar }: CriarTreinoPageProps) {
   const navegar = useNavigate();
   const mostrarToast = useToast();
-  const [inicial] = useState(() => criarRascunho(aluno.hoje));
+  const [inicial] = useState(() => treino?.rascunho ?? criarRascunho(aluno.hoje));
   const [rascunho, setRascunho] = useState(inicial);
-  const [dadosConfirmados, setDadosConfirmados] = useState(false);
+  const [dadosConfirmados, setDadosConfirmados] = useState(treino !== undefined);
   /** A cópia da ficha aberta em Editar ficha: só entra no rascunho em "Salvar ficha". */
   const [edicao, setEdicao] = useState<Ficha | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState<Rascunho | null>(null);
   const [descarte, setDescarte] = useState<"ficha" | "treino" | null>(null);
+  const [removendo, setRemovendo] = useState(false);
 
-  // A ficha nova ainda não está no rascunho: a posição dela é depois da última.
-  const salvaEm = edicao ? rascunho.fichas.findIndex((f) => f.id === edicao.id) : -1;
-  const indice = salvaEm >= 0 ? salvaEm : rascunho.fichas.length;
+  const letra = edicao ? letraDaFichaAberta(rascunho, edicao) : "";
   const editandoFicha = dadosConfirmados && edicao !== null && passo === "ficha";
   const alterouFicha = editandoFicha && fichaMudou(rascunho, edicao);
   const treinoMudou = mudou(inicial, rascunho);
@@ -118,15 +128,32 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
       await rpc("save_workout", {
         p_student_id: aluno.id,
         // Nulo cria o treino; os tipos gerados não sabem que o parâmetro aceita nulo.
-        p_workout_id: null as unknown as string,
+        p_workout_id: (treino?.id ?? null) as unknown as string,
         p_data: paraSaveWorkout(rascunho),
       });
-      setSalvo(rascunho);
+      if (treino) {
+        mostrarToast("success", "Alterações salvas.");
+        void navegar({
+          to: "/professor/alunos/$alunoId",
+          params: { alunoId: aluno.id },
+          replace: true,
+        });
+      } else {
+        setSalvo(rascunho);
+      }
     } catch (causa) {
       mostrarToast("error", erroDaResposta(causa).message);
     } finally {
       setSalvando(false);
     }
+  }
+
+  function removerFichaAberta() {
+    if (!edicao) return;
+    setRascunho(removerFicha(rascunho, edicao.id));
+    setRemovendo(false);
+    setEdicao(null);
+    voltar();
   }
 
   function abrirFicha(ficha: Ficha) {
@@ -158,7 +185,7 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
       return (
         <AdicionarExercicio
           ficha={edicao}
-          indice={indice}
+          letra={letra}
           criando={passo === "novo-exercicio"}
           aoCriar={() => irPara("novo-exercicio")}
           emOcultos={passo === "ocultos"}
@@ -176,7 +203,7 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
       return (
         <EditarFicha
           ficha={edicao}
-          indice={indice}
+          letra={letra}
           aoMudar={setEdicao}
           aoVoltar={voltarDaFicha}
           aoAdicionarExercicio={() => irPara("adicionar")}
@@ -184,11 +211,8 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
             setRascunho(salvarFicha(rascunho, edicao));
             voltar();
           }}
-          aoRemover={() => {
-            setRascunho(removerFicha(rascunho, edicao.id));
-            setEdicao(null);
-            voltar();
-          }}
+          // Ficha já no banco pode ter marcações: pergunta antes (regra 149 (2) vale para a nova).
+          aoRemover={() => (edicao.letra ? setRemovendo(true) : removerFichaAberta())}
         />
       );
     }
@@ -196,6 +220,13 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
     return (
       <FichasDoTreino
         rascunho={rascunho}
+        textos={
+          treino && {
+            titulo: "Editar treino",
+            apoio: `${aluno.nome} · ${rascunho.nome}. Você altera o treino ativo, sem criar outro.`,
+            salvar: "Salvar alterações",
+          }
+        }
         salvando={salvando}
         aoVoltar={sairDoFluxo}
         aoAbrirFicha={abrirFicha}
@@ -211,9 +242,17 @@ export function CriarTreinoPage({ aluno, passo, irPara, voltar }: CriarTreinoPag
       {telaDoPasso()}
       <FolhaDescartar
         aberta={descarte !== null}
-        aviso={descarte === "ficha" ? DESCARTAR_FICHA : DESCARTAR_TREINO}
+        aviso={
+          descarte === "ficha" ? DESCARTAR_FICHA : treino ? DESCARTAR_EDICAO : DESCARTAR_TREINO
+        }
         aoContinuar={() => setDescarte(null)}
         aoDescartar={descartar}
+      />
+      <FolhaRemoverFicha
+        aberta={removendo}
+        letra={letra}
+        aoManter={() => setRemovendo(false)}
+        aoRemover={removerFichaAberta}
       />
     </>
   );

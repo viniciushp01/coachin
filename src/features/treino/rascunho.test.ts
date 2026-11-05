@@ -6,6 +6,8 @@ import {
   fichaMudou,
   fimDoTreino,
   letraDaFicha,
+  letraDaFichaAberta,
+  letrasDasFichas,
   mudou,
   novaFicha,
   novoExercicio,
@@ -95,6 +97,7 @@ describe("Rascunho novo", () => {
       inicio: HOJE,
       semanas: 8,
       frequencia: "",
+      letrasUsadas: 0,
       fichas: [],
     });
   });
@@ -116,14 +119,14 @@ describe("Letras acompanham a posição até o primeiro salvamento (regra 149 (3
   it("remover a primeira ficha faz a segunda virar A", () => {
     const r = comFichas(["Peito", "Costas", "Pernas"]);
     const sem = removerFicha(r, r.fichas[0]!.id);
-    expect(sem.fichas.map((f, i) => tituloDaFicha(f, i))).toEqual([
+    expect(sem.fichas.map((f, i) => tituloDaFicha(f, letraDaFicha(i)))).toEqual([
       "Ficha A · Costas",
       "Ficha B · Pernas",
     ]);
   });
 
   it("ficha sem nome mostra só a letra", () => {
-    expect(tituloDaFicha(novaFicha(), 0)).toBe("Ficha A");
+    expect(tituloDaFicha(novaFicha(), "A")).toBe("Ficha A");
   });
 });
 
@@ -219,7 +222,7 @@ describe("Reordenar (regras 66 e 149 (3))", () => {
     const r = comFichas(["Peito", "Costas", "Pernas"]);
     const [peito, costas, pernas] = r.fichas;
     const novo = reordenarFichas(r, [pernas!, peito!, costas!]);
-    expect(novo.fichas.map(tituloDaFicha)).toEqual([
+    expect(novo.fichas.map((f, i) => tituloDaFicha(f, letraDaFicha(i)))).toEqual([
       "Ficha A · Pernas",
       "Ficha B · Peito",
       "Ficha C · Costas",
@@ -435,5 +438,44 @@ describe("paraSaveWorkout (migration 0012)", () => {
       rest_seconds: 0,
       note: null,
     });
+  });
+});
+
+describe("letras ao editar o treino ativo (regra 111)", () => {
+  const exercicio = novoExercicio(
+    { id: "ex", nome: "Supino", medida: "reps" },
+    { series: 3, reps: "10", descanso: 0, observacao: "" },
+  );
+  // A letra B já foi removida: letters_used continua em 3.
+  const treino = {
+    ...criarRascunho("2026-10-29"),
+    letrasUsadas: 3,
+    fichas: [
+      { id: "d-a", letra: "A", nome: "Peito", exercicios: [exercicio] },
+      { id: "d-c", letra: "C", nome: "Pernas", exercicios: [exercicio] },
+    ],
+  };
+
+  it("as fichas mantêm a letra, e a nova não reaproveita a removida", () => {
+    const nova = { ...novaFicha(), nome: "Costas", exercicios: [exercicio] };
+    const comNova = salvarFicha(treino, nova);
+    expect(letrasDasFichas(comNova)).toEqual(["A", "C", "D"]);
+    expect(letrasDasFichas(removerFicha(comNova, "d-a"))).toEqual(["C", "D"]);
+  });
+
+  it("a ficha nova aberta, ainda fora do rascunho, já mostra a próxima letra", () => {
+    expect(letraDaFichaAberta(treino, novaFicha())).toBe("D");
+    expect(letraDaFichaAberta(treino, treino.fichas[1]!)).toBe("C");
+  });
+
+  it("o aviso de ficha vazia cita a letra de verdade", () => {
+    const vazia = salvarFicha(treino, { ...treino.fichas[1]!, exercicios: [] });
+    expect(validarTreino(vazia)).toMatchObject({ tipo: "ficha_sem_exercicio", letra: "C" });
+  });
+
+  it("no p_data, a ficha do banco leva o id e a nova vai sem", () => {
+    const nova = { ...novaFicha(), nome: "Costas", exercicios: [exercicio] };
+    const dias = paraSaveWorkout(salvarFicha(treino, nova)).days;
+    expect(dias.map((d) => d.id)).toEqual(["d-a", "d-c", null]);
   });
 });

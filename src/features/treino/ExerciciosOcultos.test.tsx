@@ -66,7 +66,7 @@ function Caminho() {
   return (
     <AdicionarExercicio
       ficha={FICHA}
-      indice={0}
+      letra="A"
       criando={false}
       aoCriar={() => {}}
       emOcultos={emOcultos}

@@ -12,6 +12,7 @@ type DestinoDaAcao = (alunoId: string) => NavigateOptions;
  */
 const DESTINOS: Partial<Record<AcaoDoRodape, DestinoDaAcao>> = {
   criar: (alunoId) => ({ to: "/professor/alunos/$alunoId/criar-treino", params: { alunoId } }),
+  editar: (alunoId) => ({ to: "/professor/alunos/$alunoId/editar-treino", params: { alunoId } }),
 };
 
 /** Rótulos do Figma: só "Criar treino" é o botão principal (regra 68; design.md, barra fixa). */

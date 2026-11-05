@@ -20,13 +20,21 @@ export type ExercicioDoRascunho = {
   observacao: string;
 };
 
-export type Ficha = { id: string; nome: string; exercicios: ExercicioDoRascunho[] };
+export type Ficha = {
+  id: string;
+  /** Só na ficha que já está no banco: `id` é o dela, e a letra não muda (regra 111). */
+  letra?: string;
+  nome: string;
+  exercicios: ExercicioDoRascunho[];
+};
 
 export type Rascunho = {
   nome: string;
   inicio: string;
   semanas: number;
   frequencia: string;
+  /** `letters_used`: a próxima ficha nova parte daqui, e letra removida não volta (regra 111). */
+  letrasUsadas: number;
   fichas: Ficha[];
 };
 
@@ -42,7 +50,7 @@ const novoId = () => `local-${++ultimoId}`;
 
 /** Sem regra para o padrão de semanas: 8 é o valor de todas as telas de Dados no Figma. */
 export function criarRascunho(hoje: string): Rascunho {
-  return { nome: "", inicio: hoje, semanas: 8, frequencia: "", fichas: [] };
+  return { nome: "", inicio: hoje, semanas: 8, frequencia: "", letrasUsadas: 0, fichas: [] };
 }
 
 // Fim e aviso ---------------------------------------------------------------------------------
@@ -92,11 +100,26 @@ export function letraDaFicha(indice: number) {
   return letra;
 }
 
+/** As letras na ordem das fichas, iguais às que `save_workout` vai dar. */
+export function letrasDasFichas({
+  fichas,
+  letrasUsadas,
+}: Pick<Rascunho, "fichas" | "letrasUsadas">) {
+  let proxima = letrasUsadas;
+  return fichas.map((ficha) => ficha.letra ?? letraDaFicha(proxima++));
+}
+
+/** A letra da ficha aberta; a nova ainda fora do rascunho entra depois da última. */
+export function letraDaFichaAberta(r: Pick<Rascunho, "fichas" | "letrasUsadas">, ficha: Ficha) {
+  const posicao = r.fichas.findIndex((f) => f.id === ficha.id);
+  if (posicao >= 0) return letrasDasFichas(r)[posicao]!;
+  return letrasDasFichas({ ...r, fichas: [...r.fichas, ficha] }).at(-1)!;
+}
+
 /** "Ficha A · Peito e tríceps"; ainda sem nome, "Ficha A". */
-export function tituloDaFicha(ficha: Pick<Ficha, "nome">, indice: number) {
+export function tituloDaFicha(ficha: Pick<Ficha, "nome">, letra: string) {
   const nome = ficha.nome.trim();
-  const letra = `Ficha ${letraDaFicha(indice)}`;
-  return nome ? `${letra} · ${nome}` : letra;
+  return nome ? `Ficha ${letra} · ${nome}` : `Ficha ${letra}`;
 }
 
 // Fichas e exercícios -------------------------------------------------------------------------
@@ -196,13 +219,14 @@ export type ErroDoTreino =
   | { tipo: "ficha_sem_exercicio"; letra: string; fichas: string[] };
 
 /** O erro de "Salvar treino" (regra 104); nulo se pode salvar. */
-export function validarTreino({ fichas }: Pick<Rascunho, "fichas">): ErroDoTreino | null {
+export function validarTreino(r: Pick<Rascunho, "fichas" | "letrasUsadas">): ErroDoTreino | null {
+  const { fichas } = r;
   if (fichas.length === 0) return { tipo: "sem_ficha" };
   const primeira = fichas.findIndex((f) => f.exercicios.length === 0);
   if (primeira < 0) return null;
   return {
     tipo: "ficha_sem_exercicio",
-    letra: letraDaFicha(primeira),
+    letra: letrasDasFichas(r)[primeira]!,
     fichas: fichas.filter((f) => f.exercicios.length === 0).map((f) => f.id),
   };
 }
@@ -251,7 +275,7 @@ export function paraSaveWorkout(r: Rascunho) {
     weeks: r.semanas,
     suggested_frequency: r.frequencia.trim() || null,
     days: r.fichas.map((ficha) => ({
-      id: null,
+      id: ficha.letra ? ficha.id : null,
       name: ficha.nome.trim(),
       exercises: ficha.exercicios.map((e) => ({
         exercise_id: e.exercicioId,
