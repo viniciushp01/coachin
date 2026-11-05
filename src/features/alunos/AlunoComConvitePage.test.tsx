@@ -85,7 +85,7 @@ describe("Convite pendente (regras 55 e 58)", () => {
       await screen.findByText("E-mail não enviado. Copie o link e envie por WhatsApp."),
     ).toBeVisible();
     await usuario.click(screen.getByRole("button", { name: "Copiar link" }));
-    expect(copiar).toHaveBeenCalledWith(`${window.location.origin}/convite/tok-novo`);
+    expect(copiar).toHaveBeenCalledWith(`${window.location.origin}/c/tok-novo`);
   });
 
   it('enviado há 18 s: "Reenviar em 42 s" desabilitado (regra 139, tela 4)', () => {

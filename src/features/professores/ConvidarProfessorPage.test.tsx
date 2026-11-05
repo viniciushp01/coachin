@@ -126,7 +126,7 @@ describe("Convite gerado do professor (regra 92)", () => {
       ),
     ).toBeVisible();
     await usuario.click(screen.getByRole("button", { name: "Copiar link" }));
-    expect(copiar).toHaveBeenCalledWith(`${window.location.origin}/convite/tok-prof`);
+    expect(copiar).toHaveBeenCalledWith(`${window.location.origin}/c/tok-prof`);
     expect(await screen.findByText("Link copiado.")).toBeVisible();
     expect(screen.getAllByRole("button").at(-2)).toHaveTextContent("Enviar por e-mail");
   });

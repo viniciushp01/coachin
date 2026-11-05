@@ -55,8 +55,8 @@ Deno.test("aluno: envia ao e-mail do convite, com o texto da regra 136", async (
   assertStringIncludes(m.texto, "Carlos Almeida quer montar seus treinos no Coach In.");
   assertStringIncludes(m.texto, "O link vale por 7 dias e só pode ser usado uma vez.");
   assertStringIncludes(m.texto, "Se você não esperava este convite, pode ignorar esta mensagem.");
-  assertStringIncludes(m.texto, `${APP_URL}/convite/${TOKEN}`);
-  assertStringIncludes(m.html, `href="${APP_URL}/convite/${TOKEN}"`);
+  assertStringIncludes(m.texto, `${APP_URL}/c/${TOKEN}`);
+  assertStringIncludes(m.html, `href="${APP_URL}/c/${TOKEN}"`);
   assertStringIncludes(m.html, ">Abrir convite</a>");
 });
 
@@ -93,7 +93,7 @@ Deno.test("URL e e-mail enviados pelo app são ignorados (regras 138 e 140)", as
 Deno.test("APP_URL com barra no fim não dobra a barra; token vai codificado", async () => {
   const { s, enviadas } = servicos();
   await enviarConvite({ token: "a/b c" }, s, `${APP_URL}/`);
-  assertStringIncludes(enviadas[0].texto, `${APP_URL}/convite/a%2Fb%20c`);
+  assertStringIncludes(enviadas[0].texto, `${APP_URL}/c/a%2Fb%20c`);
 });
 
 Deno.test("nome de quem convidou é escapado no HTML", async () => {

@@ -124,6 +124,11 @@ begin
   perform t.put('inv_t1_old', r ->> 'token');
   r := public.create_teacher_invite('Prof Um', 't1@x.com');            -- novo convite invalida o anterior
   perform t.put('inv_t1', r ->> 'token');
+  perform t.ok(t.get('inv_t1') ~ '^[23456789abcdefghjkmnpqrstuvwxyz]{16}$',
+    'token de convite: 16 caracteres do alfabeto sem ambiguos');
+  perform t.ok((select count(*) from generate_series(1, 500) g
+    where private.new_token() !~ '^[23456789abcdefghjkmnpqrstuvwxyz]{16}$') = 0,
+    'token de convite: 500 tokens, todos com 16 caracteres validos');
   perform t.put('inv_t2_id', (public.create_teacher_invite('Prof Dois', 't2@x.com')) ->> 'invite_id');
   r := public.reissue_invite((t.get('inv_t2_id'))::uuid);
   perform t.put('inv_t2', r ->> 'token'); perform t.put('inv_t2_id', r ->> 'invite_id');

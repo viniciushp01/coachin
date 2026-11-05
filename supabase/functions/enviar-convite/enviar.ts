@@ -2,7 +2,7 @@
  * "Enviar por e-mail" do convite de aluno e de professor (regras 136, 138, 139 e 140).
  * O app manda só o token. O banco (`claim_invite_email`, como quem chama) confere dono, estado
  * e o intervalo de 60 s e devolve o e-mail do convite; qualquer endereço ou URL vindo do app é
- * ignorado. O link é sempre `APP_URL` + /convite/ + token. O token nunca vai para o log.
+ * ignorado. O link é sempre `APP_URL` + /c/ + token. O token nunca vai para o log.
  *
  * Lógica pura: banco e SMTP entram por `Servicos` (ver index.ts), para testar sem rede.
  */
@@ -69,7 +69,7 @@ export async function enviarConvite(
   }
 
   const tipo: Tipo = reserva.kind === "teacher" ? "teacher" : "student";
-  const link = `${appUrl.replace(/\/+$/, "")}/convite/${encodeURIComponent(token)}`;
+  const link = `${appUrl.replace(/\/+$/, "")}/c/${encodeURIComponent(token)}`;
   const email = montarEmail(tipo, nomeCurto(reserva.inviter_name) || "Seu professor", link);
 
   try {
