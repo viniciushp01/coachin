@@ -7,6 +7,8 @@ export type Marcacao = {
   /** Data da marcação, "aaaa-mm-dd" no fuso do aluno (regra 115). */
   feitoEm: string;
   marcadaEm: string;
+  /** Ainda na fila de envio (regra 116): aparece como "Aguardando envio". */
+  pendente?: boolean;
 };
 
 /** A última feita: a do dia mais recente; no mesmo dia, a última marcada (regra 16). */

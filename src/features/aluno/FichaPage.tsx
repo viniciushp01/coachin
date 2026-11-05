@@ -2,7 +2,8 @@ import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { ErroApp } from "@/lib/erros";
 import { BackButton, BarraFixa, Button, Chip, Tela, TextButton, useToast } from "@/ui";
-import { desfazerMarcacao, marcarComoFeito, salvarCarga } from "./acoes";
+import { desfazerMarcacao, marcarComoFeito, salvarCarga, type SituacaoDoEnvio } from "./acoes";
+import { AVISO_GUARDADO } from "./textos";
 import type { ExercicioDaFicha, TreinoDoAluno } from "./dados";
 import { FolhaCarga } from "./FolhaCarga";
 import { diaDaEdicao, fichaDeHoje, textoDaCarga, textoDaSerie } from "./logica";
@@ -11,7 +12,16 @@ import { diaDaEdicao, fichaDeHoje, textoDaCarga, textoDaSerie } from "./logica";
  * Ficha do aluno (Figma "Aluno · Ficha e painel do dia", Ficha · 1 a 4; regras 19 a 29, 123 e 124).
  * Sem "Iniciar treino" e sem cronômetro: o descanso é só informação (regra 25).
  */
-export function FichaPage({ treino, fichaId }: { treino: TreinoDoAluno; fichaId: string }) {
+export function FichaPage({
+  treino,
+  fichaId,
+  offline = false,
+}: {
+  treino: TreinoDoAluno;
+  fichaId: string;
+  /** Mostrando a cópia guardada no aparelho (regra 116). */
+  offline?: boolean;
+}) {
   const navegar = useNavigate();
   const router = useRouter();
   const mostrarToast = useToast();
@@ -20,12 +30,12 @@ export function FichaPage({ treino, fichaId }: { treino: TreinoDoAluno; fichaId:
   const ficha = treino.fichas.find((f) => f.id === fichaId);
   const voltar = () => void navegar({ to: "/aluno" });
 
-  async function agir(acao: () => Promise<unknown>, sucesso: string) {
+  async function agir(acao: () => Promise<SituacaoDoEnvio>, sucesso: string) {
     setOcupado(true);
     try {
-      await acao();
+      const situacao = await acao();
       await router.invalidate();
-      mostrarToast("success", sucesso);
+      mostrarToast("success", situacao === "guardado" ? AVISO_GUARDADO : sucesso);
       return true;
     } catch (erro) {
       mostrarToast("error", erro instanceof ErroApp ? erro.message : "Não foi possível salvar.");
@@ -45,7 +55,10 @@ export function FichaPage({ treino, fichaId }: { treino: TreinoDoAluno; fichaId:
   }
 
   const eDeHoje = fichaDeHoje(treino.fichas, treino.marcacoes)?.id === ficha.id;
-  const feitaHoje = treino.marcacoes.some((m) => m.diaId === ficha.id && m.feitoEm === treino.hoje);
+  const marcacaoDeHoje = treino.marcacoes.find(
+    (m) => m.diaId === ficha.id && m.feitoEm === treino.hoje,
+  );
+  const feitaHoje = marcacaoDeHoje !== undefined;
   const situacao = treino.concluido
     ? "Treino concluído"
     : `Semana ${treino.semana.atual} de ${treino.semana.total}`;
@@ -56,7 +69,9 @@ export function FichaPage({ treino, fichaId }: { treino: TreinoDoAluno; fichaId:
       <BackButton onClick={voltar} />
       <header className="flex flex-col gap-8">
         <div>
-          {feitaHoje ? (
+          {marcacaoDeHoje?.pendente ? (
+            <Chip tom="neutral">AGUARDANDO ENVIO</Chip>
+          ) : feitaHoje ? (
             <Chip tom="success">✓ Feita hoje</Chip>
           ) : (
             <p className="text-overline text-text-secondary">
@@ -154,6 +169,7 @@ export function FichaPage({ treino, fichaId }: { treino: TreinoDoAluno; fichaId:
       <FolhaCarga
         key={carga?.exercicioId}
         exercicio={carga && { nome: carga.nome, carga: treino.cargas[carga.exercicioId] }}
+        offline={offline}
         ocupado={ocupado}
         aoFechar={() => setCarga(null)}
         aoSalvar={(kg) =>

@@ -216,3 +216,55 @@ describe("FichaPage", () => {
     expect(acoes.salvarCarga).not.toHaveBeenCalled();
   });
 });
+
+describe("sem conexão (regra 116)", () => {
+  it("Início avisa que mostra o treino salvo e quantos registros aguardam envio", () => {
+    renderizar(
+      <InicioPage
+        nome="Vinicius"
+        dados={{ hoje: "2026-10-29", treino, offline: true, pendentes: 2 }}
+      />,
+    );
+    expect(screen.getByText("Sem conexão")).toBeInTheDocument();
+    expect(
+      screen.getByText("Mostrando o treino salvo neste aparelho. 2 registros aguardam envio."),
+    ).toBeInTheDocument();
+  });
+
+  it("Início com conexão e nada na fila não mostra aviso", () => {
+    renderizar(<InicioPage nome="Vinicius" dados={{ hoje: "2026-10-29", treino, pendentes: 0 }} />);
+    expect(screen.queryByText("Sem conexão")).not.toBeInTheDocument();
+    expect(screen.queryByText("Aguardando envio")).not.toBeInTheDocument();
+  });
+
+  it("marcar sem conexão guarda no aparelho e avisa", async () => {
+    acoes.marcarComoFeito.mockResolvedValueOnce("guardado" as never);
+    renderizar(<FichaPage treino={treino} fichaId="dC" offline />);
+    await userEvent.click(screen.getByRole("button", { name: "Marcar como feito" }));
+    expect(await screen.findByText("Guardado. Envio quando voltar.")).toBeInTheDocument();
+  });
+
+  it("ficha marcada e ainda não enviada mostra AGUARDANDO ENVIO no lugar de Feita hoje", () => {
+    const pendente = {
+      ...treino,
+      marcacoes: [
+        ...treino.marcacoes,
+        { diaId: "dC", feitoEm: "2026-10-29", marcadaEm: "2026-10-29T20:00:00Z", pendente: true },
+      ],
+    };
+    renderizar(<FichaPage treino={pendente} fichaId="dC" offline />);
+    expect(screen.getByText("AGUARDANDO ENVIO")).toBeInTheDocument();
+    expect(screen.queryByText("✓ Feita hoje")).not.toBeInTheDocument();
+  });
+
+  it("a folha de carga explica que a carga fica no aparelho e deixa salvar", async () => {
+    renderizar(<FichaPage treino={treino} fichaId="dC" offline />);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Editar carga de Agachamento livre" }),
+    );
+    expect(
+      screen.getByText("Sem conexão: a carga fica neste aparelho e é enviada depois."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Salvar carga" })).toBeEnabled();
+  });
+});
