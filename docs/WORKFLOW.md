@@ -101,7 +101,7 @@ Para cada etapa, em uma sessão só:
 2. **Implementar com testes primeiro** (`/tdd`). Banco: teste de RLS e de função antes da migration.
 3. **Mudou o banco?** Nova migration → `node supabase/tests/pglite/run.mjs` → aplicar via MCP → `generate_typescript_types` → Security Advisor → atualizar `docs/schema-coach-in.md`.
 4. **Revisar.** `/code-review` completo só em banco, autenticação e permissões, com revisor separado. Nos demais casos, testes e CI bastam.
-5. **PR.** `/pr`. Merge automático com CI verde, sem esperar aprovação, **exceto em banco, autenticação e permissões**, que aguardam o ok do Vinicius.
+5. **PR.** `/pr`. Merge automático com CI verde, sem esperar aprovação, **exceto em banco, autenticação e permissões**, que aguardam o ok do Vinicius. (05/11/2026: o Vinicius autorizou a sessão principal a mergear sozinha nesses casos, sem pedir a cada PR.)
 6. **Fechar a etapa.** Um preview do Vinicius, no celular, com a lista de textos e estados propostos para revisar.
 
 Modelo: Sonnet como padrão; Opus só em migration, autenticação e permissões. A sessão lê só as regras da etapa, não o `contexto-produto.md` inteiro.
