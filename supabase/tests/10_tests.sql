@@ -1095,4 +1095,43 @@ begin
   perform t.su();
 end $$;
 
+-- ---------------------------------------------------------------------
+-- Aviso de parecido: ordem e ocultos (regra 157 (6) e (7), migration 0013)
+-- ---------------------------------------------------------------------
+do $$
+begin
+  perform t.login('t1');
+  -- "Pulleys" é muito mais parecido com o texto do que "Puxada alta aberta", que só tem o apelido.
+  perform public.create_exercise('Pulleys');
+  perform t.ok(
+    (select 'pulley' = any (string_to_array(aliases_normalized, ' | '))
+       from public.similar_exercises('Pulley') limit 1),
+    'aviso: apelido igual vem antes de outro resultado mais parecido'
+  );
+  perform public.create_exercise('Pulley');
+  perform t.ok(
+    (select name from public.similar_exercises('  PÚLLEY ') limit 1) = 'Pulley',
+    'aviso: nome igual (normalizado) vem antes do apelido igual'
+  );
+
+  perform public.set_exercise_hidden(t.exid('Rosca 21'), true);
+  perform t.ok(
+    not exists (select 1 from public.similar_exercises('Rosca 21') where name = 'Rosca 21'),
+    'aviso: exercício oculto não aparece para quem ocultou'
+  );
+  perform t.err($q$ select public.create_exercise('rosca 21') $q$, 'exercise_exists');
+  perform t.login('t2');
+  perform t.ok(
+    exists (select 1 from public.similar_exercises('Rosca 21') where name = 'Rosca 21'),
+    'aviso: oculto continua aparecendo para outro professor'
+  );
+  perform t.login('t1');
+  perform public.set_exercise_hidden(t.exid('Rosca 21'), false);
+  perform t.ok(
+    exists (select 1 from public.similar_exercises('Rosca 21') where name = 'Rosca 21'),
+    'aviso: desfazer ocultar devolve o exercício'
+  );
+  perform t.su();
+end $$;
+
 select 'FIM: todos os testes passaram' as resultado;

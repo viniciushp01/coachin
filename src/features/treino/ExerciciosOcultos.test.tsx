@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ErroApp, MENSAGENS } from "@/lib/erros";
 import { ToastProvider } from "@/ui";
 import { AdicionarExercicio } from "./AdicionarExercicio";
-import { adicionarFicha, criarRascunho } from "./rascunho";
+import { novaFicha } from "./rascunho";
 
 // A busca espera 250 ms; com a máquina cheia, o primeiro teste passava de 1 s e falhava à toa.
 configure({ asyncUtilTimeout: 4000 });
@@ -58,7 +58,7 @@ HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
   this.open = false;
 };
 
-const FICHA = adicionarFicha(criarRascunho("2026-10-29")).fichas[0]!;
+const FICHA = novaFicha();
 
 /** Faz o papel de CriarTreinoPage e da rota: a tela de ocultos é um passo no histórico. */
 function Caminho() {
@@ -67,6 +67,8 @@ function Caminho() {
     <AdicionarExercicio
       ficha={FICHA}
       indice={0}
+      criando={false}
+      aoCriar={() => {}}
       emOcultos={emOcultos}
       aoVerOcultos={() => setEmOcultos(true)}
       aoVoltar={() => setEmOcultos(false)}

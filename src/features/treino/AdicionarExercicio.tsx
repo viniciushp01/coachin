@@ -3,6 +3,8 @@ import { erroDaResposta } from "@/lib/erros";
 import { BackButton, SearchField, SectionRow, Tela, TextButton, useToast } from "@/ui";
 import { buscarExercicios, type ExercicioDaBusca } from "./biblioteca";
 import { ExerciciosOcultosTela } from "./ExerciciosOcultosTela";
+import { CriarExercicio } from "./CriarExercicio";
+import { procurarParecido, type ExercicioParecido } from "./exercicioNovo";
 import { FolhaDoExercicio } from "./FolhaDoExercicio";
 import { FolhaOcultar } from "./FolhaOcultar";
 import { useOcultos } from "./ocultos";
@@ -16,6 +18,9 @@ type AdicionarExercicioProps = {
   /** A tela "Exercícios ocultos": um passo no histórico, sem perder o que foi digitado. */
   emOcultos: boolean;
   aoVerOcultos: () => void;
+  /** O passo "novo-exercicio": a criação fica na rota para o "voltar" do aparelho. */
+  criando: boolean;
+  aoCriar: () => void;
   aoVoltar: () => void;
   aoAdicionar: (exercicio: ExercicioDoRascunho) => void;
 };
@@ -26,6 +31,8 @@ export function AdicionarExercicio({
   indice,
   emOcultos,
   aoVerOcultos,
+  criando,
+  aoCriar,
   aoVoltar,
   aoAdicionar,
 }: AdicionarExercicioProps) {
@@ -34,8 +41,15 @@ export function AdicionarExercicio({
   const [resultados, setResultados] = useState<ExercicioDaBusca[]>([]);
   const [escolhido, setEscolhido] = useState<ExercicioDaBusca | null>(null);
   const [paraOcultar, setParaOcultar] = useState<ExercicioDaBusca | null>(null);
+  const [criacao, setCriacao] = useState<{
+    nome: string;
+    parecido: ExercicioParecido | null;
+  } | null>(null);
+  const [procurandoParecido, setProcurandoParecido] = useState(false);
+  /** Muda ao ocultar e ao voltar da criação: a busca precisa ser refeita. */
   const [versaoDaBusca, setVersaoDaBusca] = useState(0);
   const { ocultos, gravando, ocultar, mostrar } = useOcultos(() => setVersaoDaBusca((v) => v + 1));
+  const nomeDigitado = termo.trim();
 
   useEffect(() => {
     let valida = true;
@@ -67,6 +81,33 @@ export function AdicionarExercicio({
             if (ficouVazia) aoVoltar();
           })
         }
+      />
+    );
+  }
+
+  async function tocarEmCriar() {
+    setProcurandoParecido(true);
+    try {
+      setCriacao({ nome: nomeDigitado, parecido: await procurarParecido(nomeDigitado) });
+      aoCriar();
+    } catch (causa) {
+      mostrarToast("error", erroDaResposta(causa).message);
+    } finally {
+      setProcurandoParecido(false);
+    }
+  }
+
+  if (criando && criacao) {
+    return (
+      <CriarExercicio
+        nome={criacao.nome}
+        parecido={criacao.parecido}
+        aoVoltar={aoVoltar}
+        aoEscolher={(exercicio) => {
+          setEscolhido(exercicio);
+          setVersaoDaBusca((n) => n + 1);
+          aoVoltar();
+        }}
       />
     );
   }
@@ -106,6 +147,15 @@ export function AdicionarExercicio({
           </li>
         ))}
       </ul>
+      {nomeDigitado && (
+        <TextButton
+          className="self-start text-left"
+          disabled={procurandoParecido}
+          onClick={() => void tocarEmCriar()}
+        >
+          Criar “{nomeDigitado}” como novo exercício
+        </TextButton>
+      )}
       {ocultos.length > 0 && (
         <TextButton tom="muted" className="self-start" onClick={aoVerOcultos}>
           Exercícios ocultos ({ocultos.length})

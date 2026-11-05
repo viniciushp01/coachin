@@ -3,7 +3,14 @@ import { lerAlunoDoTreino } from "@/features/treino/alunoDoTreino";
 import { CriarTreinoPage, type PassoDoTreino } from "@/features/treino/CriarTreinoPage";
 import { exigirDestino } from "@/lib/sessao";
 
-const PASSOS: readonly PassoDoTreino[] = ["dados", "fichas", "ficha", "adicionar", "ocultos"];
+const PASSOS: readonly PassoDoTreino[] = [
+  "dados",
+  "fichas",
+  "ficha",
+  "adicionar",
+  "novo-exercicio",
+  "ocultos",
+];
 
 // Criar treino (regra 73). O passo fica na URL para o "voltar" do aparelho andar um passo em vez de
 // sair do fluxo e perder o rascunho, que só existe na memória da tela (regra 107).
@@ -34,7 +41,7 @@ export const Route = createFileRoute("/professor_/alunos/$alunoId_/criar-treino"
         aluno={aluno}
         passo={passo}
         irPara={(proximo) => void navegar({ search: { passo: proximo } })}
-        voltar={() => router.history.back()}
+        voltar={() => router.history.back({ ignoreBlocker: true })}
       />
     );
   },

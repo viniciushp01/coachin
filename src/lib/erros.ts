@@ -61,7 +61,7 @@ export const MENSAGENS = {
   notice_not_accepted: "Confirme que leu o aviso de dados.",
 
   // Biblioteca de exercícios
-  exercise_exists: "Já existe um exercício com esse nome.",
+  exercise_exists: "Esse nome já existe. Confira os ocultos.",
   exercise_not_found: "Não encontramos este exercício.",
   exercises_are_permanent: "Exercícios não podem ser excluídos.",
   name_too_long: "O nome está longo demais.",

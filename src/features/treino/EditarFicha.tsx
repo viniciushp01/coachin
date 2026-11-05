@@ -6,6 +6,7 @@ import { linhaDoExercicio } from "./medida";
 import {
   letraDaFicha,
   removerExercicio,
+  reordenarExercicios,
   salvarExercicio,
   validarFicha,
   type Ficha,
@@ -63,8 +64,10 @@ export function EditarFicha({
         </Notice>
       )}
       {ficha.exercicios.length > 0 && (
-        // Arrastar é do #91: até lá, a linha solta volta para o lugar.
-        <ListaReordenavel itens={ficha.exercicios} aoReordenar={() => {}}>
+        <ListaReordenavel
+          itens={ficha.exercicios}
+          aoReordenar={(exercicios) => aoMudar(reordenarExercicios(ficha, exercicios))}
+        >
           {(exercicio, posicao) => (
             <ReorderRow
               key={exercicio.id}
