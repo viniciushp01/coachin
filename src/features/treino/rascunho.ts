@@ -1,5 +1,6 @@
-// O rascunho da montagem do treino: só memória, nada vai ao banco antes de "Salvar treino" (regra
-// 107). Sem tela e sem banco: cada operação devolve um rascunho novo. Datas em "aaaa-mm-dd".
+// O rascunho da montagem do treino: nada vai ao banco antes de "Salvar treino" (regra 107); na
+// criação, também fica guardado no aparelho (regra 162, `rascunhoGuardado.ts`). Sem tela e sem
+// banco: cada operação devolve um rascunho novo. Datas em "aaaa-mm-dd".
 import { z } from "zod";
 import { MENSAGENS } from "@/lib/erros";
 import { plural } from "@/lib/listas";
@@ -46,8 +47,9 @@ const SERIES_MAX = 20;
 const REPS_MAX_CARACTERES = 20;
 const DESCANSO_MAX = 600;
 
+// Com a hora: um rascunho guardado no aparelho volta depois de recarregar, quando a conta recomeça.
 let ultimoId = 0;
-const novoId = () => `local-${++ultimoId}`;
+const novoId = () => `local-${Date.now().toString(36)}-${++ultimoId}`;
 
 /** Sem regra para o padrão de semanas: 8 é o valor de todas as telas de Dados no Figma. */
 export function criarRascunho(hoje: string): Rascunho {

@@ -2,7 +2,7 @@
 
 Como produto, design e código andam juntos. Leia este arquivo antes de planejar trabalho novo. Ele não repete regras de negócio (vivem em `docs/contexto/contexto-produto.md`) nem o desenho do banco (`docs/schema-coach-in.md`).
 
-Última verificação do estado: 05/11/2026.
+Última verificação do estado: 06/11/2026.
 
 ## 1. Princípios
 
@@ -25,7 +25,7 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 
 ## 3. Estado atual (05/11/2026)
 
-- **Produto:** regras 1 a 158. Nenhum ponto bloqueando o piloto. Pendências menores na seção 8 do `contexto-produto.md`.
+- **Produto:** regras 1 a 162. Nenhum ponto bloqueando o piloto. Pendências menores na seção 8 do `contexto-produto.md`.
 - **Banco:** migrations 0001 a 0014 aplicadas no Supabase (`kfjjiajxgbsqpuskxbzb`) e iguais às do repositório (a 0007 e a 0012 entraram pelo SQL Editor; ver `docs/schema-coach-in.md`). 373 verificações passando (PGlite). Administrador criado. Edge Functions `ativar-professor` e `enviar-convite` publicadas (pasta `supabase/functions`, testes em Deno no CI).
 - **Design:** Figma completo até a 24ª rodada. Faltam no FigJam original as seções 19 a 24.
 - **App:** **Fase 0 concluída** em 28/10/2026 (PR #1). Produção em https://coachin.vercel.app. Stack: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Tokens em `src/styles/tokens.css`; componentes base em `src/ui` (catálogo em `/dev/componentes`); camada Supabase em `src/lib` (`supabase.ts`, `rpc.ts`, `erros.ts`); roteamento por papel (`src/lib/destino.ts` e `sessao.ts`, rotas `/entrar`, `/admin`, `/professor`, `/aluno`, `/sem-professor`, `/primeiro-acesso`, `/bloqueado`); CI em `.github/workflows/ci.yml`. `main` protegida (PR obrigatório e os dois jobs do CI verdes). Projeto `coachin` na Vercel com preview por PR.
@@ -112,7 +112,7 @@ Problema durante o caminho: `/diagnosing-bugs`. Contexto grande demais para uma 
 - **Sem paralelo e sem sessão coordenadora:** uma etapa de cada vez, em worktree próprio. Ninguém trabalha na `main` direto.
 - **Migrations:** uma por vez, com o número conferido antes de começar. Quem aplica roda os testes inteiros depois.
 - **Componentes base:** a sessão da etapa cria o que precisar em `src/ui`, seguindo o `design.md`.
-- **Numeração de regras:** a próxima é a **160**.
+- **Numeração de regras:** a próxima é a **163**.
 
 ## 7. Quando uma regra de negócio muda ou aparece
 
@@ -143,4 +143,5 @@ Problema durante o caminho: `/diagnosing-bugs`. Contexto grande demais para uma 
 - Fatia 1: links de confirmação enviados antes do PR #31 voltam para `/entrar` e entram direto (só contas de teste); SMTP do Gmail a trocar por provedor transacional antes do lançamento (Fase 2).
 - Figma: o frame "Login · 2 Erro de credenciais" diz "E-mail ou senha incorretos"; o texto decidido é "E-mail ou senha não conferem." (corrigir no Figma).
 - Figma: página "↳ Fluxo · Conta e privacidade" com frames antigos sobrepostos; toques numerados e raia própria para os frames novos da 24ª rodada.
+- Fatia 9 (excluir conta): apagar os rascunhos guardados no aparelho com `limparRascunhos(conta, () => false)` (regra 162).
 - Jurídico (Fase 2).

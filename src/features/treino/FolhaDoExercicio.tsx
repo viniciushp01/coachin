@@ -244,7 +244,7 @@ export function FolhaDoExercicio({
           <span id={idDoDescanso} className={rotuloCampo}>
             Descanso (informativo)
           </span>
-          <div className="flex gap-8">
+          <div className="grid grid-cols-3 gap-8">
             {ATALHOS_DE_DESCANSO.map((segundos) => (
               <QuickPick
                 key={segundos}

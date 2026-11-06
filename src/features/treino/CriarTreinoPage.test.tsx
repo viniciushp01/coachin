@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import type { AlunoDoTreino } from "./alunoDoTreino";
 import "@testing-library/jest-dom/vitest";
-import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { useState, type ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -10,7 +10,15 @@ import { ToastProvider } from "@/ui";
 import type { TreinoParaEditar } from "./treinoParaEditar";
 import { CriarTreinoPage, type PassoDoTreino } from "./CriarTreinoPage";
 import { FichasDoTreino } from "./FichasDoTreino";
-import { criarRascunho, novaFicha, novoExercicio, reordenarFichas, salvarFicha } from "./rascunho";
+import {
+  criarRascunho,
+  novaFicha,
+  novoExercicio,
+  reordenarFichas,
+  salvarExercicio,
+  salvarFicha,
+} from "./rascunho";
+import { guardarRascunho, type RascunhoGuardado } from "./rascunhoGuardado";
 
 // Fluxos longos, digitando de verdade: com a máquina ocupada, 5 s não bastam.
 vi.setConfig({ testTimeout: 30_000 });
@@ -28,6 +36,7 @@ vi.mock("@tanstack/react-router", async (original) => ({
 type Destino = { routeId: string; search: { passo?: PassoDoTreino } };
 type Bloqueio = {
   disabled?: boolean;
+  enableBeforeUnload: () => boolean;
   shouldBlockFn: (a: { action: string; current: Destino; next: Destino }) => boolean;
 };
 let bloqueio: Bloqueio;
@@ -99,25 +108,36 @@ const rpc = vi.fn((funcao: string, args: ArgsDoRpc) =>
 );
 vi.mock("@/lib/rpc", () => ({ rpc: (f: string, a: ArgsDoRpc) => rpc(f, a) }));
 
+/** A tabela `exercises` de agora (regra 162); nulo é sem conexão. */
+let catalogoAtual: { id: string; measure: string }[] | null = [];
+const respostaDoCatalogo = () =>
+  catalogoAtual
+    ? { error: null, data: catalogoAtual }
+    : { error: { code: "", message: "Failed to fetch" }, data: null };
+
 vi.mock("@/lib/supabase", () => ({
   supabase: {
-    from() {
+    from(tabela: string) {
       const passo = {
         select: () => passo,
         eq: () => passo,
         in: () => passo,
         is: () => passo,
         then: (ok: (r: unknown) => unknown) =>
-          Promise.resolve({
-            error: null,
-            data: [
-              {
-                exercise_id: "ex-supino",
-                equipment: { name: "Barra reta" },
-                workout_days: { workout_id: "w1" },
-              },
-            ],
-          }).then(ok),
+          Promise.resolve(
+            tabela === "exercises"
+              ? respostaDoCatalogo()
+              : {
+                  error: null,
+                  data: [
+                    {
+                      exercise_id: "ex-supino",
+                      equipment: { name: "Barra reta" },
+                      workout_days: { workout_id: "w1" },
+                    },
+                  ],
+                },
+          ).then(ok),
       };
       return passo;
     },
@@ -156,8 +176,18 @@ const JULIANA: AlunoDoTreino = {
 };
 
 /** Faz o papel da rota: guarda os passos como o histórico do navegador. */
-function Caminho({ aluno, treino }: { aluno: AlunoDoTreino; treino?: TreinoParaEditar }) {
-  const [pilha, setPilha] = useState<PassoDoTreino[]>([treino ? "fichas" : "dados"]);
+function Caminho({
+  aluno,
+  treino,
+  professorId,
+  urlEm,
+}: {
+  aluno: AlunoDoTreino;
+  treino?: TreinoParaEditar;
+  professorId?: string;
+  urlEm?: PassoDoTreino;
+}) {
+  const [pilha, setPilha] = useState<PassoDoTreino[]>([urlEm ?? (treino ? "fichas" : "dados")]);
   return (
     <CriarTreinoPage
       aluno={aluno}
@@ -165,6 +195,17 @@ function Caminho({ aluno, treino }: { aluno: AlunoDoTreino; treino?: TreinoParaE
       passo={pilha.at(-1)!}
       irPara={(passo) => setPilha((p) => [...p, passo])}
       voltar={() => setPilha((p) => p.slice(0, -1))}
+      guardarNoAparelho={
+        professorId
+          ? {
+              professorId,
+              abrirCaminho: (passos) => {
+                setPilha((p) => [...p, ...passos]);
+                return Promise.resolve();
+              },
+            }
+          : undefined
+      }
     />
   );
 }
@@ -251,7 +292,7 @@ afterEach(cleanup);
 
 describe("Passo na URL e rascunho na memória (regra 107)", () => {
   it.each(["fichas", "ficha", "adicionar", "ajustar-exercicio", "ocultos"] as const)(
-    "recarregar em %s perde o rascunho e recomeça em Dados",
+    "recarregar em %s, sem rascunho guardado, recomeça em Dados",
     (passo) => {
       render(
         <ToastProvider>
@@ -1477,5 +1518,247 @@ describe("Ajustar a medida de um exercício que já está na ficha (regras 123 e
     await u.click(botao("Voltar"));
     semFolhaDescartar();
     expect(navegar).toHaveBeenCalledWith(SAIU);
+  });
+});
+
+describe("Rascunho guardado no aparelho (regra 162)", () => {
+  const CHAVE = "coachin:rascunho-treino:p1:a1";
+  const folhaContinuar = () => screen.getByRole("dialog", { name: "Continuar de onde parou?" });
+  const semFolhaContinuar = () =>
+    expect(
+      screen.queryByRole("dialog", { name: "Continuar de onde parou?" }),
+    ).not.toBeInTheDocument();
+  const continuar = (u: UserEvent) =>
+    u.click(within(folhaContinuar()).getByRole("button", { name: "Continuar de onde parei" }));
+  const guardadoAgora = () => JSON.parse(localStorage.getItem(CHAVE)!) as RascunhoGuardado;
+
+  /** A rota de Criar treino, com o passo que estiver na URL ao abrir. */
+  function abrirGuardando(professorId = "p1", urlEm: PassoDoTreino = "dados") {
+    render(
+      <ToastProvider>
+        <Caminho aluno={JULIANA} professorId={professorId} urlEm={urlEm} />
+      </ToastProvider>,
+    );
+    return userEvent.setup();
+  }
+
+  /** Monta até "Editar ficha" com um exercício, sem "Salvar ficha". */
+  async function montarAteAFicha(u: UserEvent) {
+    await irParaFichas(u);
+    await abrirFichaNova(u, "Peito");
+    await adicionarExercicio(u, "Supino reto", { descanso: "90" });
+    await screen.findByRole("heading", { name: "Ficha A" });
+  }
+
+  const exercicioGuardado = (id: string) =>
+    novoExercicio(
+      { id, nome: `Exercício ${id}`, medida: "reps" },
+      { series: 3, reps: "10", descanso: 60, observacao: "" },
+    );
+
+  function comGuardado(parcial: Partial<RascunhoGuardado> = {}) {
+    guardarRascunho("p1", "a1", {
+      comecadoEm: new Date(2026, 9, 29, 8, 5).toISOString(),
+      passo: "fichas",
+      rascunho: salvarFicha(
+        { ...criarRascunho("2026-10-29"), nome: "Guardado" },
+        salvarExercicio({ ...novaFicha(), nome: "Peito" }, exercicioGuardado("ex-supino")),
+      ),
+      edicao: null,
+      ...parcial,
+    });
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    catalogoAtual = [
+      { id: "ex-supino", measure: "reps" },
+      { id: "ex-prancha", measure: "time" },
+    ];
+  });
+
+  it("sem alteração, não guarda nada", async () => {
+    abrirGuardando();
+    await screen.findByRole("heading", { name: "Criar treino" });
+    expect(localStorage.getItem(CHAVE)).toBeNull();
+    semFolhaContinuar();
+  });
+
+  it("recarregar no meio da ficha mostra a folha sobre Dados e continuar volta com tudo", async () => {
+    const u = abrirGuardando();
+    await montarAteAFicha(u);
+    expect(guardadoAgora().passo).toBe("ficha");
+
+    cleanup();
+    const u2 = abrirGuardando("p1", "ficha");
+    expect(screen.getByRole("heading", { name: "Criar treino" })).toBeVisible();
+    expect(screen.getByLabelText("Nome do treino")).toHaveValue("Hipertrofia · Fase 3");
+    const folha = within(folhaContinuar());
+    expect(folha.getByText("Treino não salvo de Juliana")).toBeVisible();
+    expect(
+      folha.getByText(/Tem 1 ficha e 1 exercício\. Fica guardado só neste aparelho\./),
+    ).toBeVisible();
+
+    await continuar(u2);
+    await screen.findByRole("heading", { name: "Ficha A" });
+    semFolhaContinuar();
+    expect(screen.getByLabelText("Nome da ficha")).toHaveValue("Peito");
+    expect(linha("Supino reto")).toBeVisible();
+    // Não reabre a folha do exercício.
+    expect(screen.queryByRole("dialog", { name: "Supino reto" })).not.toBeInTheDocument();
+
+    // A ficha nova continua sem "Salvar ficha": voltar pergunta, e salvar a põe na lista.
+    await u2.click(botao("Voltar"));
+    await continuarEditando(u2);
+    await u2.click(botao("Salvar ficha"));
+    await screen.findByText("Adicionar ficha");
+    expect(linha("Ficha A")).toBeVisible();
+  });
+
+  it("guarda o que foi digitado na ficha mesmo sem Salvar ficha, e a data de começo não muda", async () => {
+    const u = abrirGuardando();
+    await montarAteAFicha(u);
+    const { comecadoEm, edicao, rascunho } = guardadoAgora();
+    expect(rascunho.fichas).toHaveLength(0);
+    expect(edicao?.nome).toBe("Peito");
+
+    await u.type(screen.getByLabelText("Nome da ficha"), " e tríceps");
+    expect(guardadoAgora().edicao?.nome).toBe("Peito e tríceps");
+    expect(guardadoAgora().comecadoEm).toBe(comecadoEm);
+  });
+
+  it("outro professor no mesmo aparelho não vê", () => {
+    comGuardado();
+    abrirGuardando("p2");
+    semFolhaContinuar();
+    expect(screen.getByLabelText("Nome do treino")).toHaveValue("");
+    expect(localStorage.getItem(CHAVE)).not.toBeNull();
+  });
+
+  it("Começar de novo apaga e segue com Dados vazio", async () => {
+    comGuardado();
+    const u = abrirGuardando();
+    await u.click(within(folhaContinuar()).getByRole("button", { name: "Começar de novo" }));
+    semFolhaContinuar();
+    expect(screen.getByLabelText("Nome do treino")).toHaveValue("");
+    expect(localStorage.getItem(CHAVE)).toBeNull();
+  });
+
+  it("fechar sem escolher (arrastar, tocar fora ou Esc) continua e não apaga", async () => {
+    comGuardado();
+    abrirGuardando();
+    fireEvent.click(within(folhaContinuar()).getByTestId("escurecimento"));
+    await screen.findByText("Adicionar ficha");
+    semFolhaContinuar();
+    expect(linha("Ficha A")).toBeVisible();
+    expect(guardadoAgora().rascunho.nome).toBe("Guardado");
+  });
+
+  it("enquanto a folha está aberta, o rascunho guardado não muda", () => {
+    comGuardado({ passo: "ficha", edicao: { ...novaFicha(), nome: "Aberta" } });
+    const antes = localStorage.getItem(CHAVE);
+    abrirGuardando();
+    expect(localStorage.getItem(CHAVE)).toBe(antes);
+  });
+
+  it("salvar o treino apaga o rascunho", async () => {
+    comGuardado();
+    const u = abrirGuardando();
+    await continuar(u);
+    await u.click(await screen.findByRole("button", { name: "Salvar treino" }));
+    await screen.findByRole("heading", { name: /Treino (salvo|agendado)/ });
+    expect(localStorage.getItem(CHAVE)).toBeNull();
+  });
+
+  it("Descartar alterações apaga o rascunho; descartar só a ficha mantém o treino", async () => {
+    const u = abrirGuardando();
+    await montarAteAFicha(u);
+
+    await u.click(botao("Voltar"));
+    await descartar(u);
+    await screen.findByText("Adicionar ficha");
+    expect(guardadoAgora().rascunho.nome).toBe("Hipertrofia · Fase 3");
+    expect(guardadoAgora().edicao).toBeNull();
+
+    await u.click(botao("Voltar"));
+    await descartar(u);
+    expect(localStorage.getItem(CHAVE)).toBeNull();
+    expect(navegar).toHaveBeenCalledWith(SAIU);
+  });
+
+  it("Editar treino não lê nem guarda rascunho", async () => {
+    comGuardado();
+    const antes = localStorage.getItem(CHAVE);
+    render(
+      <ToastProvider>
+        <Caminho
+          aluno={JULIANA}
+          professorId="p1"
+          treino={{ id: "w1", rascunho: { ...criarRascunho("2026-10-29"), nome: "Atual" } }}
+        />
+      </ToastProvider>,
+    );
+    const u = userEvent.setup();
+    semFolhaContinuar();
+    await abrirFichaNova(u, "Costas");
+    expect(localStorage.getItem(CHAVE)).toBe(antes);
+  });
+
+  it("ao continuar, data passada vira hoje, a medida é a de agora e o que sumiu sai", async () => {
+    const ficha = [exercicioGuardado("ex-prancha"), exercicioGuardado("ex-sumiu")].reduce(
+      salvarExercicio,
+      { ...novaFicha(), nome: "Peito" },
+    );
+    comGuardado({
+      rascunho: salvarFicha({ ...criarRascunho("2026-10-01"), nome: "Antigo" }, ficha),
+    });
+    const u = abrirGuardando();
+    await continuar(u);
+    await screen.findByText("Adicionar ficha");
+
+    await u.click(linha("Ficha A"));
+    expect(linha("Exercício ex-prancha")).toHaveTextContent("3 séries · 10 s");
+    expect(screen.queryByText("Exercício ex-sumiu")).not.toBeInTheDocument();
+    expect(guardadoAgora().rascunho.inicio).toBe("2026-10-29");
+  });
+
+  it("sem conexão para conferir, continua como estava guardado", async () => {
+    comGuardado();
+    catalogoAtual = null;
+    const u = abrirGuardando();
+    await continuar(u);
+    await screen.findByText("Adicionar ficha");
+    expect(linha("Ficha A")).toBeVisible();
+  });
+});
+
+describe("Aviso ao recarregar ou fechar a aba (regra 161)", () => {
+  const avisa = () => !bloqueio.disabled && bloqueio.enableBeforeUnload();
+
+  it("sem alteração não avisa; com alteração avisa; depois de salvar não avisa", async () => {
+    const u = abrir();
+    expect(avisa()).toBe(false);
+    await irParaFichas(u);
+    expect(avisa()).toBe(true);
+    await fichaCompleta(u, "Peito");
+    await u.click(await screen.findByRole("button", { name: "Salvar treino" }));
+    await screen.findByRole("heading", { name: /Treino (salvo|agendado)/ });
+    expect(avisa()).toBe(false);
+  });
+
+  it("enquanto pergunta o que fazer com o rascunho guardado, não avisa", () => {
+    localStorage.clear();
+    guardarRascunho("p1", "a1", {
+      comecadoEm: new Date().toISOString(),
+      passo: "dados",
+      rascunho: { ...criarRascunho("2026-10-29"), nome: "Guardado" },
+      edicao: null,
+    });
+    render(
+      <ToastProvider>
+        <Caminho aluno={JULIANA} professorId="p1" />
+      </ToastProvider>,
+    );
+    expect(avisa()).toBe(false);
   });
 });

@@ -17,4 +17,9 @@
     @apply bg-bg-canvas text-body text-text-primary antialiased;
     min-height: 100dvh;
   }
+  /* Com folha aberta, nenhum gesto puxa para atualizar (regra 160). O resto do app segue normal. */
+  html:has(dialog[open]),
+  html:has(dialog[open]) body {
+    overscroll-behavior: none;
+  }
 }

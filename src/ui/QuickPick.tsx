@@ -16,7 +16,7 @@ export function QuickPick({ selecionado, className, ...props }: QuickPickProps) 
       type="button"
       aria-pressed={selecionado}
       className={clsx(
-        "h-44 min-w-0 flex-1 rounded-control border-2 px-0 text-body-strong whitespace-nowrap",
+        "h-[44px] min-w-0 flex-1 rounded-control border-2 px-0 text-body-strong whitespace-nowrap",
         "focus-visible:outline-2 focus-visible:outline-text-primary",
         selecionado
           ? "border-border-strong bg-bg-surface-raised text-text-primary"
