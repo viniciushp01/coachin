@@ -47,6 +47,14 @@ export async function buscarExercicios(termo: string): Promise<ExercicioDaBusca[
   });
 }
 
+/** A medida atual de cada exercício; o que não vier não existe mais para este professor. */
+export async function lerMedidasDoCatalogo(ids: string[]) {
+  if (ids.length === 0) return new Map<string, Medida>();
+  const resposta = await supabase.from("exercises").select("id, measure").in("id", ids);
+  if (resposta.error) throw erroDaResposta(resposta.error);
+  return new Map(resposta.data.map((e) => [e.id, e.measure as Medida]));
+}
+
 /**
  * Em quantas fichas não removidas de treino ativo ou agendado o exercício está (regra 151 (4)):
  * treino encerrado fica de fora, porque não dá mais para editar. Repetido na ficha conta uma vez.

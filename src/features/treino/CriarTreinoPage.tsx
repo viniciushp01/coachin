@@ -1,13 +1,16 @@
 import { useBlocker, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { erroDaResposta } from "@/lib/erros";
+import { primeiroNome } from "@/lib/listas";
 import { rpc } from "@/lib/rpc";
 import { useToast } from "@/ui";
 import { AdicionarExercicio } from "./AdicionarExercicio";
 import type { AlunoDoTreino } from "./alunoDoTreino";
+import { lerMedidasDoCatalogo } from "./biblioteca";
 import { DadosDoTreino } from "./DadosDoTreino";
 import { EditarFicha } from "./EditarFicha";
 import { FichasDoTreino } from "./FichasDoTreino";
+import { FolhaContinuar } from "./FolhaContinuar";
 import { FolhaDescartar } from "./FolhaDescartar";
 import { FolhaRemoverFicha } from "./FolhaRemoverFicha";
 import type { Medida } from "./medida";
@@ -27,6 +30,18 @@ import {
   type Ficha,
   type Rascunho,
 } from "./rascunho";
+import {
+  apagarRascunhoGuardado,
+  caminhoAte,
+  comInicioValido,
+  conferirComOCatalogo,
+  exerciciosDaMontagem,
+  guardarRascunho,
+  lerRascunhoGuardado,
+  passoParaGuardar,
+  textoDoRascunhoGuardado,
+  type PassoGuardado,
+} from "./rascunhoGuardado";
 import type { TreinoParaEditar } from "./treinoParaEditar";
 import { TreinoSalvo } from "./TreinoSalvo";
 
@@ -58,30 +73,111 @@ type CriarTreinoPageProps = {
   irPara: (passo: PassoDoTreino) => void;
   /** Volta um passo no histórico, sem passar pela pergunta de descartar. */
   voltar: () => void;
+  /** Só em Criar treino e Agendar novo treino: sem isto, nada fica no aparelho (regra 162). */
+  guardarNoAparelho?: {
+    professorId: string;
+    /** Anda pelos passos em ordem, um de cada vez, para o "voltar" seguir o mesmo caminho. */
+    abrirCaminho: (passos: PassoGuardado[]) => Promise<void>;
+  };
 };
 
 /**
  * Criar treino: Dados → Fichas → Editar ficha → Adicionar exercício → Editar exercício (regra 73).
- * O rascunho só existe aqui, na memória: só "Salvar treino" grava, e voltar com alteração pergunta
- * antes (regra 107). Figma "Professor · Treino", seções 1, 2, 5, 6 e 8.
+ * Só "Salvar treino" grava no banco, e voltar com alteração pergunta antes (regra 107). Na criação,
+ * o rascunho também fica neste aparelho e volta depois de recarregar (regra 162). Figma "Professor
+ * · Treino", seções 1, 2, 5, 6, 8 e 11.
  */
-export function CriarTreinoPage({ aluno, treino, passo, irPara, voltar }: CriarTreinoPageProps) {
+export function CriarTreinoPage({
+  aluno,
+  treino,
+  passo,
+  irPara,
+  voltar,
+  guardarNoAparelho,
+}: CriarTreinoPageProps) {
   const navegar = useNavigate();
   const mostrarToast = useToast();
+  const professorId = treino ? undefined : guardarNoAparelho?.professorId;
+  const [guardado] = useState(() =>
+    professorId ? lerRascunhoGuardado(professorId, aluno.id) : null,
+  );
   const [inicial, setInicial] = useState(() => treino?.rascunho ?? criarRascunho(aluno.hoje));
-  const [rascunho, setRascunho] = useState(inicial);
+  const [rascunho, setRascunho] = useState(() =>
+    guardado ? comInicioValido(guardado.rascunho, aluno.hoje) : inicial,
+  );
   const [dadosConfirmados, setDadosConfirmados] = useState(treino !== undefined);
   /** A cópia da ficha aberta em Editar ficha: só entra no rascunho em "Salvar ficha". */
-  const [edicao, setEdicao] = useState<Ficha | null>(null);
+  const [edicao, setEdicao] = useState<Ficha | null>(guardado?.edicao ?? null);
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState<Rascunho | null>(null);
   const [descarte, setDescarte] = useState<"ficha" | "treino" | null>(null);
   const [removendo, setRemovendo] = useState(false);
+  /** Até decidir o que fazer com o rascunho guardado, o que está nele não é alteração nova. */
+  const [retomada, setRetomada] = useState<"perguntando" | "conferindo" | "nenhuma">(
+    guardado ? "perguntando" : "nenhuma",
+  );
+  const comecadoEm = useRef(guardado?.comecadoEm ?? null);
 
   const letra = edicao ? letraDaFichaAberta(rascunho, edicao) : "";
   const editandoFicha = dadosConfirmados && edicao !== null && passo === "ficha";
   const alterouFicha = editandoFicha && fichaMudou(rascunho, edicao);
   const treinoMudou = mudou(inicial, rascunho);
+  const temAlteracao = treinoMudou || (edicao !== null && fichaMudou(rascunho, edicao));
+  const passoAtual = passoParaGuardar({
+    passo,
+    dadosConfirmados,
+    fichaAberta: edicao !== null,
+  });
+
+  // A cada mudança, para sobreviver a um recarregar ou ao sistema fechar o app (regra 162).
+  useEffect(() => {
+    if (!professorId || salvo || retomada !== "nenhuma") return;
+    if (!temAlteracao) {
+      comecadoEm.current = null;
+      apagarRascunhoGuardado(professorId, aluno.id);
+      return;
+    }
+    comecadoEm.current ??= new Date().toISOString();
+    guardarRascunho(professorId, aluno.id, {
+      comecadoEm: comecadoEm.current,
+      passo: passoAtual,
+      rascunho,
+      // Depois de voltar para Fichas, a cópia aberta já não vale.
+      edicao: passoAtual === "ficha" || passoAtual === "adicionar" ? edicao : null,
+    });
+  }, [professorId, aluno.id, salvo, retomada, temAlteracao, passoAtual, rascunho, edicao]);
+
+  function apagarGuardado() {
+    if (professorId) apagarRascunhoGuardado(professorId, aluno.id);
+  }
+
+  async function continuarGuardado() {
+    if (retomada !== "perguntando" || !guardado || !guardarNoAparelho) return;
+    setRetomada("conferindo");
+    let montagem = { rascunho, edicao };
+    try {
+      const catalogo = await lerMedidasDoCatalogo(exerciciosDaMontagem(montagem));
+      montagem = conferirComOCatalogo(montagem, catalogo);
+    } catch {
+      // Sem conexão: segue como guardado. "Salvar treino" é quem confere no servidor.
+    }
+    setRascunho(montagem.rascunho);
+    setEdicao(montagem.edicao);
+    setDadosConfirmados(guardado.passo !== "dados");
+    try {
+      await guardarNoAparelho.abrirCaminho(caminhoAte(guardado.passo));
+    } finally {
+      setRetomada("nenhuma");
+    }
+  }
+
+  function comecarDeNovo() {
+    apagarGuardado();
+    comecadoEm.current = null;
+    setRascunho(inicial);
+    setEdicao(null);
+    setRetomada("nenhuma");
+  }
 
   const sair = () =>
     void navegar({ to: "/professor/alunos/$alunoId", params: { alunoId: aluno.id } });
@@ -99,9 +195,10 @@ export function CriarTreinoPage({ aluno, treino, passo, irPara, voltar }: CriarT
   // O "voltar" do aparelho faz a mesma pergunta (regra 156 (1)). Os botões da tela não passam aqui.
   useBlocker({
     disabled: salvo !== null,
-    enableBeforeUnload: false,
+    // Recarregar ou fechar a aba com alteração mostra o aviso do navegador (regra 161).
+    enableBeforeUnload: () => retomada === "nenhuma" && temAlteracao,
     shouldBlockFn: ({ action, current, next }) => {
-      if (action === "PUSH" || action === "REPLACE") return false;
+      if (action === "PUSH" || action === "REPLACE" || retomada !== "nenhuma") return false;
       if (alterouFicha && (next.search as { passo?: PassoDoTreino }).passo !== "adicionar") {
         setDescarte("ficha");
         return true;
@@ -121,6 +218,7 @@ export function CriarTreinoPage({ aluno, treino, passo, irPara, voltar }: CriarT
       setEdicao(null);
       voltar();
     } else {
+      apagarGuardado();
       sair();
     }
   }
@@ -134,6 +232,7 @@ export function CriarTreinoPage({ aluno, treino, passo, irPara, voltar }: CriarT
         p_workout_id: (treino?.id ?? null) as unknown as string,
         p_data: paraSaveWorkout(rascunho),
       });
+      apagarGuardado();
       if (treino) {
         mostrarToast("success", "Alterações salvas.");
         void navegar({
@@ -175,7 +274,7 @@ export function CriarTreinoPage({ aluno, treino, passo, irPara, voltar }: CriarT
   if (salvo) return <TreinoSalvo aluno={aluno} rascunho={salvo} aoVoltar={sair} />;
 
   function telaDoPasso() {
-    // Ao recarregar a página, o rascunho se perde: um passo adiante na URL recomeça em Dados.
+    // Ao recarregar a página, um passo adiante na URL recomeça em Dados (regra 162).
     if (!dadosConfirmados || passo === "dados") {
       return (
         <DadosDoTreino
@@ -259,6 +358,15 @@ export function CriarTreinoPage({ aluno, treino, passo, irPara, voltar }: CriarT
   return (
     <>
       {telaDoPasso()}
+      {guardado && (
+        <FolhaContinuar
+          aberta={retomada === "perguntando"}
+          nome={primeiroNome(aluno.nome)}
+          texto={textoDoRascunhoGuardado(guardado)}
+          aoContinuar={() => void continuarGuardado()}
+          aoComecarDeNovo={comecarDeNovo}
+        />
+      )}
       <FolhaDescartar
         aberta={descarte !== null}
         aviso={
