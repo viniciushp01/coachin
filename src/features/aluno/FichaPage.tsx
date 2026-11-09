@@ -77,7 +77,7 @@ export function FichaPage({
             <p className="text-overline text-text-secondary">
               {eDeHoje
                 ? treino.marcacoes.some((m) => m.feitoEm === treino.hoje)
-                  ? "Próximo treino"
+                  ? "Próxima"
                   : "Ficha de hoje"
                 : "Ficha"}
             </p>

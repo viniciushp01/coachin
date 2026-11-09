@@ -135,7 +135,7 @@ describe("InicioPage", () => {
     it("reconhece o treino feito e mostra a próxima ficha sem botão principal", () => {
       renderizar(<InicioPage nome="Vinicius" dados={treinou()} />);
       const card = screen.getByRole("region", { name: "Treino de hoje feito" });
-      expect(within(card).getByText("✓ Ficha C")).toBeInTheDocument();
+      expect(within(card).getByText("✓ FEITA HOJE")).toBeInTheDocument();
       expect(within(card).getByText("Próximo treino")).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Ver ficha" })).not.toBeInTheDocument();
       expect(screen.queryByText(/Segue a sequência/)).not.toBeInTheDocument();
@@ -150,7 +150,7 @@ describe("InicioPage", () => {
 
     it("marcação aguardando envio conta como feita hoje", () => {
       renderizar(<InicioPage nome="Vinicius" dados={treinou(true)} />);
-      expect(screen.getByText("Treino de hoje feito")).toBeInTheDocument();
+      expect(screen.getByRole("region", { name: "Treino de hoje feito" })).toBeInTheDocument();
       expect(screen.getAllByText("AGUARDANDO ENVIO").length).toBeGreaterThan(0);
     });
 
@@ -158,7 +158,9 @@ describe("InicioPage", () => {
       const base = treinou();
       const amanha = { hoje: "2026-10-30", treino: { ...base.treino, hoje: "2026-10-30" } };
       renderizar(<InicioPage nome="Vinicius" dados={amanha} />);
-      expect(screen.queryByText("Treino de hoje feito")).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("region", { name: "Treino de hoje feito" }),
+      ).not.toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Ver ficha" })).toBeInTheDocument();
     });
   });
@@ -213,7 +215,7 @@ describe("FichaPage", () => {
     expect(screen.getAllByRole("button", { name: /^Editar carga/ })).toHaveLength(1);
   });
 
-  it('a ficha seguinte vira "Próximo treino" depois de treinar hoje (regra 163)', () => {
+  it('a ficha seguinte vira "Próxima" depois de treinar hoje (regra 163)', () => {
     const treinou = {
       ...treino,
       marcacoes: [
@@ -222,7 +224,7 @@ describe("FichaPage", () => {
       ],
     };
     renderizar(<FichaPage treino={treinou} fichaId="dA" />);
-    expect(screen.getByText("Próximo treino")).toBeInTheDocument();
+    expect(screen.getByText("Próxima")).toBeInTheDocument();
     expect(screen.queryByText("Ficha de hoje")).not.toBeInTheDocument();
   });
 

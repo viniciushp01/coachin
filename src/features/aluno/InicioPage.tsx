@@ -162,12 +162,15 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
               aria-label="Treino de hoje feito"
               className="flex flex-col gap-12 rounded-card bg-bg-surface p-20"
             >
-              <div className="flex items-center justify-between gap-8">
-                <p className="text-overline text-text-secondary">Treino de hoje feito</p>
-                {feita.pendente && <Chip tom="neutral">AGUARDANDO ENVIO</Chip>}
+              <div>
+                {feita.pendente ? (
+                  <Chip tom="neutral">AGUARDANDO ENVIO</Chip>
+                ) : (
+                  <Chip tom="success">✓ FEITA HOJE</Chip>
+                )}
               </div>
               <div className="flex flex-col gap-4">
-                <p className="text-title-md text-text-primary">✓ Ficha {feitaFicha?.letra ?? ""}</p>
+                <p className="text-title-md text-text-primary">Ficha {feitaFicha?.letra ?? ""}</p>
                 {feitaFicha && (
                   <p className="line-clamp-2 text-body text-text-secondary">{feitaFicha.nome}</p>
                 )}
