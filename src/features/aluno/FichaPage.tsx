@@ -75,7 +75,11 @@ export function FichaPage({
             <Chip tom="success">✓ Feita hoje</Chip>
           ) : (
             <p className="text-overline text-text-secondary">
-              {eDeHoje ? "Ficha de hoje" : "Ficha"}
+              {eDeHoje
+                ? treino.marcacoes.some((m) => m.feitoEm === treino.hoje)
+                  ? "Próxima"
+                  : "Ficha de hoje"
+                : "Ficha"}
             </p>
           )}
         </div>

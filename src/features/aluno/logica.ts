@@ -20,6 +20,11 @@ export function ultimaMarcacao(marcacoes: Marcacao[]) {
   );
 }
 
+/** A última marcada com a data de hoje, ou null se ainda não treinou hoje (regra 163). */
+export function feitaHoje(marcacoes: Marcacao[], hoje: string) {
+  return ultimaMarcacao(marcacoes.filter((m) => m.feitoEm === hoje));
+}
+
 /**
  * A "Ficha de hoje": a próxima que existe, na ordem, depois da última feita (regras 14 a 17 e 111).
  * Última feita = a do dia mais recente; no mesmo dia, a última marcada. Se ela foi removida, vale a

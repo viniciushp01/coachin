@@ -171,7 +171,8 @@ Componentes com **truncamento aplicado em 27/10** (texto `FILL`, `textTruncation
 | CalendarHeader | — | 326×36 | Intervalo da semana (ou mês) + setas |
 | WeekCalendar | — | 350×176 | Cartão do calendário semanal |
 | ActiveWorkoutCard | — | 350×188 | Treino ativo: fase, semana, barra de progresso, datas. Nome do treino trunca em 1 linha. Para "Treino concluído": trocar o texto da semana e dar largura total (310) ao preenchimento da barra |
-| TodayCard | — | 350×298 | "Ficha de hoje" com borda laranja e Button primary |
+| TodayCard | — | 350×298 | "Ficha de hoje" com borda laranja e Button primary. Depois de treinar no dia usa o **TodayCardFeito** (regra 163) |
+| TodayCardFeito | — | 350×206 | Molecules, abaixo do TodayCard. Chip success "✓ FEITA HOJE" (no código, "AGUARDANDO ENVIO" neutro se a marcação está na fila), ficha feita (letra e nome) e bloco "Próximo treino" com "Ficha A · Peito e tríceps", só informativo. **Sem botão principal e sem borda laranja.** Telas: "Home · 6 Treino de hoje feito" (Aluno · Home) e "Ficha · 7 Próxima ficha (já treinou hoje)" (Aluno · Ficha e painel do dia), com a etiqueta PRÓXIMA no lugar de FICHA DE HOJE. **Ainda não desenhado:** a disputa com "Descanso recomendado" (proposta: "feito hoje" vence) e o "Painel do dia", que também usa a etiqueta FICHA DE HOJE |
 | WorkoutRow | chip "Próxima" opcional (oculte a camada Chip) | 350×76 | Linha de ficha na home |
 | ExerciseCard | observação opcional (ocultar bloco); 3 ou 4 DataChip; botão "Editar carga" (ocultar na ficha só leitura do professor) | 350×321 (213 sem observação) | Exercício na ficha, com carga e Editar. Nome do exercício até 2 linhas; observação quebra linha |
 | SheetRow | botão "Marcar" opcional | 350×68 | Linha de ficha nas folhas do dia |
