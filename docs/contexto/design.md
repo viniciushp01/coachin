@@ -171,7 +171,7 @@ Componentes com **truncamento aplicado em 27/10** (texto `FILL`, `textTruncation
 | CalendarHeader | — | 326×36 | Intervalo da semana (ou mês) + setas |
 | WeekCalendar | — | 350×176 | Cartão do calendário semanal |
 | ActiveWorkoutCard | — | 350×188 | Treino ativo: fase, semana, barra de progresso, datas. Nome do treino trunca em 1 linha. Para "Treino concluído": trocar o texto da semana e dar largura total (310) ao preenchimento da barra |
-| TodayCard | — | 350×298 | "Ficha de hoje" com borda laranja e Button primary |
+| TodayCard | — | 350×298 | "Ficha de hoje" com borda laranja e Button primary. **Falta a variante "treino feito"** (regra 163): sem botão laranja, com "Treino de hoje feito" e "Próximo treino" discreto; no código usa só os tokens atuais, a desenhar no Figma |
 | WorkoutRow | chip "Próxima" opcional (oculte a camada Chip) | 350×76 | Linha de ficha na home |
 | ExerciseCard | observação opcional (ocultar bloco); 3 ou 4 DataChip; botão "Editar carga" (ocultar na ficha só leitura do professor) | 350×321 (213 sem observação) | Exercício na ficha, com carga e Editar. Nome do exercício até 2 linhas; observação quebra linha |
 | SheetRow | botão "Marcar" opcional | 350×68 | Linha de ficha nas folhas do dia |

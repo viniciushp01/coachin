@@ -120,6 +120,49 @@ describe("InicioPage", () => {
     expect(navegar).toHaveBeenCalledWith({ to: "/aluno/ficha/$diaId", params: { diaId: "dC" } });
   });
 
+  describe("depois de treinar no dia (regra 163)", () => {
+    const treinou = (pendente?: boolean) => ({
+      hoje: "2026-10-29",
+      treino: {
+        ...treino,
+        marcacoes: [
+          ...treino.marcacoes,
+          { diaId: "dC", feitoEm: "2026-10-29", marcadaEm: "2026-10-29T08:00:00Z", pendente },
+        ],
+      },
+    });
+
+    it("reconhece o treino feito e mostra a próxima ficha sem botão principal", () => {
+      renderizar(<InicioPage nome="Vinicius" dados={treinou()} />);
+      const card = screen.getByRole("region", { name: "Treino de hoje feito" });
+      expect(within(card).getByText("✓ Ficha C")).toBeInTheDocument();
+      expect(within(card).getByText("Próximo treino")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Ver ficha" })).not.toBeInTheDocument();
+      expect(screen.queryByText(/Segue a sequência/)).not.toBeInTheDocument();
+      expect(screen.queryByText("Ficha de hoje")).not.toBeInTheDocument();
+    });
+
+    it("a próxima ficha continua abrindo, sem bloquear nada (regras 11 e 15)", async () => {
+      renderizar(<InicioPage nome="Vinicius" dados={treinou()} />);
+      await userEvent.click(screen.getByRole("button", { name: /Próximo treino.*Ficha A/ }));
+      expect(navegar).toHaveBeenCalledWith({ to: "/aluno/ficha/$diaId", params: { diaId: "dA" } });
+    });
+
+    it("marcação aguardando envio conta como feita hoje", () => {
+      renderizar(<InicioPage nome="Vinicius" dados={treinou(true)} />);
+      expect(screen.getByText("Treino de hoje feito")).toBeInTheDocument();
+      expect(screen.getAllByText("AGUARDANDO ENVIO").length).toBeGreaterThan(0);
+    });
+
+    it("no dia seguinte volta ao estado normal", () => {
+      const base = treinou();
+      const amanha = { hoje: "2026-10-30", treino: { ...base.treino, hoje: "2026-10-30" } };
+      renderizar(<InicioPage nome="Vinicius" dados={amanha} />);
+      expect(screen.queryByText("Treino de hoje feito")).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Ver ficha" })).toBeInTheDocument();
+    });
+  });
+
   it("sem treino ativo mostra a tela vazia (Home · 4)", () => {
     renderizar(<InicioPage nome="Vinicius" dados={{ hoje: "2026-10-29", treino: null }} />);
     expect(screen.getByText("Sem treino por enquanto")).toBeInTheDocument();
@@ -168,6 +211,19 @@ describe("FichaPage", () => {
     expect(screen.getByText("Atualizada em 22/10")).toBeInTheDocument();
     // A prancha não tem carga (regra 123): só o agachamento oferece "Editar".
     expect(screen.getAllByRole("button", { name: /^Editar carga/ })).toHaveLength(1);
+  });
+
+  it('a ficha seguinte vira "Próximo treino" depois de treinar hoje (regra 163)', () => {
+    const treinou = {
+      ...treino,
+      marcacoes: [
+        ...treino.marcacoes,
+        { diaId: "dC", feitoEm: "2026-10-29", marcadaEm: "2026-10-29T08:00:00Z" },
+      ],
+    };
+    renderizar(<FichaPage treino={treinou} fichaId="dA" />);
+    expect(screen.getByText("Próximo treino")).toBeInTheDocument();
+    expect(screen.queryByText("Ficha de hoje")).not.toBeInTheDocument();
   });
 
   it("marca como feito hoje e mostra o aviso", async () => {

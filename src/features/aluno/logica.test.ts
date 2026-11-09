@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   dataPorExtenso,
   diasDaSemana,
+  feitaHoje,
   fichaDeHoje,
   lerCarga,
   textoDaCarga,
@@ -22,6 +23,36 @@ const feita = (diaId: string, feitoEm: string, marcadaEm = `${feitoEm}T10:00:00Z
   diaId,
   feitoEm,
   marcadaEm,
+});
+
+describe("feitaHoje (regra 163)", () => {
+  it("é nula sem marcação com a data de hoje", () => {
+    expect(feitaHoje([], "2026-11-07")).toBeNull();
+    expect(feitaHoje([feita("D", "2026-11-05")], "2026-11-07")).toBeNull();
+  });
+
+  it("devolve a marcação de hoje", () => {
+    const marcacoes = [feita("D", "2026-11-05"), feita("A", "2026-11-07")];
+    expect(feitaHoje(marcacoes, "2026-11-07")?.diaId).toBe("A");
+  });
+
+  it("com duas no mesmo dia, vale a última marcada", () => {
+    const marcacoes = [
+      feita("A", "2026-11-07", "2026-11-07T09:00:00Z"),
+      feita("B", "2026-11-07", "2026-11-07T18:00:00Z"),
+    ];
+    expect(feitaHoje(marcacoes, "2026-11-07")?.diaId).toBe("B");
+  });
+
+  it("marcação aguardando envio conta", () => {
+    expect(
+      feitaHoje([{ ...feita("A", "2026-11-07"), pendente: true }], "2026-11-07"),
+    ).not.toBeNull();
+  });
+
+  it("na virada do dia volta a ser nula", () => {
+    expect(feitaHoje([feita("A", "2026-11-07")], "2026-11-08")).toBeNull();
+  });
 });
 
 describe("fichaDeHoje (regras 14 a 17 e 111)", () => {

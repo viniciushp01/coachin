@@ -21,6 +21,7 @@ import type { DadosDoAluno, TreinoDoAluno } from "./dados";
 import {
   dataPorExtenso,
   diasDaSemana,
+  feitaHoje,
   fichaDeHoje,
   podeMarcar,
   rotuloDaSemana,
@@ -75,7 +76,7 @@ function Semana({
 }
 
 /**
- * Início do aluno (Figma "Aluno · Home", Home · 1, 3, 4 e 5; regras 1, 5, 9, 10 e 14 a 18).
+ * Início do aluno (Figma "Aluno · Home", Home · 1, 3, 4 e 5; regras 1, 5, 9, 10, 14 a 18 e 163).
  * O menu inferior só entra quando houver mais de uma aba (fatia 6): por ora, o "Sair" fica no topo.
  */
 export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno }) {
@@ -104,6 +105,8 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
   const hoje = treino ? fichaDeHoje(treino.fichas, treino.marcacoes) : null;
   const anterior = treino ? ultimaMarcacao(treino.marcacoes) : null;
   const ultima = treino?.fichas.find((f) => f.id === anterior?.diaId);
+  const feita = treino ? feitaHoje(treino.marcacoes, treino.hoje) : null;
+  const feitaFicha = treino?.fichas.find((f) => f.id === feita?.diaId);
   const abrir = (diaId: string) => void navegar({ to: "/aluno/ficha/$diaId", params: { diaId } });
 
   return (
@@ -154,7 +157,38 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
           )}
           <Semana treino={treino} aoEscolher={setDia} />
 
-          {hoje && (
+          {feita && (
+            <section
+              aria-label="Treino de hoje feito"
+              className="flex flex-col gap-12 rounded-card bg-bg-surface p-20"
+            >
+              <div className="flex items-center justify-between gap-8">
+                <p className="text-overline text-text-secondary">Treino de hoje feito</p>
+                {feita.pendente && <Chip tom="neutral">AGUARDANDO ENVIO</Chip>}
+              </div>
+              <div className="flex flex-col gap-4">
+                <p className="text-title-md text-text-primary">✓ Ficha {feitaFicha?.letra ?? ""}</p>
+                {feitaFicha && (
+                  <p className="line-clamp-2 text-body text-text-secondary">{feitaFicha.nome}</p>
+                )}
+              </div>
+              {hoje && (
+                <button
+                  type="button"
+                  onClick={() => abrir(hoje.id)}
+                  aria-label={`Próximo treino: Ficha ${hoje.letra}, ${hoje.nome}`}
+                  className="flex flex-col gap-4 rounded-tile bg-bg-surface-raised p-16 text-left"
+                >
+                  <span className="text-caption text-text-secondary">Próximo treino</span>
+                  <span className="line-clamp-2 text-body-strong text-text-primary">
+                    Ficha {hoje.letra} · {hoje.nome}
+                  </span>
+                </button>
+              )}
+            </section>
+          )}
+
+          {hoje && !feita && (
             <section className="flex flex-col gap-12 rounded-card bg-bg-surface p-20">
               <p className="text-overline text-text-secondary">Ficha de hoje</p>
               <div className="flex flex-col gap-4">
