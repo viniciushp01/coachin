@@ -23,6 +23,8 @@ export { SeletorDeData } from "./SeletorDeData";
 export { Sheet } from "./Sheet";
 export { StepIndicator } from "./StepIndicator";
 export { Stepper } from "./Stepper";
+export { TodayCard, TodayCardFeito } from "./TodayCard";
+export { WeekDay, type EstadoDoDia } from "./WeekDay";
 export { StudentRow } from "./StudentRow";
 export { Tela } from "./Tela";
 export { Toast, ToastProvider, useToast, type TomToast } from "./Toast";

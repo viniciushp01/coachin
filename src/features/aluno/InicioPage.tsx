@@ -1,19 +1,20 @@
 import { useNavigate, useRouter } from "@tanstack/react-router";
-import clsx from "clsx";
 import { useState } from "react";
 import { FolhaSair } from "@/features/acesso/FolhaSair";
 import { diaEMes } from "@/features/alunos/listaDeAlunos";
 import { ErroApp } from "@/lib/erros";
 import {
   ActiveWorkoutCard,
-  Button,
   Chip,
   EmptyState,
   IconButton,
   Logo,
   Notice,
   Tela,
+  TodayCard,
+  TodayCardFeito,
   useToast,
+  WeekDay,
 } from "@/ui";
 import { desfazerMarcacao, marcarComoFeito, type SituacaoDoEnvio } from "./acoes";
 import { AVISO_GUARDADO, registrosAguardando } from "./textos";
@@ -44,32 +45,22 @@ function Semana({
   return (
     <section aria-label="Semana" className="flex flex-col gap-12 rounded-card bg-bg-surface p-16">
       <p className="text-label text-text-secondary">{rotuloDaSemana(dias)}</p>
-      <div className="flex justify-between">
-        {dias.map((dia, i) => {
-          const letras = treino.marcacoes
-            .filter((m) => m.feitoEm === dia)
-            .map((m) => treino.fichas.find((f) => f.id === m.diaId)?.letra)
-            .join("");
-          const ativo = podeMarcar(treino.inicio, dia, treino.hoje);
-          return (
-            <button
-              key={dia}
-              type="button"
-              disabled={!ativo}
-              onClick={() => aoEscolher(dia)}
-              aria-label={`${dataPorExtenso(dia)}${letras ? `, ficha ${letras}` : ""}`}
-              className={clsx(
-                "flex w-40 flex-col items-center gap-4 rounded-control py-8",
-                dia === treino.hoje && "bg-bg-surface-raised",
-                !ativo && "opacity-50",
-              )}
-            >
-              <span className="text-caption text-text-secondary">{INICIAIS[i]}</span>
-              <span className="text-body-strong text-text-primary">{Number(dia.slice(8, 10))}</span>
-              <span className="h-16 text-caption text-text-brand-soft">{letras}</span>
-            </button>
-          );
-        })}
+      <div className="flex">
+        {dias.map((dia, i) => (
+          <WeekDay
+            key={dia}
+            estado={dia === treino.hoje ? "hoje" : dia > treino.hoje ? "futuro" : "padrao"}
+            inicial={INICIAIS[i]!}
+            numero={Number(dia.slice(8, 10))}
+            marcas={treino.marcacoes
+              .filter((m) => m.feitoEm === dia)
+              .map((m) => treino.fichas.find((f) => f.id === m.diaId)?.letra)
+              .join("")}
+            rotulo={dataPorExtenso(dia)}
+            desativado={!podeMarcar(treino.inicio, dia, treino.hoje)}
+            aoEscolher={() => aoEscolher(dia)}
+          />
+        ))}
       </div>
     </section>
   );
@@ -157,61 +148,32 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
           )}
           <Semana treino={treino} aoEscolher={setDia} />
 
-          {feita && (
-            <section
-              aria-label="Treino de hoje feito"
-              className="flex flex-col gap-12 rounded-card bg-bg-surface p-20"
-            >
-              <div>
-                {feita.pendente ? (
-                  <Chip tom="neutral">AGUARDANDO ENVIO</Chip>
-                ) : (
-                  <Chip tom="success">✓ FEITA HOJE</Chip>
-                )}
-              </div>
-              <div className="flex flex-col gap-4">
-                <p className="text-title-md text-text-primary">Ficha {feitaFicha?.letra ?? ""}</p>
-                {feitaFicha && (
-                  <p className="line-clamp-2 text-body text-text-secondary">{feitaFicha.nome}</p>
-                )}
-              </div>
-              {hoje && (
-                <button
-                  type="button"
-                  onClick={() => abrir(hoje.id)}
-                  aria-label={`Próximo treino: Ficha ${hoje.letra}, ${hoje.nome}`}
-                  className="flex flex-col gap-4 rounded-tile bg-bg-surface-raised p-16 text-left"
-                >
-                  <span className="text-caption text-text-secondary">Próximo treino</span>
-                  <span className="line-clamp-2 text-body-strong text-text-primary">
-                    Ficha {hoje.letra} · {hoje.nome}
-                  </span>
-                </button>
-              )}
-            </section>
-          )}
-
-          {hoje && !feita && (
-            <section className="flex flex-col gap-12 rounded-card bg-bg-surface p-20">
-              <p className="text-overline text-text-secondary">Ficha de hoje</p>
-              <div className="flex flex-col gap-4">
-                <p className="text-title-md text-text-primary">Ficha {hoje.letra}</p>
-                <p className="line-clamp-2 text-body text-text-secondary">{hoje.nome}</p>
-              </div>
-              <p className="line-clamp-2 text-caption text-text-secondary">
-                {hoje.exercicios
-                  .slice(0, 3)
-                  .map((e) => e.nome)
-                  .join(" · ")}
-                {hoje.exercicios.length > 3 && ` + ${exercicios(hoje.exercicios.length - 3)}`}
-              </p>
-              {ultima && (
-                <p className="text-caption text-text-secondary">
-                  Segue a sequência depois da Ficha {ultima.letra}
-                </p>
-              )}
-              <Button onClick={() => abrir(hoje.id)}>Ver ficha</Button>
-            </section>
+          {feita ? (
+            <TodayCardFeito
+              letra={feitaFicha?.letra ?? ""}
+              nome={feitaFicha?.nome}
+              pendente={feita.pendente}
+              proxima={hoje ? { letra: hoje.letra, nome: hoje.nome } : undefined}
+              aoAbrirProxima={() => hoje && abrir(hoje.id)}
+            />
+          ) : (
+            hoje && (
+              <TodayCard
+                letra={hoje.letra}
+                nome={hoje.nome}
+                previa={
+                  <>
+                    {hoje.exercicios
+                      .slice(0, 3)
+                      .map((e) => e.nome)
+                      .join(" · ")}
+                    {hoje.exercicios.length > 3 && ` + ${exercicios(hoje.exercicios.length - 3)}`}
+                  </>
+                }
+                sequencia={ultima ? `Segue a sequência depois da Ficha ${ultima.letra}` : undefined}
+                aoAbrir={() => abrir(hoje.id)}
+              />
+            )
           )}
 
           {treino.fichas.filter((f) => !f.removida && f.id !== hoje?.id).length > 0 && (
