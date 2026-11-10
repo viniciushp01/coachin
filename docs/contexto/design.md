@@ -165,7 +165,7 @@ Componentes com **truncamento aplicado em 27/10** (texto `FILL`, `textTruncation
 
 | Componente | Variantes / props | Tamanho | Uso |
 |---|---|---|---|
-| WeekDay | `state=default\|today\|future`, `selected=false\|true` | 87×104 (preenche) | Dia na faixa semanal |
+| WeekDay | `state=default\|today\|future`, `selected=false\|true` | 87×104 (preenche) | Dia na faixa semanal. No código: `src/ui/WeekDay.tsx` (marca de 24: bolinha verde com a letra da ficha feita; anel laranja em `today` sem treino; ponto de 6 em `future`) |
 | MonthDay | `state=default\|today\|future`, `selected=false\|true` | 45×68 | Dia no calendário mensal (padding vertical 8). Linhas do mês são frames de 7 MonthDay, **não** há componente de semana. `state=default` mostra número e letra da ficha; `state=future` mostra só o número |
 | WeekStrip | — | 326×104 | 7 WeekDay |
 | CalendarHeader | — | 326×36 | Intervalo da semana (ou mês) + setas |
