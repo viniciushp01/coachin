@@ -1,0 +1,59 @@
+name: Estado para os chats
+
+# Regenera ESTADO.md e INDICE-REGRAS.md e publica na branch `claude-estado`
+# (https://raw.githubusercontent.com/viniciushp01/coachin/claude-estado/ESTADO.md).
+# Os chats do Claude leem esse arquivo no começo de cada conversa, em vez de receberem o contexto colado.
+# A branch não tem código: o CI não roda nela e o vercel.json dela desliga o deploy.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, closed, ready_for_review]
+  issues:
+    types: [opened, closed, reopened, labeled, unlabeled]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: read
+  actions: read
+
+concurrency:
+  group: estado-chats
+  cancel-in-progress: true
+
+jobs:
+  estado:
+    name: Gerar e publicar o estado
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0 # precisa do histórico para a "última alteração" de cada doc
+
+      # Enquanto o script não estiver na main (PR que o introduz), os dois passos abaixo são pulados.
+      - name: Gerar ESTADO.md e INDICE-REGRAS.md
+        if: hashFiles('scripts/gerar-estado.mjs') != ''
+        run: node scripts/gerar-estado.mjs "$RUNNER_TEMP/estado-out"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Publicar na branch claude-estado
+        if: hashFiles('scripts/gerar-estado.mjs') != ''
+        working-directory: ${{ runner.temp }}/estado-out
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git init -q -b claude-estado
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -qm "estado: ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" claude-estado
