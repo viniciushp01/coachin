@@ -139,10 +139,34 @@ const ci = run
 
 // ---------- trechos vivos dos docs ----------
 const workflow = ler("docs/WORKFLOW.md");
-const plano = limitar(
-  secao(workflow, /^### Plano até o piloto/m, /^### Fase 0/m).replace(/^### /, "#### "),
-  3500,
-);
+const planoBruto = secao(workflow, /^### Plano até o piloto/m, /^### Fase 0/m);
+
+// Etapa atual = primeira linha da tabela do plano cuja 1ª coluna não está riscada (~~).
+// Sem tabela, devolve null e o plano sai como antes.
+function etapaAtual(texto) {
+  const linhas = texto.split(/\r?\n/);
+  const sep = linhas.findIndex((l) => /^\|\s*:?-{3,}/.test(l));
+  if (sep < 1) return null;
+  const etapas = [];
+  for (const l of linhas.slice(sep + 1)) {
+    if (!l.trim().startsWith("|")) break;
+    etapas.push(l.split("|")[1]?.trim() ?? "");
+  }
+  if (!etapas.length) return null;
+  const atual = etapas.find((c) => !c.includes("~~"));
+  return atual
+    ? `**Etapa atual: ${atual.replace(/\s+/g, " ")}**`
+    : "**Etapa atual: todas as etapas do plano estão concluídas**";
+}
+
+function planoComEtapa(texto) {
+  const linha = etapaAtual(texto);
+  if (!linha) return texto;
+  const [titulo, ...resto] = texto.split(/\r?\n/);
+  return [titulo, "", linha, ...resto].join("\n");
+}
+
+const plano = limitar(planoComEtapa(planoBruto).replace(/^### /, "#### "), 3500);
 const pontos = limitar(
   secao(ctx, /^## 8\. Pontos em aberto/m, /^## 9\./m)
     .replace(/^## 8\. Pontos em aberto/, "")

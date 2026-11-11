@@ -46,6 +46,8 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 | 3. Fatia 8 | PWA e fila offline (regras 38 e 116) |
 | 4. Piloto | Teste de ponta a ponta dos três papéis, iPhone e Android com o app instalado, 2 semanas de uso |
 
+Ao concluir uma etapa, risque o nome dela na tabela (~~assim~~): o ESTADO.md usa a primeira etapa sem risco como a etapa atual.
+
 **Adiados até o piloto responder:**
 
 - **#97** (botão "Agendar novo treino"). O #98 (treino antes do aceite, regras 122 e 153) e o #94 (ajustar medida e carga, regras 123 e 151 (4)) foram feitos antes do piloto, a pedido.
