@@ -32,6 +32,7 @@ Decidida em `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel, 
 ## Documentos de apoio (`docs/contexto/`)
 
 - `design.md`: design system (tokens, tipografia, componentes e regras de montagem). Leia antes de criar qualquer tela ou código de interface.
+- `docs/agents/instrucoes-do-project.md`: texto versionado das instruções do Project "Coach In" no claude.ai (os chats leem o `ESTADO.md` da branch `claude-estado`).
 - `figma-paginas.md`: mapa de páginas do arquivo Figma "Coach In" (manda sobre os nomes citados nos outros arquivos).
 - `handoff-design-system.md`: convenções visuais e manhas do plugin do Figma.
 - `prompts-lotes-3-e-4.md`: prompts usados nos lotes 3 e 4 do design (referência histórica).

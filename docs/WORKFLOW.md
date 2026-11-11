@@ -123,7 +123,7 @@ Problema durante o caminho: `/diagnosing-bugs`. Contexto grande demais para uma 
 ## 8. Sincronizar os documentos
 
 - **Edição:** sempre no repositório (`docs/contexto/`).
-- **Project do claude.ai:** não é mais espelhado. O que estiver lá pode estar desatualizado; decisão tomada lá precisa entrar no repositório para valer.
+- **Project do claude.ai:** não é mais espelhado. O que estiver lá pode estar desatualizado; decisão tomada lá precisa entrar no repositório para valer. Os chats do Project leem, no começo de cada conversa, `ESTADO.md` e `INDICE-REGRAS.md` da branch `claude-estado` (gerados por `.github/workflows/estado.yml`; URL: https://raw.githubusercontent.com/viniciushp01/coachin/claude-estado/ESTADO.md). O texto das instruções do Project fica versionado em `docs/agents/instrucoes-do-project.md`.
 - **Figma:** referência visual, sem obrigação de desenhar cada caso raro. Mudança de texto decidida no código não exige atualização imediata.
 
 ## 9. Definição de pronto (qualquer ticket)
