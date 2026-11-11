@@ -37,13 +37,16 @@ jobs:
           ref: main
           fetch-depth: 0 # precisa do histórico para a "última alteração" de cada doc
 
+      # Enquanto o script não estiver na main (PR que o introduz), os dois passos abaixo são pulados.
       - name: Gerar ESTADO.md e INDICE-REGRAS.md
+        if: hashFiles('scripts/gerar-estado.mjs') != ''
         run: node scripts/gerar-estado.mjs "$RUNNER_TEMP/estado-out"
         env:
           GH_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
 
       - name: Publicar na branch claude-estado
+        if: hashFiles('scripts/gerar-estado.mjs') != ''
         working-directory: ${{ runner.temp }}/estado-out
         env:
           GH_TOKEN: ${{ github.token }}
