@@ -90,7 +90,7 @@ const migrations = readdirSync("supabase/migrations")
 const abertos = api(`repos/${REPO}/pulls?state=open&per_page=50`);
 const fechados = api(`repos/${REPO}/pulls?state=closed&sort=updated&direction=desc&per_page=40`);
 const issues = api(`repos/${REPO}/issues?state=open&per_page=100`);
-const runs = api(`repos/${REPO}/actions/runs?branch=main&per_page=1`);
+const runs = api(`repos/${REPO}/actions/workflows/ci.yml/runs?branch=main&per_page=1`);
 
 const linhaPr = (p) =>
   `- #${p.number} ${p.title} · ${p.user?.login ?? "?"} · \`${p.head.ref}\`${p.draft ? " · rascunho" : ""} · atualizado em ${p.updated_at.slice(0, 10)}`;
