@@ -146,4 +146,5 @@ Problema durante o caminho: `/diagnosing-bugs`. Contexto grande demais para uma 
 - Figma: o frame "Login · 2 Erro de credenciais" diz "E-mail ou senha incorretos"; o texto decidido é "E-mail ou senha não conferem." (corrigir no Figma).
 - Figma: página "↳ Fluxo · Conta e privacidade" com frames antigos sobrepostos; toques numerados e raia própria para os frames novos da 24ª rodada.
 - Fatia 9 (excluir conta): apagar os rascunhos guardados no aparelho com `limparRascunhos(conta, () => false)` (regra 162).
+- Regra 164 (#135), propostas: a linha da Lista do aluno sem convite diz "Convite ainda não enviado" (texto do aviso da tela dele); a mensagem de `invite_already_sent` é "O convite já foi enviado. Use Reenviar convite.". O Figma (Convite do aluno · 8 e 9) mostra "Corrigir e-mail" no aluno sem convite: ficou de fora, porque mudar o e-mail está fora da #135 e pede função nova; e "Agendar novo treino" segue com o #97.
 - Jurídico (Fase 2).

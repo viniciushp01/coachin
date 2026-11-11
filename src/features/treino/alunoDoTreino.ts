@@ -1,5 +1,5 @@
 import { acoesDoRodape, lerFuso } from "@/features/alunos/alunoVinculado";
-import { conviteDaLista, type EstadoVisivel } from "@/features/alunos/conviteDoAluno";
+import { conviteDaLista, type SemAcesso } from "@/features/alunos/conviteDoAluno";
 import { hojeDoAluno } from "@/lib/diaDoAluno";
 import { erroDaResposta } from "@/lib/erros";
 import { supabase } from "@/lib/supabase";
@@ -12,7 +12,9 @@ export type AlunoDoTreino = {
   /** Lido antes de salvar: decide os textos do "anterior" (regra 150 (1)). */
   temTreinoAtual: boolean;
   /** Estado do convite de quem ainda não aceitou (regras 122 e 153); nulo se já tem acesso. */
-  convite: EstadoVisivel | null;
+  convite: SemAcesso | null;
+  /** E-mail do cadastro: decide o "Convite gerado" depois de "Enviar convite agora" (regra 164). */
+  email?: string | null;
 };
 
 /**
@@ -26,7 +28,7 @@ export async function lerAlunoDoTreino(
   const resposta = await supabase
     .from("teacher_student_list")
     .select(
-      "user_id, name, link_status, list_status, current_workout_id, scheduled_workout_id, has_open_request",
+      "user_id, name, email, link_status, list_status, current_workout_id, scheduled_workout_id, has_open_request",
     )
     .eq("student_id", alunoId)
     .neq("link_status", "archived")
@@ -49,5 +51,6 @@ export async function lerAlunoDoTreino(
     hoje: hojeDoAluno(await lerFuso(aluno.user_id), agora),
     temTreinoAtual,
     convite: aluno.link_status === "invited" ? conviteDaLista(aluno.list_status) : null,
+    email: aluno.email,
   };
 }

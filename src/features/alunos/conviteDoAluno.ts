@@ -9,10 +9,13 @@ export type ConviteDoAluno = Pick<
   "id" | "status" | "expires_at" | "created_at" | "declined_at" | "email_sent_at"
 >;
 
-/** Aluno que ainda não ativou o acesso, com o convite mais recente dele. */
+/**
+ * Aluno que ainda não ativou o acesso, com o convite mais recente dele. Sem convite (nulo): o
+ * professor cadastrou e ainda não enviou (regra 164).
+ */
 export type AlunoComConvite = {
   aluno: { id: string; nome: string; email: string | null };
-  convite: ConviteDoAluno;
+  convite: ConviteDoAluno | null;
   /** O treino que o professor já montou antes do aceite (regras 122 e 153). */
   treino?: TreinoDoAlunoComConvite;
 };
@@ -52,6 +55,15 @@ export const CHIP_DO_ESTADO: Record<EstadoVisivel, { tom: TomChip; texto: string
   recusado: { tom: "neutral", texto: "Convite recusado" },
 };
 
+/** Quem ainda não tem acesso: um estado do convite ou "sem convite" (regra 164). */
+export type SemAcesso = EstadoVisivel | "sem_convite";
+
+/** Chip do aluno cadastrado e ainda não convidado (regra 164): neutro. */
+export const CHIP_SEM_CONVITE: { tom: TomChip; texto: string } = {
+  tom: "neutral",
+  texto: "Sem convite",
+};
+
 /** "Recusou o convite em dd/mm" (regra 102); sem a data, só o fato. */
 export function textoDaRecusa(convite: Pick<ConviteDoAluno, "declined_at">): string {
   return convite.declined_at
@@ -71,8 +83,10 @@ export type TreinoDoAlunoComConvite = {
 };
 
 /** O estado do convite que a Lista informa (`list_status`); nulo para quem já ativou o acesso. */
-export function conviteDaLista(statusDaLista: string | null | undefined): EstadoVisivel | null {
+export function conviteDaLista(statusDaLista: string | null | undefined): SemAcesso | null {
   switch (statusDaLista) {
+    case "sem_convite":
+      return "sem_convite";
     case "convite_pendente":
       return "pendente";
     case "convite_expirado":

@@ -1,19 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { ErroApp, erroDaResposta, MENSAGENS } from "@/lib/erros";
 import { email } from "@/lib/formularios";
 import { formatarTelefone, telefoneParaServidor } from "@/lib/perfil";
 import { rpc } from "@/lib/rpc";
-import { ConviteGerado, type LinkDoConvite } from "./ConviteGerado";
 import { BarraFixa, BackButton, Button, FormField, Notice, PhoneField, Tela, useToast } from "@/ui";
 
 /** Nome vazio no cadastro do aluno (Figma "Cadastrar · 2"); o "Digite seu nome." é do perfil. */
 const NOME_DO_ALUNO = "Digite o nome do aluno.";
 
-/** Cadastro → argumentos de `create_student_with_invite` (regras 57 e 109). */
+/** Cadastro → argumentos de `create_student` (regras 57, 109 e 164). */
 const esquema = z
   .object({ nome: z.string(), email: z.string(), codigoPais: z.string(), telefone: z.string() })
   .transform((v, ctx) => {
@@ -34,16 +32,6 @@ const esquema = z
     };
   });
 
-/**
- * Cadastrar aluno e "Convite gerado" (regras 46, 57 e 109; Figma "Professor · Alunos", seções 2
- * e 3). O link do convite fica só na memória da tela: copiar é o caminho até o envio por e-mail
- * (#52).
- */
-export function CadastrarAlunoPage() {
-  const [convite, setConvite] = useState<LinkDoConvite>();
-  return convite ? <ConviteGerado {...convite} /> : <Cadastro aoGerar={setConvite} />;
-}
-
 /** Erros do servidor que pertencem a um campo do cadastro. */
 const CAMPO_DO_ERRO = {
   name_required: ["nome", NOME_DO_ALUNO],
@@ -52,7 +40,11 @@ const CAMPO_DO_ERRO = {
   phone_invalid: ["telefone", MENSAGENS.phone_invalid],
 } as const;
 
-function Cadastro({ aoGerar }: { aoGerar: (convite: LinkDoConvite) => void }) {
+/**
+ * Cadastrar aluno (regras 46, 57, 109 e 164; Figma "Professor · Alunos", seção 9, Cadastrar · 3):
+ * cria só o aluno, sem convite nem e-mail, e abre a tela dele.
+ */
+export function CadastrarAlunoPage() {
   const navegar = useNavigate();
   const mostrarToast = useToast();
   const {
@@ -68,10 +60,10 @@ function Cadastro({ aoGerar }: { aoGerar: (convite: LinkDoConvite) => void }) {
   });
   const codigoPais = useWatch({ control, name: "codigoPais" });
 
-  async function gerar(dados: z.infer<typeof esquema>) {
+  async function cadastrar(dados: z.infer<typeof esquema>) {
     let resposta: unknown;
     try {
-      resposta = await rpc("create_student_with_invite", dados);
+      resposta = await rpc("create_student", dados);
     } catch (causa) {
       const erro = causa instanceof ErroApp ? causa : erroDaResposta(causa);
       const campo = CAMPO_DO_ERRO[erro.codigo as keyof typeof CAMPO_DO_ERRO];
@@ -79,15 +71,20 @@ function Cadastro({ aoGerar }: { aoGerar: (convite: LinkDoConvite) => void }) {
       else mostrarToast("error", erro.message);
       return;
     }
-    const { token } = resposta as { token: string };
-    aoGerar({ nome: dados.p_name, comEmail: "p_email" in dados, token });
+    // Sem convite nem e-mail: a tela do aluno oferece "Enviar convite" (regra 164).
+    const { student_id } = resposta as { student_id: string };
+    void navegar({
+      to: "/professor/alunos/$alunoId",
+      params: { alunoId: student_id },
+      replace: true,
+    });
   }
 
   return (
     <Tela barra="um">
       <form
         id="cadastro"
-        onSubmit={handleSubmit(gerar)}
+        onSubmit={handleSubmit(cadastrar)}
         className="flex flex-col gap-16"
         noValidate
       >
@@ -95,7 +92,7 @@ function Cadastro({ aoGerar }: { aoGerar: (convite: LinkDoConvite) => void }) {
         <div className="flex flex-col gap-8">
           <h1 className="text-title-screen">Cadastrar aluno</h1>
           <p className="text-body text-text-secondary">
-            Depois você gera o convite para o aluno criar o acesso.
+            Você monta o treino e depois envia o convite para o aluno criar o acesso.
           </p>
         </div>
         <FormField
@@ -128,12 +125,13 @@ function Cadastro({ aoGerar }: { aoGerar: (convite: LinkDoConvite) => void }) {
           })}
         />
         <Notice tom="neutral" titulo="Sem e-mail? Sem problema">
-          Você pode enviar o link do convite por WhatsApp. O aluno escolhe o e-mail do acesso.
+          Você pode enviar o link do convite por WhatsApp quando for a hora. O aluno escolhe o
+          e-mail do acesso.
         </Notice>
       </form>
       <BarraFixa>
         <Button type="submit" form="cadastro" disabled={isSubmitting}>
-          Gerar convite
+          Cadastrar aluno
         </Button>
       </BarraFixa>
     </Tela>

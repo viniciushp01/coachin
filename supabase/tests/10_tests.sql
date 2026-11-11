@@ -1293,4 +1293,78 @@ begin
   perform t.su();
 end $$;
 
+-- ---------------------------------------------------------------------
+-- 16. Cadastrar o aluno sem convite e enviar o convite depois (regra 164)
+-- ---------------------------------------------------------------------
+do $$
+declare
+  r jsonb; v_g uuid; v_h uuid; v_w uuid; v_tok text; v_exp timestamptz;
+begin
+  perform t.login('t1');
+  -- validações do cadastro, como em create_student_with_invite
+  perform t.err($q$ select public.create_student('  ') $q$, 'name_required');
+  perform t.err($q$ select public.create_student('Gil', 'nao-e-email') $q$, 'email_invalid');
+  perform t.err($q$ select public.create_student('Gil', null, '123') $q$, 'phone_invalid');
+
+  -- (1) cadastrar cria só o aluno: sem convite
+  r := public.create_student('Gil', ' S7@X.com ', '+5511999990007');
+  v_g := (r ->> 'student_id')::uuid;
+  perform t.err($q$ select public.create_student('Outro', 's7@x.com') $q$, 'student_email_taken');
+  perform t.ok(v_g is not null and r ? 'token' is false, 'regra 164: cadastrar devolve o aluno e nenhum token');
+  perform t.ok((select status = 'invited' and user_id is null and email = 's7@x.com' from public.students where id = v_g), 'aluno sem convite: vínculo invited, e-mail normalizado');
+  perform t.su();
+  perform t.ok(not exists (select 1 from public.invites where student_id = v_g), 'regra 164: nenhum convite no cadastro');
+  perform t.login('t1');
+
+  -- (2) lista: "sem convite"
+  perform t.ok((select list_status = 'sem_convite' and invite_id is null and invite_state is null
+                  from public.teacher_student_list where student_id = v_g), 'regra 164: lista devolve sem_convite');
+
+  -- regra 122: treino antes do convite
+  v_w := public.save_workout(v_g, null, jsonb_build_object('name', 'Antes do convite', 'start_date', t.today(), 'weeks', 8,
+    'days', jsonb_build_array(t.day(null, 'Peito', array[t.item('Supino reto com barra', 4, '10')]))));
+  perform t.ok((select list_status = 'sem_convite' and current_workout_id = v_w from public.teacher_student_list where student_id = v_g),
+               'regra 164: treino para aluno sem convite; lista segue "sem convite"');
+  perform t.ok((select count(*) from public.workout_days d where d.workout_id = v_w) = 1, 'professor lê o treino do aluno sem convite');
+
+  -- só o professor dono envia; aluno e outro professor, não
+  perform t.login('t2');
+  perform t.err(format($q$ select public.send_student_invite(%L) $q$, v_g), 'student_not_found');
+  perform t.ok(not exists (select 1 from public.teacher_student_list where student_id = v_g), 'outro professor não vê o aluno sem convite');
+  perform t.login('s1');
+  perform t.err(format($q$ select public.send_student_invite(%L) $q$, v_g), 'forbidden');
+  perform t.err($q$ select public.create_student('Intruso') $q$, 'forbidden');
+
+  -- (3) enviar gera o primeiro convite: 7 dias a partir do envio
+  perform t.login('t1');
+  r := public.send_student_invite(v_g);
+  v_tok := r ->> 'token'; v_exp := (r ->> 'expires_at')::timestamptz;
+  perform t.ok(v_tok is not null and v_exp between now() + interval '7 days' - interval '1 minute' and now() + interval '7 days',
+               'regra 164: convite vale 7 dias a partir do envio');
+  perform t.ok((select list_status = 'convite_pendente' and invite_id = (r ->> 'invite_id')::uuid
+                  from public.teacher_student_list where student_id = v_g), 'depois do envio: convite pendente');
+  perform t.ok((select current_workout_id = v_w from public.teacher_student_list where student_id = v_g), 'o treino continua depois do envio');
+  perform t.err(format($q$ select public.send_student_invite(%L) $q$, v_g), 'invite_already_sent');
+
+  -- regra 139: o intervalo de 60 s conta do envio por e-mail do convite novo
+  perform public.claim_invite_email(v_tok);
+  perform t.err(format($q$ select public.reissue_invite(%L) $q$, r ->> 'invite_id'), 'too_many_emails');
+
+  -- sem e-mail: o convite nasce sem e-mail (só "Copiar link")
+  v_h := (public.create_student('Hana') ->> 'student_id')::uuid;
+  r := public.send_student_invite(v_h);
+  perform t.su();
+  perform t.ok((select email is null and status = 'pending' from public.invites where id = (r ->> 'invite_id')::uuid), 'convite de aluno sem e-mail');
+
+  -- aluno que já ativou o acesso não recebe "primeiro convite"
+  perform t.login('t1');
+  perform t.err(format($q$ select public.send_student_invite(%L) $q$,
+    (select student_id from public.teacher_student_list where link_status = 'active' limit 1)), 'student_already_linked');
+  -- aluno cadastrado antes da regra 164 (já com convite): reenviar é reissue_invite
+  perform t.err(format($q$ select public.send_student_invite(%L) $q$,
+    (public.create_student_with_invite('Ivo') ->> 'student_id')), 'invite_already_sent');
+  perform t.err($q$ select public.send_student_invite('00000000-0000-0000-0000-000000000000') $q$, 'student_not_found');
+  perform t.su();
+end $$;
+
 select 'FIM: todos os testes passaram' as resultado;

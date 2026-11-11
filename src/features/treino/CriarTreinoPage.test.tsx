@@ -93,6 +93,7 @@ type ArgsDoRpc = {
   p_exercise_id?: string;
   p_measure?: string;
   p_load_mode?: string;
+  p_student_id?: string;
 };
 const rpc = vi.fn((funcao: string, args: ArgsDoRpc) =>
   Promise.resolve().then(() => {
@@ -102,6 +103,9 @@ const rpc = vi.fn((funcao: string, args: ArgsDoRpc) =>
     if (funcao === "set_exercise_hidden") return void ocultos.add(args.p_exercise_id!);
     if (funcao === "set_exercise_settings") {
       return { measure: args.p_measure, load_mode: args.p_load_mode };
+    }
+    if (funcao === "send_student_invite") {
+      return { invite_id: "i9", token: "tok-9", expires_at: "2026-11-05T12:00:00Z" };
     }
     return salvar(args);
   }),
@@ -1225,6 +1229,49 @@ describe("Aluno que ainda não aceitou o convite (regras 122 e 153)", () => {
         "O treino de Juliana já está salvo. Começa a contar hoje, mesmo antes do aceite.",
       ),
     ).toBeVisible();
+  });
+});
+
+describe("Aluno sem convite (regra 164)", () => {
+  const SEM_CONVITE: AlunoDoTreino = { ...JULIANA, temTreinoAtual: false, convite: "sem_convite" };
+
+  it("Dados avisa que ainda não recebeu o convite, só com início hoje", async () => {
+    const u = abrir(SEM_CONVITE);
+    expect(screen.getByText("Juliana ainda não recebeu o convite")).toBeVisible();
+    expect(
+      screen.getByText("O treino começa a contar na data de início, mesmo antes do aceite."),
+    ).toBeVisible();
+    await u.click(botao("Início: Hoje · 29/10/2026"));
+    await u.click(botao("30 de outubro de 2026"));
+    await u.click(botao("Confirmar início"));
+    expect(screen.queryByText("Juliana ainda não recebeu o convite")).not.toBeInTheDocument();
+  });
+
+  it('Treino salvo oferece "Enviar convite agora" e "Agora não"', async () => {
+    const u = abrir(SEM_CONVITE);
+    await irParaFichas(u);
+    await fichaCompleta(u, "Peito");
+    await u.click(botao("Salvar treino"));
+    expect(
+      await screen.findByText(
+        "O treino de Juliana já está salvo. Envie o convite para Juliana ver o treino no app.",
+      ),
+    ).toBeVisible();
+    expect(botao("Agora não")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Voltar ao aluno" })).not.toBeInTheDocument();
+    await u.click(botao("Enviar convite agora"));
+    expect(rpc).toHaveBeenCalledWith("send_student_invite", { p_student_id: SEM_CONVITE.id });
+    expect(await screen.findByRole("heading", { name: "Convite gerado" })).toBeVisible();
+  });
+
+  it('"Agora não" volta ao aluno sem gerar convite', async () => {
+    const u = abrir(SEM_CONVITE);
+    await irParaFichas(u);
+    await fichaCompleta(u, "Peito");
+    await u.click(botao("Salvar treino"));
+    await u.click(await screen.findByRole("button", { name: "Agora não" }));
+    expect(rpc).not.toHaveBeenCalledWith("send_student_invite", expect.anything());
+    expect(navegar).toHaveBeenCalled();
   });
 });
 

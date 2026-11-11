@@ -46,6 +46,7 @@ export const MENSAGENS = {
   email_is_admin: "Este e-mail é do administrador.",
   student_already_linked: "Este aluno já ativou o acesso.",
   student_email_taken: "Você já tem um aluno com este e-mail.",
+  invite_already_sent: "O convite já foi enviado. Use Reenviar convite.", // regra 164
   teacher_not_found: "Não encontramos este professor.",
 
   // Dados pessoais

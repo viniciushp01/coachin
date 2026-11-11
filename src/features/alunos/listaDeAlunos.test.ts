@@ -88,12 +88,29 @@ describe("linhaDoAluno (regras 55, 102, 122 e 147)", () => {
   });
 });
 
+describe("Aluno sem convite na lista (regra 164)", () => {
+  it("chip neutro e a linha diz que o convite ainda não foi enviado, mesmo com treino", () => {
+    const linha = linhaDoAluno(
+      aluno({
+        student_id: "a1",
+        name: "Rafael Torres",
+        list_status: "sem_convite",
+        current_end_date: "2026-12-28",
+      }),
+      HOJE,
+    );
+    expect(linha).toMatchObject({ status: "sem_convite", detalhe: "Convite ainda não enviado" });
+    expect(CHIP_DO_ALUNO[linha.status]).toEqual({ tom: "neutral", texto: "Sem convite" });
+  });
+});
+
 describe("CHIP_DO_ALUNO (regras 34, 55 e 102; design.md)", () => {
   it("tom e texto de cada status", () => {
     expect(CHIP_DO_ALUNO).toEqual({
       ativo: { tom: "success", texto: "Ativo" },
       sem_treino: { tom: "neutral", texto: "Sem treino" },
       quase_no_fim: { tom: "warning", texto: "Quase no fim" },
+      sem_convite: { tom: "neutral", texto: "Sem convite" },
       convite_pendente: { tom: "info", texto: "Convite pendente" },
       convite_expirado: { tom: "neutral", texto: "Convite expirado" },
       convite_recusado: { tom: "neutral", texto: "Convite recusado" },

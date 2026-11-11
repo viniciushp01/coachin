@@ -10,7 +10,7 @@ import {
 /**
  * Um aluno que ainda não ativou o acesso, com o convite mais recente dele. Nulo se o aluno não
  * existe para este professor (RLS), já ativou o acesso (aí a tela é a do aluno, fatias 3 e 7) ou
- * o convite não está num estado que o professor vê (regra 55).
+ * o convite não está num estado que o professor vê (regra 55). Sem convite, `convite` é nulo.
  */
 export async function lerAlunoComConvite(
   alunoId: string,
@@ -31,7 +31,8 @@ export async function lerAlunoComConvite(
     .limit(1)
     .maybeSingle();
   if (convite.error) throw erroDaResposta(convite.error);
-  if (!convite.data || !estadoVisivel(estadoDoConvite(convite.data, agora))) return null;
+  // Sem nenhum convite: cadastrado e ainda não convidado (regra 164).
+  if (convite.data && !estadoVisivel(estadoDoConvite(convite.data, agora))) return null;
   return {
     aluno: { id: aluno.data.id, nome: aluno.data.name, email: aluno.data.email },
     convite: convite.data,

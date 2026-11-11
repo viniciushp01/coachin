@@ -936,6 +936,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_student: {
+        Args: { p_email?: string; p_name: string; p_phone?: string }
+        Returns: Json
+      }
       create_student_with_invite: {
         Args: { p_email?: string; p_name: string; p_phone?: string }
         Returns: Json
@@ -1000,6 +1004,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      send_student_invite: { Args: { p_student_id: string }; Returns: Json }
       set_exercise_hidden: {
         Args: { p_exercise_id: string; p_hidden: boolean }
         Returns: undefined

@@ -21,6 +21,7 @@ import {
 } from "@/ui";
 import {
   CHIP_DO_ESTADO,
+  CHIP_SEM_CONVITE,
   dataCurta,
   estadoDoConvite,
   textoDaRecusa,
@@ -35,7 +36,12 @@ const SEM_COPIAR_LINK =
   "O link só aparece quando é gerado: para pegar outro, toque em Reenviar convite (o anterior deixa de valer).";
 
 /** Erros do reenvio que significam "este convite não vale mais": a área mostra o atual. */
-const CONVITE_MUDOU = ["student_already_linked", "invite_used", "invite_replaced"];
+const CONVITE_MUDOU = [
+  "student_already_linked",
+  "invite_used",
+  "invite_replaced",
+  "invite_already_sent", // regra 164: enviado noutra aba
+];
 /** Erros de "Corrigir e reenviar" que pertencem ao campo de e-mail. */
 const ERRO_DO_EMAIL = ["email_invalid", "student_email_taken", "email_is_admin", "already_teacher"];
 
@@ -67,12 +73,25 @@ const POR_PAPEL = {
  * "já tem conta": o aluno com conta aparece como convite pendente (regra 143).
  */
 export function AlunoComConvitePage({
+  convite,
+  ...props
+}: AlunoComConvite & { agora?: Date; papel?: Papel }) {
+  return convite ? <ComConvite convite={convite} {...props} /> : <SemConvite {...props} />;
+}
+
+type ComConviteProps = AlunoComConvite & {
+  convite: NonNullable<AlunoComConvite["convite"]>;
+  agora?: Date;
+  papel?: Papel;
+};
+
+function ComConvite({
   aluno,
   convite,
   agora = new Date(),
   treino,
   papel = "aluno",
-}: AlunoComConvite & { agora?: Date; papel?: Papel }) {
+}: ComConviteProps) {
   const textos = POR_PAPEL[papel];
   const navegar = useNavigate();
   const mostrarToast = useToast();
@@ -83,14 +102,6 @@ export function AlunoComConvitePage({
   // A rota só abre esta tela com um estado visível (lerAlunoComConvite).
   const estado = estadoDoConvite(convite, agora) as EstadoVisivel;
   const voltar = () => navegar({ to: textos.volta });
-  const abrirTreino = (acao: "criar" | "editar") =>
-    void navegar({
-      to:
-        acao === "criar"
-          ? "/professor/alunos/$alunoId/criar-treino"
-          : "/professor/alunos/$alunoId/editar-treino",
-      params: { alunoId: aluno.id },
-    });
 
   /** Gera o link novo. Erro do campo de e-mail volta para quem chamou; os demais viram toast. */
   async function reemitir(novoEmail?: string): Promise<ErroApp | undefined> {
@@ -173,19 +184,88 @@ export function AlunoComConvitePage({
       {estado === "pendente" && (
         <p className="text-caption text-text-secondary">{SEM_COPIAR_LINK}</p>
       )}
-      {treino && (
-        <>
-          {treino.cartao && <ActiveWorkoutCard rotulo="Treino salvo" {...treino.cartao} />}
-          {treino.acoes
-            .filter((acao): acao is "criar" | "editar" => acao === "criar" || acao === "editar")
-            .map((acao) => (
-              <Button key={acao} variante="secondary" onClick={() => abrirTreino(acao)}>
-                {acao === "criar" ? "Criar treino" : "Editar treino"}
-              </Button>
-            ))}
-        </>
-      )}
+      {treino && <TreinoAntesDoAceite alunoId={aluno.id} treino={treino} />}
     </Cabecalho>
+  );
+}
+
+/**
+ * Aluno cadastrado e ainda não convidado (regra 164; Figma "Professor · Alunos", seção 9,
+ * Convite do aluno · 8 e 9). "Enviar convite" gera o primeiro convite (7 dias a partir daqui) e
+ * abre "Convite gerado", que envia por e-mail ou copia o link (regras 57 e 142). Mudar o e-mail
+ * fica para depois (fora da #135): sem "Corrigir e-mail" aqui.
+ */
+function SemConvite({ aluno, treino }: Omit<AlunoComConvite, "convite">) {
+  const navegar = useNavigate();
+  const mostrarToast = useToast();
+  const [enviando, setEnviando] = useState(false);
+  const [gerado, setGerado] = useState<LinkDoConvite>();
+
+  async function enviar() {
+    setEnviando(true);
+    try {
+      const { token } = (await rpc("send_student_invite", { p_student_id: aluno.id })) as {
+        token: string;
+      };
+      setGerado({ nome: aluno.nome, comEmail: Boolean(aluno.email), token });
+    } catch (causa) {
+      const erro = causa instanceof ErroApp ? causa : erroDaResposta(causa);
+      setEnviando(false);
+      mostrarToast("error", erro.message);
+      if (CONVITE_MUDOU.includes(erro.codigo)) void navegar({ to: "/professor" });
+    }
+  }
+
+  if (gerado) return <ConviteGerado {...gerado} />;
+
+  return (
+    <Cabecalho
+      nome={aluno.nome}
+      chip={CHIP_SEM_CONVITE}
+      aoVoltar={() => void navegar({ to: "/professor" })}
+      botao={{ texto: "Enviar convite", aoTocar: () => void enviar(), desabilitado: enviando }}
+    >
+      <p className="text-body text-text-secondary">{aluno.email ?? "Sem e-mail no cadastro"}</p>
+      <Notice tom="neutral" titulo="Convite ainda não enviado">
+        Monte o treino agora e envie o convite quando estiver pronto. O convite vale 7 dias a partir
+        do envio.
+      </Notice>
+      {treino && <TreinoAntesDoAceite alunoId={aluno.id} treino={treino} />}
+    </Cabecalho>
+  );
+}
+
+/**
+ * O treino montado antes do aceite, abaixo do convite (regras 122 e 153): cartão "Treino salvo" e,
+ * em contorno, "Criar treino" ou "Editar treino". "Agendar novo treino" é o #97 (adiado).
+ */
+function TreinoAntesDoAceite({
+  alunoId,
+  treino,
+}: {
+  alunoId: string;
+  treino: NonNullable<AlunoComConvite["treino"]>;
+}) {
+  const navegar = useNavigate();
+  const abrirTreino = (acao: "criar" | "editar") =>
+    void navegar({
+      to:
+        acao === "criar"
+          ? "/professor/alunos/$alunoId/criar-treino"
+          : "/professor/alunos/$alunoId/editar-treino",
+      params: { alunoId },
+    });
+  return (
+    <>
+      {treino.cartao && <ActiveWorkoutCard rotulo="Treino salvo" {...treino.cartao} />}
+      {treino.acoes
+        .filter((acao): acao is "criar" | "editar" => acao === "criar" || acao === "editar")
+        .map((acao) => (
+          <Button key={acao} variante="secondary" onClick={() => abrirTreino(acao)}>
+            {acao === "criar" ? "Criar treino" : "Editar treino"}
+          </Button>
+        ))}
+    </>
   );
 }
 

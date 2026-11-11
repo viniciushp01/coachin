@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { MENSAGENS } from "@/lib/erros";
 import { plural } from "@/lib/listas";
-import type { EstadoVisivel } from "@/features/alunos/conviteDoAluno";
+import type { SemAcesso } from "@/features/alunos/conviteDoAluno";
 import { formatarData } from "@/ui/datas";
 import type { Medida } from "./medida";
 
@@ -96,21 +96,24 @@ export function avisoDoConvite({
   inicio,
   hoje,
 }: {
-  convite: EstadoVisivel | null;
+  convite: SemAcesso | null;
   nome: string;
   inicio: string;
   hoje: string;
 }): { titulo: string; texto: string } | null {
   if (!convite || inicio > hoje) return null;
-  return convite === "recusado"
-    ? {
+  const antesDoAceite = "O treino começa a contar na data de início, mesmo antes do aceite.";
+  switch (convite) {
+    case "recusado":
+      return {
         titulo: `${nome} recusou o convite`,
         texto: "O treino fica guardado até um novo convite ser aceito.",
-      }
-    : {
-        titulo: `${nome} ainda não aceitou o convite`,
-        texto: "O treino começa a contar na data de início, mesmo antes do aceite.",
       };
+    case "sem_convite": // regra 164 (5)
+      return { titulo: `${nome} ainda não recebeu o convite`, texto: antesDoAceite };
+    default:
+      return { titulo: `${nome} ainda não aceitou o convite`, texto: antesDoAceite };
+  }
 }
 
 // Letras --------------------------------------------------------------------------------------

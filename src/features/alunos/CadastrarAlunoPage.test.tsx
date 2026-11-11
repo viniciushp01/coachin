@@ -15,12 +15,7 @@ vi.mock("@tanstack/react-router", async (original) => ({
 const rpc = vi.fn();
 vi.mock("@/lib/rpc", () => ({ rpc: (...args: unknown[]) => rpc(...args) }));
 
-const conviteCriado = {
-  student_id: "s1",
-  invite_id: "i1",
-  token: "tok-123",
-  expires_at: "2026-11-05T12:00:00Z",
-};
+const alunoCriado = { student_id: "s1" };
 
 function abrir() {
   render(
@@ -31,7 +26,7 @@ function abrir() {
   return userEvent.setup();
 }
 
-const gerar = () => screen.getByRole("button", { name: "Gerar convite" });
+const cadastrar = () => screen.getByRole("button", { name: "Cadastrar aluno" });
 
 beforeEach(() => {
   navegar.mockReset();
@@ -39,12 +34,12 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-describe("Cadastrar aluno (regras 46, 57 e 109)", () => {
+describe("Cadastrar aluno (regras 57, 109 e 164)", () => {
   it("mostra nome, e-mail e telefone opcionais e o aviso de WhatsApp", () => {
     abrir();
     expect(screen.getByRole("heading", { name: "Cadastrar aluno" })).toBeVisible();
     expect(
-      screen.getByText("Depois você gera o convite para o aluno criar o acesso."),
+      screen.getByText("Você monta o treino e depois envia o convite para o aluno criar o acesso."),
     ).toBeVisible();
     expect(screen.getByLabelText("Nome")).toHaveAttribute("placeholder", "Nome do aluno");
     expect(screen.getByLabelText("E-mail (opcional)")).toBeVisible();
@@ -52,39 +47,47 @@ describe("Cadastrar aluno (regras 46, 57 e 109)", () => {
     expect(screen.getByText("Sem e-mail? Sem problema")).toBeVisible();
     expect(
       screen.getByText(
-        "Você pode enviar o link do convite por WhatsApp. O aluno escolhe o e-mail do acesso.",
+        "Você pode enviar o link do convite por WhatsApp quando for a hora. O aluno escolhe o e-mail do acesso.",
       ),
     ).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Gerar convite" })).not.toBeInTheDocument();
   });
 
   it("nome vazio, e-mail inválido e telefone incompleto: erros no campo, sem gravar", async () => {
     const usuario = abrir();
     await usuario.type(screen.getByLabelText("E-mail (opcional)"), "rafael@exemplo");
     await usuario.type(screen.getByLabelText("Telefone (opcional)"), "3198765");
-    await usuario.click(gerar());
+    await usuario.click(cadastrar());
     expect(await screen.findByText("Digite o nome do aluno.")).toBeVisible();
     expect(screen.getByText("Digite um e-mail válido, como nome@exemplo.com.")).toBeVisible();
     expect(screen.getByText("Digite um telefone com DDD, como (31) 91234-5678.")).toBeVisible();
     expect(rpc).not.toHaveBeenCalled();
   });
 
-  it("só com o nome: gera o convite sem e-mail nem telefone", async () => {
-    rpc.mockResolvedValue(conviteCriado);
+  it("só com o nome: cria o aluno, sem convite, e abre a tela dele", async () => {
+    rpc.mockResolvedValue(alunoCriado);
     const usuario = abrir();
     await usuario.type(screen.getByLabelText("Nome"), "  Rafael Torres ");
-    await usuario.click(gerar());
-    expect(rpc).toHaveBeenCalledWith("create_student_with_invite", { p_name: "Rafael Torres" });
+    await usuario.click(cadastrar());
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(rpc).toHaveBeenCalledWith("create_student", { p_name: "Rafael Torres" });
+    expect(navegar).toHaveBeenCalledWith({
+      to: "/professor/alunos/$alunoId",
+      params: { alunoId: "s1" },
+      replace: true,
+    });
+    expect(screen.queryByText("Convite gerado")).not.toBeInTheDocument();
   });
 
   it("com e-mail e telefone, envia os dois normalizados", async () => {
-    rpc.mockResolvedValue(conviteCriado);
+    rpc.mockResolvedValue(alunoCriado);
     const usuario = abrir();
     await usuario.type(screen.getByLabelText("Nome"), "Rafael Torres");
     await usuario.type(screen.getByLabelText("E-mail (opcional)"), " Rafael@Exemplo.com ");
     await usuario.type(screen.getByLabelText("Telefone (opcional)"), "31987654321");
     expect(screen.getByLabelText("Telefone (opcional)")).toHaveValue("(31) 98765-4321");
-    await usuario.click(gerar());
-    expect(rpc).toHaveBeenCalledWith("create_student_with_invite", {
+    await usuario.click(cadastrar());
+    expect(rpc).toHaveBeenCalledWith("create_student", {
       p_name: "Rafael Torres",
       p_email: "Rafael@Exemplo.com",
       p_phone: "+5531987654321",
@@ -96,68 +99,23 @@ describe("Cadastrar aluno (regras 46, 57 e 109)", () => {
     const usuario = abrir();
     await usuario.type(screen.getByLabelText("Nome"), "Rafael Torres");
     await usuario.type(screen.getByLabelText("E-mail (opcional)"), "rafael@exemplo.com");
-    await usuario.click(gerar());
+    await usuario.click(cadastrar());
     expect(await screen.findByText("Você já tem um aluno com este e-mail.")).toBeVisible();
+    expect(navegar).not.toHaveBeenCalled();
+  });
+
+  it("outro erro: toast, e o formulário continua", async () => {
+    rpc.mockRejectedValue(new ErroApp("forbidden"));
+    const usuario = abrir();
+    await usuario.type(screen.getByLabelText("Nome"), "Rafael Torres");
+    await usuario.click(cadastrar());
+    expect(await screen.findByText("Você não tem acesso a isso.")).toBeVisible();
+    expect(cadastrar()).toBeEnabled();
   });
 
   it("voltar leva à lista", async () => {
     const usuario = abrir();
     await usuario.click(screen.getByRole("button", { name: "Voltar" }));
     expect(navegar).toHaveBeenCalledWith({ to: "/professor" });
-  });
-});
-
-describe("Convite gerado (regras 46 e 57)", () => {
-  const copiar = vi.fn();
-  // Depois do userEvent.setup(), que instala a sua própria área de transferência.
-  function abrirComAreaDeTransferencia(writeText: (texto: string) => Promise<void> = copiar) {
-    const usuario = abrir();
-    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
-    return usuario;
-  }
-  beforeEach(() => copiar.mockReset().mockResolvedValue(undefined));
-
-  it("sem e-mail: Copiar link (principal) e Voltar à lista", async () => {
-    rpc.mockResolvedValue(conviteCriado);
-    const usuario = abrirComAreaDeTransferencia();
-    await usuario.type(screen.getByLabelText("Nome"), "Rafael Torres");
-    await usuario.click(gerar());
-    expect(await screen.findByRole("heading", { name: "Convite gerado" })).toBeVisible();
-    expect(
-      screen.getByText(
-        "O link de Rafael Torres é de uso único e vale por 7 dias. Copie e envie por WhatsApp ou outro app.",
-      ),
-    ).toBeVisible();
-    await usuario.click(screen.getByRole("button", { name: "Copiar link" }));
-    expect(copiar).toHaveBeenCalledWith(`${window.location.origin}/c/tok-123`);
-    expect(await screen.findByText("Link copiado.")).toBeVisible();
-    await usuario.click(screen.getByRole("button", { name: "Voltar à lista" }));
-    expect(navegar).toHaveBeenCalledWith({ to: "/professor" });
-  });
-
-  it('com e-mail: o texto pede para enviar agora; "Enviar por e-mail" é o principal', async () => {
-    rpc.mockResolvedValue(conviteCriado);
-    const usuario = abrirComAreaDeTransferencia();
-    await usuario.type(screen.getByLabelText("Nome"), "Rafael Torres");
-    await usuario.type(screen.getByLabelText("E-mail (opcional)"), "rafael@exemplo.com");
-    await usuario.click(gerar());
-    expect(
-      await screen.findByText(
-        "O link de Rafael Torres é de uso único e vale por 7 dias. Envie agora para Rafael criar o acesso.",
-      ),
-    ).toBeVisible();
-    expect(screen.getByRole("button", { name: "Enviar por e-mail" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Copiar link" })).toBeVisible();
-  });
-
-  it("sem acesso à área de transferência: toast de erro, o convite continua na tela", async () => {
-    rpc.mockResolvedValue(conviteCriado);
-    // Função comum: o espião do Vitest acompanha a promessa e acusaria a rejeição como não tratada.
-    const usuario = abrirComAreaDeTransferencia(() => Promise.reject(new Error("negado")));
-    await usuario.type(screen.getByLabelText("Nome"), "Rafael Torres");
-    await usuario.click(gerar());
-    await usuario.click(await screen.findByRole("button", { name: "Copiar link" }));
-    expect(await screen.findByText("Não foi possível copiar o link.")).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Convite gerado" })).toBeVisible();
   });
 });

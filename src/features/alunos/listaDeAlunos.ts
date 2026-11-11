@@ -3,7 +3,7 @@ import { erroDaResposta } from "@/lib/erros";
 import { emOrdemAlfabetica, plural, resumoDaBusca } from "@/lib/listas";
 import { supabase } from "@/lib/supabase";
 import type { TomChip } from "@/ui";
-import { CHIP_DO_ESTADO, dataCurta, textoDaRecusa } from "./conviteDoAluno";
+import { CHIP_DO_ESTADO, CHIP_SEM_CONVITE, dataCurta, textoDaRecusa } from "./conviteDoAluno";
 
 type LinhaDaView = Database["public"]["Views"]["teacher_student_list"]["Row"];
 
@@ -28,11 +28,12 @@ export type AlunoDaLista = Pick<
 /** Data de envio do convite, lida direto de `invites` (a view não a traz). */
 export type EnvioDoConvite = { id: string; created_at: string };
 
-/** Os seis status da lista, como a view `teacher_student_list` os calcula (regras 34, 55 e 102). */
+/** Os status da lista, como a view `teacher_student_list` os calcula (regras 34, 55, 102 e 164). */
 export type StatusDoAluno =
   | "ativo"
   | "sem_treino"
   | "quase_no_fim"
+  | "sem_convite"
   | "convite_pendente"
   | "convite_expirado"
   | "convite_recusado";
@@ -59,6 +60,7 @@ export const CHIP_DO_ALUNO: Record<StatusDoAluno, { tom: TomChip; texto: string 
   ativo: { tom: "success", texto: "Ativo" },
   sem_treino: { tom: "neutral", texto: "Sem treino" },
   quase_no_fim: { tom: "warning", texto: "Quase no fim" },
+  sem_convite: CHIP_SEM_CONVITE,
   convite_pendente: CHIP_DO_ESTADO.pendente,
   convite_expirado: CHIP_DO_ESTADO.expirado,
   convite_recusado: CHIP_DO_ESTADO.recusado,
@@ -70,6 +72,8 @@ export const CHIP_DO_ALUNO: Record<StatusDoAluno, { tom: TomChip; texto: string 
  */
 function detalheDoConvite(aluno: AlunoDaLista, enviadoEm: string | undefined) {
   switch (aluno.list_status) {
+    case "sem_convite": // regra 164; texto do aviso da tela do aluno (Convite do aluno · 8)
+      return "Convite ainda não enviado";
     case "convite_pendente": {
       const validade = aluno.invite_expires_at
         ? `vale até ${dataCurta(aluno.invite_expires_at)}`
