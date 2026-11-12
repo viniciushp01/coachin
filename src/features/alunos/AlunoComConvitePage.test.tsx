@@ -21,7 +21,7 @@ vi.mock("@/lib/funcoes", () => ({
 }));
 
 const agora = new Date("2026-10-29T12:00:00Z");
-const pendente: AlunoComConvite = {
+const pendente = {
   aluno: { id: "s1", nome: "Rafael Torres", email: "rafael@exemplo.com" },
   convite: {
     id: "i1",
@@ -31,7 +31,7 @@ const pendente: AlunoComConvite = {
     declined_at: null,
     email_sent_at: null,
   },
-};
+} satisfies AlunoComConvite;
 const novoLink = { invite_id: "i2", token: "tok-novo", expires_at: "2026-11-05T12:00:00Z" };
 
 function abrir(dados: AlunoComConvite = pendente) {
@@ -291,5 +291,94 @@ describe("Treino montado antes do aceite (regras 122 e 153)", () => {
       treino: { cartao: null, agendado: false, acoes: ["criar"] },
     });
     expect(screen.getByRole("button", { name: "Criar treino" })).toBeVisible();
+  });
+});
+
+describe("Aluno sem convite (regra 164)", () => {
+  const semConvite: AlunoComConvite = { aluno: pendente.aluno, convite: null };
+  const primeiroLink = {
+    invite_id: "i9",
+    token: "tok-primeiro",
+    expires_at: "2026-11-05T12:00:00Z",
+  };
+
+  it("chip neutro, o aviso de convite não enviado, Enviar convite (laranja) e Criar treino", async () => {
+    const u = abrir({ ...semConvite, treino: { cartao: null, agendado: false, acoes: ["criar"] } });
+    expect(screen.getByRole("heading", { name: "Rafael Torres" })).toBeVisible();
+    expect(screen.getByText("Sem convite")).toBeVisible();
+    expect(screen.getByText("rafael@exemplo.com")).toBeVisible();
+    expect(screen.getByText("Convite ainda não enviado")).toBeVisible();
+    expect(
+      screen.getByText(
+        "Monte o treino agora e envie o convite quando estiver pronto. O convite vale 7 dias a partir do envio.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Enviar convite" })).toBeEnabled();
+    // Mudar o e-mail está fora da #135; "Reenviar" e "Copiar link" não existem antes do envio.
+    expect(screen.queryByRole("button", { name: "Corrigir e-mail" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Reenviar/ })).not.toBeInTheDocument();
+    await u.click(screen.getByRole("button", { name: "Criar treino" }));
+    expect(navegar).toHaveBeenCalledWith({
+      to: "/professor/alunos/$alunoId/criar-treino",
+      params: { alunoId: "s1" },
+    });
+  });
+
+  it("com treino: cartão Treino salvo e Editar treino", () => {
+    abrir({
+      ...semConvite,
+      treino: {
+        cartao: {
+          nome: "Hipertrofia · Fase 3",
+          situacao: "8 semanas",
+          progresso: 0,
+          feitos: 0,
+          inicio: "03/11",
+          fim: "28/12",
+        },
+        agendado: false,
+        acoes: ["editar", "agendar"],
+      },
+    });
+    expect(screen.getByText("Treino salvo")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Editar treino" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Agendar novo treino" })).not.toBeInTheDocument();
+  });
+
+  it('com e-mail: "Enviar convite" gera o primeiro convite e abre "Convite gerado", sem enviar sozinho', async () => {
+    rpc.mockResolvedValue(primeiroLink);
+    const u = abrir(semConvite);
+    await u.click(screen.getByRole("button", { name: "Enviar convite" }));
+    expect(rpc).toHaveBeenCalledWith("send_student_invite", { p_student_id: "s1" });
+    expect(await screen.findByRole("heading", { name: "Convite gerado" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Enviar por e-mail" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Copiar link" })).toBeVisible();
+    expect(chamarFuncao).not.toHaveBeenCalled();
+  });
+
+  it('sem e-mail: "Copiar link" é a ação principal', async () => {
+    rpc.mockResolvedValue(primeiroLink);
+    const u = abrir({ aluno: { ...pendente.aluno, email: null }, convite: null });
+    expect(screen.getByText("Sem e-mail no cadastro")).toBeVisible();
+    await u.click(screen.getByRole("button", { name: "Enviar convite" }));
+    expect(await screen.findByRole("heading", { name: "Convite gerado" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Enviar por e-mail" })).not.toBeInTheDocument();
+    const copiar = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: copiar },
+      configurable: true,
+    });
+    await u.click(screen.getByRole("button", { name: "Copiar link" }));
+    expect(copiar).toHaveBeenCalledWith(`${window.location.origin}/c/tok-primeiro`);
+  });
+
+  it("convite já enviado (outra aba): toast e volta à área", async () => {
+    rpc.mockRejectedValue(new ErroApp("invite_already_sent"));
+    const u = abrir(semConvite);
+    await u.click(screen.getByRole("button", { name: "Enviar convite" }));
+    expect(
+      await screen.findByText("O convite já foi enviado. Use Reenviar convite."),
+    ).toBeVisible();
+    expect(navegar).toHaveBeenCalledWith({ to: "/professor" });
   });
 });

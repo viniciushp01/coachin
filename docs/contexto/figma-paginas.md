@@ -30,11 +30,11 @@ Arquivo: Coach In (`IDP8M2IKanbn60dyqmzjh1`).
 | | Aluno · Abas | Abas do aluno |
 | 🎓 PROFESSOR | Professor · Entrada | (nova) ativar acesso, acesso ativado, link inválido, já tem conta, ativar acesso de professor?, acesso bloqueado |
 | | ↳ Fluxo · Professor · Entrada | (nova) |
-| | Professor · Alunos | Professor · Alunos (**seção 7: sair do app, regra 147; seção 8: convite com treino, regra 153**) |
+| | Professor · Alunos | Professor · Alunos (**seção 7: sair do app, regra 147; seção 8: convite com treino, regra 153; seção 9: aluno sem convite, regra 164, telas "Cadastrar · 3" e "Convite do aluno · 8 e 9"**) |
 | | ↳ Fluxo · Professor · Alunos | Fluxo · Professor · Alunos |
 | | Professor · Acompanhar | Professor · Acompanhar |
 | | ↳ Fluxo · Professor · Acompanhar | Fluxo · Professor · Acompanhar |
-| | Professor · Treino | Professor · Treino (seções 5 e 6, 22ª e 23ª rodadas; **seção 8: fatia 4, regras 149 a 153; seção 9: criar exercício, regra 157; seção 10: montagem rápida de repetições e descanso, regra 159, telas "Editar exercício · A1 a A5"; seção 13: nome do exercício sem corte, regra 165, opção A "Editar ficha · A" e "Biblioteca · A", as demais telas são só comparação**) |
+| | Professor · Treino | Professor · Treino (seções 5 e 6, 22ª e 23ª rodadas; **seção 8: fatia 4, regras 149 a 153; seção 9: criar exercício, regra 157; seção 10: montagem rápida de repetições e descanso, regra 159, telas "Editar exercício · A1 a A5"; seção 12: criar treino para aluno sem convite, regra 164, telas "Criar treino · 18b e 7d"; seção 13: nome do exercício sem corte, regra 165, opção A "Editar ficha · A" e "Biblioteca · A", as demais telas são só comparação**) |
 | | ↳ Fluxo · Professor · Treino | Fluxo · Professor · Treino |
 | 🛠️ ADMIN | Admin · Professores | (nova) lista de professores, convidar, convites, bloquear; **4 · Lista: vazia, busca, nome vazio e sair** (29ª rodada, regra 145) |
 | | ↳ Fluxo · Admin · Professores | (nova) |

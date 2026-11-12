@@ -20,7 +20,8 @@ Arquivos (em `supabase/`):
 | `migrations/20261104110318_save_workout_limits.sql` | 0012 · Regras 149 (4) e 154 (2) (#100): `save_workout` valida semanas de 1 a 104, séries de 1 a 20, repetições ou tempo até 20 caracteres e descanso de 0 a 600; número gigante vira o código, não erro cru de inteiro; descanso em branco grava 0. Aplicada em 04/11/2026, pelo SQL Editor |
 | `migrations/20261105121922_similar_exercises_order_hidden.sql` | 0013 · Regra 157 (6) e (7) (#93): `similar_exercises` ordena por nome igual, apelido igual, similaridade e nome, e ignora o que quem chama ocultou |
 | `migrations/20261105200000_set_exercise_settings.sql` | 0011 · Regras 123 e 148 (#94): `set_exercise_settings` ajusta medida e modo de carga do exercício do próprio professor; não toca em carga nem histórico. O número foi reservado no #95; o que vale é a ordem pelo timestamp. Aplicada em 05/11/2026 via MCP, antes do merge (versão registrada `20261105211112`) |
-| `tests/` | Simulação do Supabase, 373 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
+| `migrations/20261111175653_student_without_invite.sql` | 0015 · Regra 164 (#135): `create_student` cria só o aluno (vínculo `invited`, sem convite); `send_student_invite(aluno)` gera o primeiro convite (7 dias a partir do envio; `invite_already_sent` se já houver convite, `student_already_linked`, `student_not_found`); `teacher_student_list` devolve `sem_convite` para o vínculo `invited` sem nenhum convite. `create_student_with_invite` fica como está (o app deixa de usar). **Aplicada em 11/11/2026** via MCP (versão `20261111175653`) |
+| `tests/` | Simulação do Supabase, 396 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
 
 ## 1. Como o banco funciona (5 ideias)
 
@@ -69,7 +70,7 @@ Conta **bloqueada** perde acesso a tudo, mas ainda lê o próprio perfil (para m
 
 ## 4. Funções (o "API" do app)
 
-**Convites e conta:** `get_invite_preview` (aceita sem login), `create_student_with_invite`, `create_teacher_invite`, `reissue_invite` (reenviar, gerar novo, corrigir e-mail), `accept_student_invite` (exige confirmar a troca se já tem professor), `accept_teacher_invite`, `decline_invite`, `claim_invite_email` (só a Edge Function `enviar-convite` chama, com o JWT de quem envia), `set_teacher_status` (bloquear/desbloquear, encerra as sessões), `admin_teacher_student_counts`, `accept_data_notice`, `save_student_profile`, `delete_my_account`.
+**Convites e conta:** `get_invite_preview` (aceita sem login), `create_student` (cadastro sem convite, regra 164), `send_student_invite` (primeiro convite do aluno sem convite), `create_student_with_invite` (antiga: cadastro já com convite; o app não usa mais), `create_teacher_invite`, `reissue_invite` (reenviar, gerar novo, corrigir e-mail), `accept_student_invite` (exige confirmar a troca se já tem professor), `accept_teacher_invite`, `decline_invite`, `claim_invite_email` (só a Edge Function `enviar-convite` chama, com o JWT de quem envia), `set_teacher_status` (bloquear/desbloquear, encerra as sessões), `admin_teacher_student_counts`, `accept_data_notice`, `save_student_profile`, `delete_my_account`.
 
 **Biblioteca:** `search_exercises` e `similar_exercises` (olham o nome e, desde a 0007, os apelidos; desde a 0013, `similar_exercises` ordena por nome igual, apelido igual, similaridade e nome, e ignora o que quem chama ocultou), `create_exercise` (desde a 0007 com 4 parâmetros: nome, grupo, `load_mode`, `measure`; o grupo precisa estar em `muscle_groups`), `set_exercise_settings` (desde a 0011: medida e modo de carga do exercício do próprio professor; predefinido recusa com `exercise_predefined`, de outro professor com `exercise_not_found`; carga, histórico e o `reps` das fichas não mudam), `set_exercise_hidden`.
 
@@ -119,7 +120,7 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 2. Rodar o **Security Advisor** do Supabase depois (alertas de RLS ou de função sem `search_path`).
 3. Criar o administrador conforme o comentário no fim da migration 0001.
 
-**Ordem de aplicação:** os arquivos de `supabase/migrations/`, na ordem do timestamp do nome (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link, 0008 invite_preview_teacher_unavailable, 0009 invite_email_claim, 0010 teacher_list_last_done_letter, 0007 exercise_catalog, que roda depois da 0010, 0012 save_workout_limits, 0013 similar_exercises_order_hidden, 0014 short_invite_token, 0011 set_exercise_settings, a última), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
+**Ordem de aplicação:** os arquivos de `supabase/migrations/`, na ordem do timestamp do nome (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link, 0008 invite_preview_teacher_unavailable, 0009 invite_email_claim, 0010 teacher_list_last_done_letter, 0007 exercise_catalog, que roda depois da 0010, 0012 save_workout_limits, 0013 similar_exercises_order_hidden, 0014 short_invite_token, 0011 set_exercise_settings, 0015 student_without_invite, a última), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
 
 **Rodar os testes:** `supabase/tests/run.sh` (precisa de Postgres 16 instalado e Linux/WSL/macOS; sobe e derruba um banco descartável) ou, sem Postgres (Windows), `npm --prefix supabase/tests/pglite install` e `node supabase/tests/pglite/run.mjs` (Postgres 17.5 em WebAssembly, PGlite 0.4.6, banco em memória, um comando por transação como o `psql -f`; `--sem-pgcrypto` troca `digest` e `gen_random_bytes` por equivalentes nativos só no harness). Os dois devem terminar com "TODOS OS TESTES PASSARAM".
 
@@ -200,3 +201,12 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 - **Conferido no banco:** os limites novos estão no corpo da função; uma só versão de `save_workout`; `EXECUTE` para `authenticated` e não para `anon`.
 - **Advisor:** sem alerta novo (as mesmas 24 RPCs `security definer` para `authenticated`, `get_invite_preview` para `anon` e os dois avisos do Auth).
 - **Tipos:** não regerados: a assinatura é a mesma e nenhuma tabela mudou.
+
+### Resultado da aplicação da 0015 (11/11/2026, issue #135)
+
+- **O que muda:** `create_student` e `send_student_invite` (novas, `security definer`, `search_path=public, extensions`, `EXECUTE` só para `authenticated`); `teacher_student_list` (`create or replace view`, mesmas colunas, `security_invoker` e grants mantidos) passa a devolver `list_status = 'sem_convite'` para o vínculo `invited` sem nenhuma linha em `invites`. `create_student_with_invite`, `reissue_invite` e `claim_invite_email` não mudam: depois do primeiro envio, reenviar segue por `reissue_invite`, e o intervalo de 60 s (regra 139) conta do envio por e-mail do convite novo.
+- **`save_workout` e a leitura de treinos** já aceitavam vínculo `invited` sem olhar o convite (0006): valem para o aluno sem convite (testado).
+- **Testes (PGlite, Postgres 17.5):** a seção 16, nova, falha sem a migration (`create_student` não existe). Com a 0015, **396 verificações**.
+- **Aplicação:** via MCP, registrada como versão `20261111175653` (arquivo local renomeado para essa versão). O texto aplicado é o do arquivo sem os comentários do cabeçalho. Conferido: `anon` sem `EXECUTE` nas duas funções novas; `authenticated` com.
+- **Advisor:** sem alerta novo além do padrão já aceito (`create_student` e `send_student_invite` entram na lista de RPCs `security definer` para `authenticated`; `get_invite_preview` segue para `anon`).
+- **Tipos:** regerados; `create_student` e `send_student_invite` em `database.types.ts`.
