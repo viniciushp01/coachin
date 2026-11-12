@@ -132,7 +132,7 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 - **Item 2 (Security Advisor):** nenhum alerta de RLS. Alertas que ficaram:
   - `function_search_path_mutable` (11 funções), `auth_rls_initplan` (18 políticas) e `unindexed_foreign_keys` (7): **corrigidos pela 0005** (27/10/2026). A 0005 foi testada antes com os 203 testes, num Postgres 17 em WebAssembly (PGlite), porque esta máquina não tem Postgres nem WSL.
   - `anon/authenticated_security_definer_function_executable` nas funções RPC: **intencional** (é o desenho: toda escrita passa por função que confere papel; `get_invite_preview` é aberta para o link de convite).
-  - `auth_leaked_password_protection`: configuração do painel (Authentication > Policies), não do SQL. Pendente de decisão; pode exigir plano pago.
+  - `auth_leaked_password_protection`: configuração do painel (Authentication > Policies), não do SQL. **Decidido em 12/11/2026: não ligar por ora** (basta a proteção básica do plano gratuito); WARN aceito, reavaliar se o plano mudar.
   - Desempenho, aceitos: `multiple_permissive_policies` (uma política por papel, de propósito, para ficar legível) e `unused_index` (o banco ainda não tem dados).
 - **Item 3 (administrador):** criado (conta criada pelo painel e promovida a `admin`; é o único administrador).
 - Tipos TypeScript gerados em `supabase/database.types.ts`.
