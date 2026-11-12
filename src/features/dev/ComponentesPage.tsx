@@ -111,8 +111,8 @@ const FICHAS_EXEMPLO = [
   { id: "c", titulo: "Ficha C · Pernas e glúteos", detalhe: "7 exercícios", comProblema: false },
   {
     id: "d",
-    titulo: "Ficha D · Nome bem comprido que trunca em uma linha só",
-    detalhe: "4 séries · 10 reps · Descanso 90 s · detalhe comprido também trunca",
+    titulo: "Ficha D · Nome bem comprido que quebra de linha, sem corte",
+    detalhe: "4 séries · 10 reps · Descanso 90 s · detalhe comprido também quebra",
     comProblema: false,
   },
 ];
@@ -357,7 +357,7 @@ function Demonstracoes() {
         <SectionRow
           icone="fitness_center"
           titulo="Supino inclinado com halteres e pausa no peito"
-          detalhe="Peito · nome longo trunca em uma linha"
+          detalhe="Peito · nome longo quebra de linha"
           iconeDireita="more_horiz"
         />
       </Secao>
