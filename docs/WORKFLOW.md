@@ -23,9 +23,9 @@ Como produto, design e código andam juntos. Leia este arquivo antes de planejar
 
 Os dois lados conversam por **arquivos**: pendências voltam para `contexto-produto.md` (seção "Pontos em aberto") e para issues.
 
-## 3. Estado atual (05/11/2026)
+## 3. Estado atual (12/11/2026)
 
-- **Produto:** regras 1 a 162. Nenhum ponto bloqueando o piloto. Pendências menores na seção 8 do `contexto-produto.md`.
+- **Produto:** regras 1 a 165 (a 164 está reservada no PR #136, ainda aberto). Nenhum ponto bloqueando o piloto. Pendências menores na seção 8 do `contexto-produto.md`.
 - **Banco:** migrations 0001 a 0014 aplicadas no Supabase (`kfjjiajxgbsqpuskxbzb`) e iguais às do repositório (a 0007 e a 0012 entraram pelo SQL Editor; ver `docs/schema-coach-in.md`). 373 verificações passando (PGlite). Administrador criado. Edge Functions `ativar-professor` e `enviar-convite` publicadas (pasta `supabase/functions`, testes em Deno no CI).
 - **Design:** Figma completo até a 24ª rodada. Faltam no FigJam original as seções 19 a 24.
 - **App:** **Fase 0 concluída** em 28/10/2026 (PR #1). Produção em https://coachin.vercel.app. Stack: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Tokens em `src/styles/tokens.css`; componentes base em `src/ui` (catálogo em `/dev/componentes`); camada Supabase em `src/lib` (`supabase.ts`, `rpc.ts`, `erros.ts`); roteamento por papel (`src/lib/destino.ts` e `sessao.ts`, rotas `/entrar`, `/admin`, `/professor`, `/aluno`, `/sem-professor`, `/primeiro-acesso`, `/bloqueado`); CI em `.github/workflows/ci.yml`. `main` protegida (PR obrigatório e os dois jobs do CI verdes). Projeto `coachin` na Vercel com preview por PR.
@@ -42,9 +42,9 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 | Etapa | O que entra |
 |---|---|
 | 1. ~~Fechar a fatia 4~~ | Concluída em 05/11/2026: criar e editar treino, arrastar, biblioteca (buscar, criar, ocultar) |
-| 2. Fatia 5 reduzida | Início com semana e "Ficha de hoje", ficha com exercícios e descanso, marcar como feito, desfazer, marcar dia passado, registrar carga. Menu só com o que existe, e um jeito de sair da conta |
-| 3. Fatia 8 | PWA e fila offline (regras 38 e 116) |
-| 4. Piloto | Teste de ponta a ponta dos três papéis, iPhone e Android com o app instalado, 2 semanas de uso |
+| 2. ~~Fatia 5 reduzida~~ | Concluída em 05/11/2026 (#115): Início com semana e "Ficha de hoje", ficha com exercícios e descanso, marcar como feito, desfazer, marcar dia passado, registrar carga. Menu só com o que existe, e um jeito de sair da conta |
+| 3. ~~Fatia 8~~ | Concluída em 05/11/2026 (#117): PWA e fila offline (regras 38 e 116) |
+| 4. Piloto | **Em andamento.** Teste de ponta a ponta dos três papéis, iPhone e Android com o app instalado, 2 semanas de uso |
 
 Ao concluir uma etapa, risque o nome dela na tabela (~~assim~~): o ESTADO.md usa a primeira etapa sem risco como a etapa atual.
 
@@ -78,10 +78,10 @@ Cada fatia = telas + funções do banco que ela usa + testes. Ordem sugerida pel
 | 2 | ~~Convites e vínculo: administrador → professor; professor → aluno; primeiro acesso~~ Concluída (#39) | 1 | 46 a 49, 57, 58, 79, 82, 91 a 98, 102, 132 a 145 |
 | 3 | ~~Professor: lista de alunos (o cadastro entrou na fatia 2)~~ Concluída (#74) | 2 | 54 a 59, 109, 147 |
 | 4 | ~~Professor: montar e editar treino, biblioteca~~ Concluída para o piloto (#86; adiado #97; #94 e #98 feitos para o piloto; 0011 aplicada, #95 fechado) | 3 | 73 a 77, 104 a 107, 111, 118, 122 |
-| 5 | Aluno: início, ficha, marcar como feito, carga | 4 | 1 a 29, 43, 110, 117 |
+| 5 | ~~Aluno: início, ficha, marcar como feito, carga~~ Concluída (#115, versão reduzida do plano do piloto) | 4 | 1 a 29, 43, 110, 117 |
 | 6 | Aluno: Frequência, Progressão, Histórico, Perfil | 5 | 44, 45, 85, 99 |
 | 7 | Professor acompanha, solicitação de novo treino | 5 | 40, 52, 61 a 72, 103 |
-| 8 | PWA e fila offline | 5 | 38, 116 |
+| 8 | ~~PWA e fila offline~~ Concluída (#117) | 5 | 38, 116 |
 | 9 | Conta: excluir, bloquear professor, tela de aluno bloqueado | 2 | 94, 95, 119, 120 |
 | 10 | Cardio na ficha: colunas em `workout_days`, seção na edição da ficha e cartão na ficha do aluno | 4 e 5 | 126 |
 
@@ -114,7 +114,7 @@ Problema durante o caminho: `/diagnosing-bugs`. Contexto grande demais para uma 
 - **Sem paralelo e sem sessão coordenadora:** uma etapa de cada vez, em worktree próprio. Ninguém trabalha na `main` direto.
 - **Migrations:** uma por vez, com o número conferido antes de começar. Quem aplica roda os testes inteiros depois.
 - **Componentes base:** a sessão da etapa cria o que precisar em `src/ui`, seguindo o `design.md`.
-- **Numeração de regras:** a próxima é a **164**.
+- **Numeração de regras:** a próxima é a **166** (a 164 está reservada no PR #136, ainda aberto; a 165 já está na `main`).
 
 ## 7. Quando uma regra de negócio muda ou aparece
 
