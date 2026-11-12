@@ -32,6 +32,7 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 - **Fatia 1 (Acesso) concluída** em 28/10/2026 (spec #8, PRs #23 a #32): login completo, criar conta e "Confirme seu e-mail", login com e-mail não confirmado, volta do link de confirmação, "Esqueci a senha" por link de 1 dia (vencido e já usado separados pela hora do pedido no link), sessão de 30 dias sem uso controlada no app (`src/lib/inatividade.ts`), "Sair" só deste aparelho e a folha "Sair do app?" pronta para o Perfil (fatia 6). Formulários com react-hook-form + zod (`src/lib/formularios.ts`). Rotas novas: `/criar-conta`, `/confirme-seu-email`, `/confirmar-email`, `/esqueci-a-senha`, `/confira-seu-email`, `/nova-senha`. As áreas dos papéis continuam provisórias ("Olá") até as fatias seguintes. Sem migration nova.
 - **Fatia 2 (Convites e vínculo) concluída** em 30/10/2026 (spec #39, PRs #55 a #72): convite de aluno (abrir o link e voltar a ele depois do login, vincular, trocar de professor, recusar), primeiro acesso com aviso de dados e perfil em 2 passos, cadastro de aluno e "Convite gerado", aluno com convite pendente, expirado e recusado, lista de professores e "Convidar professor" do administrador com os estados do convite, convite de professor com conta, sem conta ("Ative seu acesso", Edge Function `ativar-professor`) e de outra conta, os casos da regra 137 e o envio do convite por e-mail com intervalo de 60 s (Edge Function `enviar-convite`). Migrations 0008 e 0009. Regras 132 a 145 (29ª rodada). A área do professor ainda é provisória (lista de alunos com convite) até a fatia 3, e a do aluno até a 5.
 - **Fatia 3 (Professor: lista de alunos) concluída** em 03/11/2026 (spec #74, PRs #81, #83 e #84): `/professor` deixa de ser provisória e vira a Lista de alunos (resumo, busca sem acento e sem maiúsculas, lista vazia, "Sair" sem a fila local), com os convites (detalhe com as datas, abre a tela do aluno com convite) e os alunos vinculados (chip de status, detalhe "treinou hoje"/último treino com a ficha, chip "Pediu treino"). Migration 0010 (`last_done_letter` na view `teacher_student_list`). Regras 146 e 147. À parte, o #80 (PR #82) fechou os dois casos do convite que ficaram do #49. A tela do aluno vinculado chega com as fatias 4 e 7; a área do aluno continua provisória até a 5.
+- **Fatia 7a (Professor acompanha o aluno, só leitura) concluída** em 12/11/2026 (#141): os quatro atalhos da tela do aluno (só Perfil e Histórico sem treino ativo, como no Figma), Calendário mensal com painel do dia e ficha em modo leitura, Progressão de carga (lista e detalhe com histórico), Histórico de treinos e Perfil com "Abrir WhatsApp". Sem migration (a RLS do professor já cobria as leituras). Componente novo `MonthDay`. A 7b (solicitação de novo treino) continua pendente.
 
 ## 4. Fases
 
@@ -51,7 +52,7 @@ Ao concluir uma etapa, risque o nome dela na tabela (~~assim~~): o ESTADO.md usa
 **Adiados até o piloto responder:**
 
 - **#97** (botão "Agendar novo treino"). O #98 (treino antes do aceite, regras 122 e 153) e o #94 (ajustar medida e carga, regras 123 e 151 (4)) foram feitos antes do piloto, a pedido.
-- **Fatias 6, 7 e 10** e, na fatia 5, o aviso de treinar além da frequência, a sugestão de descanso e o pop-up de treino novo.
+- **Fatias 6 e 10** (a 7a, acompanhar o aluno em só leitura, foi feita antes do piloto, #141; a 7b, solicitação de novo treino, segue adiada) e, na fatia 5, o aviso de treinar além da frequência, a sugestão de descanso e o pop-up de treino novo.
 
 **Antes de abrir para o público, continuam obrigatórios:** a fatia 9 e a Fase 2. No piloto, combinar o uso dos dados com os participantes e atender à exclusão de conta manualmente, se alguém pedir.
 
@@ -80,7 +81,7 @@ Cada fatia = telas + funções do banco que ela usa + testes. Ordem sugerida pel
 | 4 | ~~Professor: montar e editar treino, biblioteca~~ Concluída para o piloto (#86; adiado #97; #94 e #98 feitos para o piloto; 0011 aplicada, #95 fechado) | 3 | 73 a 77, 104 a 107, 111, 118, 122 |
 | 5 | ~~Aluno: início, ficha, marcar como feito, carga~~ Concluída (#115, versão reduzida do plano do piloto) | 4 | 1 a 29, 43, 110, 117 |
 | 6 | Aluno: Frequência, Progressão, Histórico, Perfil | 5 | 44, 45, 85, 99 |
-| 7 | Professor acompanha, solicitação de novo treino | 5 | 40, 52, 61 a 72, 103 |
+| 7 | Professor acompanha, solicitação de novo treino. **7a ~~calendário, progressão, histórico e perfil, só leitura~~ concluída (#141)**; 7b, a solicitação de novo treino (40, 52, 62, 70, 103), segue pendente | 5 | 40, 52, 61 a 72, 103 |
 | 8 | ~~PWA e fila offline~~ Concluída (#117) | 5 | 38, 116 |
 | 9 | Conta: excluir, bloquear professor, tela de aluno bloqueado | 2 | 94, 95, 119, 120 |
 | 10 | Cardio na ficha: colunas em `workout_days`, seção na edição da ficha e cartão na ficha do aluno | 4 e 5 | 126 |

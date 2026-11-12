@@ -31,8 +31,14 @@ import { Route as ProfessorCadastrarAlunoRouteImport } from './routes/professor_
 import { Route as AdminConviteConviteIdRouteImport } from './routes/admin_.convite.$conviteId'
 import { Route as AlunoFichaDiaIdRouteImport } from './routes/aluno_.ficha.$diaId'
 import { Route as ProfessorAlunosAlunoIdRouteImport } from './routes/professor_.alunos.$alunoId'
+import { Route as ProfessorAlunosAlunoIdCalendarioRouteImport } from './routes/professor_.alunos.$alunoId_.calendario'
 import { Route as ProfessorAlunosAlunoIdCriarTreinoRouteImport } from './routes/professor_.alunos.$alunoId_.criar-treino'
 import { Route as ProfessorAlunosAlunoIdEditarTreinoRouteImport } from './routes/professor_.alunos.$alunoId_.editar-treino'
+import { Route as ProfessorAlunosAlunoIdHistoricoRouteImport } from './routes/professor_.alunos.$alunoId_.historico'
+import { Route as ProfessorAlunosAlunoIdPerfilRouteImport } from './routes/professor_.alunos.$alunoId_.perfil'
+import { Route as ProfessorAlunosAlunoIdProgressaoRouteImport } from './routes/professor_.alunos.$alunoId_.progressao'
+import { Route as ProfessorAlunosAlunoIdFichaDiaIdRouteImport } from './routes/professor_.alunos.$alunoId_.ficha.$diaId'
+import { Route as ProfessorAlunosAlunoIdProgressaoExercicioIdRouteImport } from './routes/professor_.alunos.$alunoId_.progressao_.$exercicioId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -144,6 +150,12 @@ const ProfessorAlunosAlunoIdRoute = ProfessorAlunosAlunoIdRouteImport.update({
   path: '/professor/alunos/$alunoId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfessorAlunosAlunoIdCalendarioRoute =
+  ProfessorAlunosAlunoIdCalendarioRouteImport.update({
+    id: '/professor_/alunos/$alunoId_/calendario',
+    path: '/professor/alunos/$alunoId/calendario',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ProfessorAlunosAlunoIdCriarTreinoRoute =
   ProfessorAlunosAlunoIdCriarTreinoRouteImport.update({
     id: '/professor_/alunos/$alunoId_/criar-treino',
@@ -154,6 +166,36 @@ const ProfessorAlunosAlunoIdEditarTreinoRoute =
   ProfessorAlunosAlunoIdEditarTreinoRouteImport.update({
     id: '/professor_/alunos/$alunoId_/editar-treino',
     path: '/professor/alunos/$alunoId/editar-treino',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProfessorAlunosAlunoIdHistoricoRoute =
+  ProfessorAlunosAlunoIdHistoricoRouteImport.update({
+    id: '/professor_/alunos/$alunoId_/historico',
+    path: '/professor/alunos/$alunoId/historico',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProfessorAlunosAlunoIdPerfilRoute =
+  ProfessorAlunosAlunoIdPerfilRouteImport.update({
+    id: '/professor_/alunos/$alunoId_/perfil',
+    path: '/professor/alunos/$alunoId/perfil',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProfessorAlunosAlunoIdProgressaoRoute =
+  ProfessorAlunosAlunoIdProgressaoRouteImport.update({
+    id: '/professor_/alunos/$alunoId_/progressao',
+    path: '/professor/alunos/$alunoId/progressao',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProfessorAlunosAlunoIdFichaDiaIdRoute =
+  ProfessorAlunosAlunoIdFichaDiaIdRouteImport.update({
+    id: '/professor_/alunos/$alunoId_/ficha/$diaId',
+    path: '/professor/alunos/$alunoId/ficha/$diaId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProfessorAlunosAlunoIdProgressaoExercicioIdRoute =
+  ProfessorAlunosAlunoIdProgressaoExercicioIdRouteImport.update({
+    id: '/professor_/alunos/$alunoId_/progressao_/$exercicioId',
+    path: '/professor/alunos/$alunoId/progressao/$exercicioId',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -180,8 +222,14 @@ export interface FileRoutesByFullPath {
   '/admin/convite/$conviteId': typeof AdminConviteConviteIdRoute
   '/aluno/ficha/$diaId': typeof AlunoFichaDiaIdRoute
   '/professor/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
+  '/professor/alunos/$alunoId/calendario': typeof ProfessorAlunosAlunoIdCalendarioRoute
   '/professor/alunos/$alunoId/criar-treino': typeof ProfessorAlunosAlunoIdCriarTreinoRoute
   '/professor/alunos/$alunoId/editar-treino': typeof ProfessorAlunosAlunoIdEditarTreinoRoute
+  '/professor/alunos/$alunoId/historico': typeof ProfessorAlunosAlunoIdHistoricoRoute
+  '/professor/alunos/$alunoId/perfil': typeof ProfessorAlunosAlunoIdPerfilRoute
+  '/professor/alunos/$alunoId/progressao': typeof ProfessorAlunosAlunoIdProgressaoRoute
+  '/professor/alunos/$alunoId/ficha/$diaId': typeof ProfessorAlunosAlunoIdFichaDiaIdRoute
+  '/professor/alunos/$alunoId/progressao/$exercicioId': typeof ProfessorAlunosAlunoIdProgressaoExercicioIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -206,8 +254,14 @@ export interface FileRoutesByTo {
   '/admin/convite/$conviteId': typeof AdminConviteConviteIdRoute
   '/aluno/ficha/$diaId': typeof AlunoFichaDiaIdRoute
   '/professor/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
+  '/professor/alunos/$alunoId/calendario': typeof ProfessorAlunosAlunoIdCalendarioRoute
   '/professor/alunos/$alunoId/criar-treino': typeof ProfessorAlunosAlunoIdCriarTreinoRoute
   '/professor/alunos/$alunoId/editar-treino': typeof ProfessorAlunosAlunoIdEditarTreinoRoute
+  '/professor/alunos/$alunoId/historico': typeof ProfessorAlunosAlunoIdHistoricoRoute
+  '/professor/alunos/$alunoId/perfil': typeof ProfessorAlunosAlunoIdPerfilRoute
+  '/professor/alunos/$alunoId/progressao': typeof ProfessorAlunosAlunoIdProgressaoRoute
+  '/professor/alunos/$alunoId/ficha/$diaId': typeof ProfessorAlunosAlunoIdFichaDiaIdRoute
+  '/professor/alunos/$alunoId/progressao/$exercicioId': typeof ProfessorAlunosAlunoIdProgressaoExercicioIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -233,8 +287,14 @@ export interface FileRoutesById {
   '/admin_/convite/$conviteId': typeof AdminConviteConviteIdRoute
   '/aluno_/ficha/$diaId': typeof AlunoFichaDiaIdRoute
   '/professor_/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
+  '/professor_/alunos/$alunoId_/calendario': typeof ProfessorAlunosAlunoIdCalendarioRoute
   '/professor_/alunos/$alunoId_/criar-treino': typeof ProfessorAlunosAlunoIdCriarTreinoRoute
   '/professor_/alunos/$alunoId_/editar-treino': typeof ProfessorAlunosAlunoIdEditarTreinoRoute
+  '/professor_/alunos/$alunoId_/historico': typeof ProfessorAlunosAlunoIdHistoricoRoute
+  '/professor_/alunos/$alunoId_/perfil': typeof ProfessorAlunosAlunoIdPerfilRoute
+  '/professor_/alunos/$alunoId_/progressao': typeof ProfessorAlunosAlunoIdProgressaoRoute
+  '/professor_/alunos/$alunoId_/ficha/$diaId': typeof ProfessorAlunosAlunoIdFichaDiaIdRoute
+  '/professor_/alunos/$alunoId_/progressao_/$exercicioId': typeof ProfessorAlunosAlunoIdProgressaoExercicioIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -261,8 +321,14 @@ export interface FileRouteTypes {
     | '/admin/convite/$conviteId'
     | '/aluno/ficha/$diaId'
     | '/professor/alunos/$alunoId'
+    | '/professor/alunos/$alunoId/calendario'
     | '/professor/alunos/$alunoId/criar-treino'
     | '/professor/alunos/$alunoId/editar-treino'
+    | '/professor/alunos/$alunoId/historico'
+    | '/professor/alunos/$alunoId/perfil'
+    | '/professor/alunos/$alunoId/progressao'
+    | '/professor/alunos/$alunoId/ficha/$diaId'
+    | '/professor/alunos/$alunoId/progressao/$exercicioId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -287,8 +353,14 @@ export interface FileRouteTypes {
     | '/admin/convite/$conviteId'
     | '/aluno/ficha/$diaId'
     | '/professor/alunos/$alunoId'
+    | '/professor/alunos/$alunoId/calendario'
     | '/professor/alunos/$alunoId/criar-treino'
     | '/professor/alunos/$alunoId/editar-treino'
+    | '/professor/alunos/$alunoId/historico'
+    | '/professor/alunos/$alunoId/perfil'
+    | '/professor/alunos/$alunoId/progressao'
+    | '/professor/alunos/$alunoId/ficha/$diaId'
+    | '/professor/alunos/$alunoId/progressao/$exercicioId'
   id:
     | '__root__'
     | '/'
@@ -313,8 +385,14 @@ export interface FileRouteTypes {
     | '/admin_/convite/$conviteId'
     | '/aluno_/ficha/$diaId'
     | '/professor_/alunos/$alunoId'
+    | '/professor_/alunos/$alunoId_/calendario'
     | '/professor_/alunos/$alunoId_/criar-treino'
     | '/professor_/alunos/$alunoId_/editar-treino'
+    | '/professor_/alunos/$alunoId_/historico'
+    | '/professor_/alunos/$alunoId_/perfil'
+    | '/professor_/alunos/$alunoId_/progressao'
+    | '/professor_/alunos/$alunoId_/ficha/$diaId'
+    | '/professor_/alunos/$alunoId_/progressao_/$exercicioId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -340,8 +418,14 @@ export interface RootRouteChildren {
   AdminConviteConviteIdRoute: typeof AdminConviteConviteIdRoute
   AlunoFichaDiaIdRoute: typeof AlunoFichaDiaIdRoute
   ProfessorAlunosAlunoIdRoute: typeof ProfessorAlunosAlunoIdRoute
+  ProfessorAlunosAlunoIdCalendarioRoute: typeof ProfessorAlunosAlunoIdCalendarioRoute
   ProfessorAlunosAlunoIdCriarTreinoRoute: typeof ProfessorAlunosAlunoIdCriarTreinoRoute
   ProfessorAlunosAlunoIdEditarTreinoRoute: typeof ProfessorAlunosAlunoIdEditarTreinoRoute
+  ProfessorAlunosAlunoIdHistoricoRoute: typeof ProfessorAlunosAlunoIdHistoricoRoute
+  ProfessorAlunosAlunoIdPerfilRoute: typeof ProfessorAlunosAlunoIdPerfilRoute
+  ProfessorAlunosAlunoIdProgressaoRoute: typeof ProfessorAlunosAlunoIdProgressaoRoute
+  ProfessorAlunosAlunoIdFichaDiaIdRoute: typeof ProfessorAlunosAlunoIdFichaDiaIdRoute
+  ProfessorAlunosAlunoIdProgressaoExercicioIdRoute: typeof ProfessorAlunosAlunoIdProgressaoExercicioIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -500,6 +584,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfessorAlunosAlunoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/professor_/alunos/$alunoId_/calendario': {
+      id: '/professor_/alunos/$alunoId_/calendario'
+      path: '/professor/alunos/$alunoId/calendario'
+      fullPath: '/professor/alunos/$alunoId/calendario'
+      preLoaderRoute: typeof ProfessorAlunosAlunoIdCalendarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/professor_/alunos/$alunoId_/criar-treino': {
       id: '/professor_/alunos/$alunoId_/criar-treino'
       path: '/professor/alunos/$alunoId/criar-treino'
@@ -512,6 +603,41 @@ declare module '@tanstack/react-router' {
       path: '/professor/alunos/$alunoId/editar-treino'
       fullPath: '/professor/alunos/$alunoId/editar-treino'
       preLoaderRoute: typeof ProfessorAlunosAlunoIdEditarTreinoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/professor_/alunos/$alunoId_/historico': {
+      id: '/professor_/alunos/$alunoId_/historico'
+      path: '/professor/alunos/$alunoId/historico'
+      fullPath: '/professor/alunos/$alunoId/historico'
+      preLoaderRoute: typeof ProfessorAlunosAlunoIdHistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/professor_/alunos/$alunoId_/perfil': {
+      id: '/professor_/alunos/$alunoId_/perfil'
+      path: '/professor/alunos/$alunoId/perfil'
+      fullPath: '/professor/alunos/$alunoId/perfil'
+      preLoaderRoute: typeof ProfessorAlunosAlunoIdPerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/professor_/alunos/$alunoId_/progressao': {
+      id: '/professor_/alunos/$alunoId_/progressao'
+      path: '/professor/alunos/$alunoId/progressao'
+      fullPath: '/professor/alunos/$alunoId/progressao'
+      preLoaderRoute: typeof ProfessorAlunosAlunoIdProgressaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/professor_/alunos/$alunoId_/ficha/$diaId': {
+      id: '/professor_/alunos/$alunoId_/ficha/$diaId'
+      path: '/professor/alunos/$alunoId/ficha/$diaId'
+      fullPath: '/professor/alunos/$alunoId/ficha/$diaId'
+      preLoaderRoute: typeof ProfessorAlunosAlunoIdFichaDiaIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/professor_/alunos/$alunoId_/progressao_/$exercicioId': {
+      id: '/professor_/alunos/$alunoId_/progressao_/$exercicioId'
+      path: '/professor/alunos/$alunoId/progressao/$exercicioId'
+      fullPath: '/professor/alunos/$alunoId/progressao/$exercicioId'
+      preLoaderRoute: typeof ProfessorAlunosAlunoIdProgressaoExercicioIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -540,10 +666,17 @@ const rootRouteChildren: RootRouteChildren = {
   AdminConviteConviteIdRoute: AdminConviteConviteIdRoute,
   AlunoFichaDiaIdRoute: AlunoFichaDiaIdRoute,
   ProfessorAlunosAlunoIdRoute: ProfessorAlunosAlunoIdRoute,
+  ProfessorAlunosAlunoIdCalendarioRoute: ProfessorAlunosAlunoIdCalendarioRoute,
   ProfessorAlunosAlunoIdCriarTreinoRoute:
     ProfessorAlunosAlunoIdCriarTreinoRoute,
   ProfessorAlunosAlunoIdEditarTreinoRoute:
     ProfessorAlunosAlunoIdEditarTreinoRoute,
+  ProfessorAlunosAlunoIdHistoricoRoute: ProfessorAlunosAlunoIdHistoricoRoute,
+  ProfessorAlunosAlunoIdPerfilRoute: ProfessorAlunosAlunoIdPerfilRoute,
+  ProfessorAlunosAlunoIdProgressaoRoute: ProfessorAlunosAlunoIdProgressaoRoute,
+  ProfessorAlunosAlunoIdFichaDiaIdRoute: ProfessorAlunosAlunoIdFichaDiaIdRoute,
+  ProfessorAlunosAlunoIdProgressaoExercicioIdRoute:
+    ProfessorAlunosAlunoIdProgressaoExercicioIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

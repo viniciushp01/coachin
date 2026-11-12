@@ -11,6 +11,7 @@ import {
   ESPACO_NAVBAR,
   FormField,
   IconButton,
+  MonthDay,
   NavBar,
   Notice,
   NumberField,
@@ -346,6 +347,24 @@ function Demonstracoes() {
             />
           )}
         </ListaReordenavel>
+      </Secao>
+
+      <Secao titulo="MonthDay">
+        <div className="grid grid-cols-7 rounded-card bg-bg-surface p-16">
+          <MonthDay estado="padrao" numero={26} marcas="A" rotulo="Segunda, 26 de outubro" />
+          <MonthDay
+            estado="padrao"
+            numero={27}
+            marcas="B"
+            rotulo="Terça, 27 de outubro"
+            selecionado
+          />
+          <MonthDay estado="padrao" numero={28} marcas="" rotulo="Quarta, 28 de outubro" />
+          <MonthDay estado="hoje" numero={29} marcas="" rotulo="Quinta, 29 de outubro" />
+          <MonthDay estado="hoje" numero={29} marcas="AB" rotulo="Quinta, 29 de outubro" />
+          <MonthDay estado="futuro" numero={30} marcas="" rotulo="Sexta, 30 de outubro" />
+          <MonthDay estado="futuro" numero={31} marcas="" rotulo="Sábado, 31 de outubro" />
+        </div>
       </Secao>
 
       <Secao titulo="SectionRow">

@@ -27,6 +27,8 @@ const comTreino: AlunoVinculado = {
   },
   agendado: false,
   acoes: ["editar", "agendar"],
+  perfilAtualizadoEm: "2026-10-20",
+  treinosAnteriores: 2,
 };
 
 // Figma Aluno · 3 Sem treino.
@@ -37,6 +39,8 @@ const semTreino: AlunoVinculado = {
   treino: null,
   agendado: false,
   acoes: ["criar"],
+  perfilAtualizadoEm: "2026-09-02",
+  treinosAnteriores: 1,
 };
 
 beforeEach(() => navegar.mockReset());
@@ -104,10 +108,49 @@ describe("Tela do aluno vinculado (regras 5, 10, 68, 114 e 144)", () => {
   });
 });
 
+describe("Atalhos de acompanhamento (regra 68; fatia 7a)", () => {
+  const atalho = (nome: RegExp) => screen.getByRole("button", { name: nome });
+
+  it("com treino ativo: os quatro atalhos, com os detalhes do Figma", () => {
+    render(<AlunoVinculadoPage aluno={comTreino} />);
+    expect(atalho(/^Calendário/)).toHaveTextContent("Marcações dos treinos feitos");
+    expect(atalho(/^Progressão de carga/)).toHaveTextContent("Última carga de cada exercício");
+    expect(atalho(/^Perfil/)).toHaveTextContent("Atualizado em 20/10");
+    expect(atalho(/^Histórico de treinos/)).toHaveTextContent("2 treinos anteriores");
+  });
+
+  it("sem treino ativo: só Perfil e Histórico (Aluno · 3), no singular", () => {
+    render(<AlunoVinculadoPage aluno={semTreino} />);
+    expect(screen.queryByRole("button", { name: /^Calendário/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Progressão/ })).toBeNull();
+    expect(atalho(/^Perfil/)).toHaveTextContent("Atualizado em 02/09");
+    expect(atalho(/^Histórico de treinos/)).toHaveTextContent("1 treino anterior");
+  });
+
+  it("perfil ainda não preenchido e nenhum treino anterior", () => {
+    const aluno = { ...comTreino, perfilAtualizadoEm: null, treinosAnteriores: 0 };
+    render(<AlunoVinculadoPage aluno={aluno} />);
+    expect(atalho(/^Perfil/)).toHaveTextContent("Ainda sem dados");
+    expect(atalho(/^Histórico de treinos/)).toHaveTextContent("Nenhum treino anterior");
+  });
+
+  it.each([
+    [/^Calendário/, "/professor/alunos/$alunoId/calendario"],
+    [/^Progressão de carga/, "/professor/alunos/$alunoId/progressao"],
+    [/^Perfil/, "/professor/alunos/$alunoId/perfil"],
+    [/^Histórico de treinos/, "/professor/alunos/$alunoId/historico"],
+  ])("%s leva à tela de acompanhamento", async (nome, rota) => {
+    render(<AlunoVinculadoPage aluno={comTreino} />);
+    await userEvent.setup().click(atalho(nome));
+    expect(navegar).toHaveBeenCalledWith({ to: rota, params: { alunoId: "a1" } });
+  });
+});
+
 describe("Rodapé: o botão só aparece quando o destino existe", () => {
   it("agendar ainda não tem destino, e nada aparece desabilitado", () => {
     render(<AlunoVinculadoPage aluno={comTreino} />);
-    expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual(["", "Editar treino"]);
+    expect(screen.getByRole("button", { name: "Editar treino" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Agendar novo treino" })).toBeNull();
   });
 
   it("Editar treino abre o treino ativo (#96)", async () => {

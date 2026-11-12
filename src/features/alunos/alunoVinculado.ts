@@ -39,6 +39,10 @@ export type AlunoVinculado = {
   treino: TreinoDoCartao | null;
   agendado: boolean;
   acoes: AcaoDoRodape[];
+  /** Dia da última atualização do perfil ("aaaa-mm-dd", fuso do aluno); nulo se ainda não preencheu. */
+  perfilAtualizadoEm: string | null;
+  /** Treinos já encerrados, para o atalho do Histórico (regra 68). */
+  treinosAnteriores: number;
 };
 
 export type TelaDoAluno =
@@ -91,7 +95,14 @@ export async function lerTelaDoAluno(
     return { tela: "convite", dados: { ...dados, treino: { cartao, agendado, acoes } } };
   }
 
-  const { cartao: treino, agendado } = await lerCartaoDoTreino(aluno, agora, false);
+  const fuso = await lerFuso(aluno.user_id);
+  const { cartao: treino, agendado } = await lerCartaoDoTreino(aluno, agora, false, fuso);
+  const { perfilAtualizadoEm, treinosAnteriores } = await lerResumoDoAcompanhamento(
+    alunoId,
+    aluno.user_id,
+    fuso,
+    agora,
+  );
   return {
     tela: "vinculado",
     dados: {
@@ -105,7 +116,43 @@ export async function lerTelaDoAluno(
         agendado,
         pedido: aluno.has_open_request ?? false,
       }),
+      perfilAtualizadoEm,
+      treinosAnteriores,
     },
+  };
+}
+
+/**
+ * O que os atalhos de Perfil e Histórico mostram (regra 68): quando o aluno atualizou o perfil e
+ * quantos treinos já terminaram (os que começaram, menos o ativo).
+ */
+async function lerResumoDoAcompanhamento(
+  alunoId: string,
+  contaId: string | null,
+  fuso: string | null,
+  agora: Date,
+) {
+  const hoje = hojeDoAluno(fuso, agora);
+  const [perfil, treinos] = await Promise.all([
+    contaId
+      ? supabase
+          .from("student_profiles")
+          .select("updated_at, completed_at")
+          .eq("user_id", contaId)
+          .maybeSingle()
+      : { data: null, error: null },
+    supabase
+      .from("workouts")
+      .select("id", { count: "exact", head: true })
+      .eq("student_id", alunoId)
+      .lte("start_date", hoje),
+  ]);
+  if (perfil.error) throw erroDaResposta(perfil.error);
+  if (treinos.error) throw erroDaResposta(treinos.error);
+  const atualizado = perfil.data?.completed_at ? perfil.data.updated_at : null;
+  return {
+    perfilAtualizadoEm: atualizado ? hojeDoAluno(fuso, new Date(atualizado)) : null,
+    treinosAnteriores: Math.max((treinos.count ?? 0) - 1, 0),
   };
 }
 
@@ -123,15 +170,17 @@ type LinhaDoTreino = {
  * O cartão do treino ativo e se há um agendado. Antes do aceite não há conta, então não há fuso
  * (vale São Paulo, regra 122) nem treino feito (marcação só depois do aceite, regra 79).
  */
-async function lerCartaoDoTreino(aluno: LinhaDoTreino, agora: Date, semConta: boolean) {
+async function lerCartaoDoTreino(
+  aluno: LinhaDoTreino,
+  agora: Date,
+  semConta: boolean,
+  fuso: string | null = null,
+) {
   const { current_workout_id: treinoId, current_start_date: inicio, current_end_date: fim } = aluno;
   const agendado = aluno.scheduled_workout_id !== null;
   let cartao: TreinoDoCartao | null = null;
   if (treinoId && inicio && fim) {
-    const [fuso, feitos] = await Promise.all([
-      lerFuso(aluno.user_id),
-      semConta ? 0 : contarTreinosFeitos(treinoId),
-    ]);
+    const feitos = semConta ? 0 : await contarTreinosFeitos(treinoId);
     const hoje = hojeDoAluno(fuso, agora);
     const semana = semanaDoTreino(inicio, fim, hoje);
     cartao = {
