@@ -81,7 +81,7 @@ type ReorderRowProps = Omit<ComponentProps<"button">, "children" | "id"> & {
   comProblema?: boolean;
 };
 
-/** Linha reordenável: alça, título e detalhe (truncam em 1 linha) e seta. Tocar na linha abre. */
+/** Linha reordenável: alça, título e detalhe (quebram de linha, sem corte: regra 165) e seta. Tocar na linha abre. */
 export function ReorderRow({
   id,
   indice,
@@ -98,7 +98,7 @@ export function ReorderRow({
     <li
       ref={ref}
       className={clsx(
-        "flex h-[72px] items-center rounded-tile",
+        "flex min-h-[72px] items-center rounded-tile py-12",
         isDragSource ? "bg-bg-surface-raised" : "bg-bg-surface",
         comProblema && "border-2 border-border-danger",
       )}
@@ -117,16 +117,16 @@ export function ReorderRow({
       <button
         type={type}
         className={clsx(
-          "flex h-full min-w-0 flex-1 items-center gap-12 rounded-r-tile pr-16 pl-4 text-left",
+          "flex min-w-0 flex-1 items-center gap-12 self-stretch rounded-r-tile pr-16 pl-4 text-left",
           className,
         )}
         {...props}
       >
         <span className="flex min-w-0 flex-1 flex-col gap-2">
-          <span className="truncate text-body-strong text-text-primary">{titulo}</span>
+          <span className="break-words text-body-strong text-text-primary">{titulo}</span>
           <span
             className={clsx(
-              "truncate text-caption",
+              "break-words text-caption",
               comProblema ? "text-status-danger" : "text-text-secondary",
             )}
           >

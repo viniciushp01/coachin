@@ -10,7 +10,7 @@ type SectionRowProps = Omit<ComponentProps<"button">, "children"> & {
   iconeDireita?: NomeIcone;
 };
 
-/** Linha de atalho com ícone. Título e detalhe truncam em 1 linha. */
+/** Linha de atalho com ícone. Título e detalhe quebram de linha, sem corte (regra 165). */
 export function SectionRow({
   icone,
   titulo,
@@ -33,8 +33,8 @@ export function SectionRow({
         <Icon nome={icone} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-2">
-        <span className="truncate text-body-strong text-text-primary">{titulo}</span>
-        {detalhe && <span className="truncate text-caption text-text-secondary">{detalhe}</span>}
+        <span className="break-words text-body-strong text-text-primary">{titulo}</span>
+        {detalhe && <span className="break-words text-caption text-text-secondary">{detalhe}</span>}
       </span>
       <span className="shrink-0 text-text-secondary">
         <Icon nome={iconeDireita} />
