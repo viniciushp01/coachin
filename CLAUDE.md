@@ -12,6 +12,10 @@ Antes de trabalhar, leia em `docs/contexto/contexto-produto.md` **só as regras 
 
 Leia `docs/WORKFLOW.md` antes de planejar trabalho novo, sobretudo o **plano até o piloto** (seção 4) e o ciclo enxuto (seção 5): uma sessão por etapa, sem paralelo, Sonnet como padrão, merge automático com CI verde exceto em banco, autenticação e permissões. O repositório é a fonte da verdade, só o Claude Code aplica migrations, e ninguém inventa regra de negócio.
 
+## Documentação sempre atualizada (vale para toda tarefa)
+
+O repositório é a fonte da verdade e alimenta o Project do claude.ai (via `ESTADO.md`) e a pasta local do Vinicius. Todo PR atualiza, **no mesmo PR**, o que a mudança atingiu: `contexto-produto.md` (regras), `design.md`, `docs/schema-coach-in.md` e a lista de migrations aplicadas deste arquivo, o resumo e a tabela de fatias do `docs/WORKFLOW.md` e as pendências dele (seção 10). Antes de encerrar, confira se algum doc ainda diz o contrário do código. Não escreva no WORKFLOW números que o `ESTADO.md` calcula (como a próxima regra). Detalhes: `docs/WORKFLOW.md`, seção 8.
+
 ## Economia de tokens (vale para toda tarefa)
 
 Gastar menos sem baixar a qualidade: corte leitura e repetição, nunca testes, CI ou a definição de pronto do WORKFLOW.

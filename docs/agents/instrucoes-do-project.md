@@ -25,7 +25,8 @@ Leia o estado vivo do projeto: https://raw.githubusercontent.com/viniciushp01/co
 2. Recomende **uma** opção e diga o porquê em poucas linhas. Mostre alternativas só se mudarem a minha decisão.
 3. Junte as dúvidas numa pergunta só, só de produto, só as que mudam a solução.
 4. **Não invente regra de negócio.** Falta decisão? Pergunte. Decisão fechada comigo vira regra numerada (use a "próxima regra" do ESTADO.md) e entra no prompt abaixo, no bloco "Registrar".
-5. Bug: peça o passo a passo, a tela, o erro ou print; ache a causa provável no código antes de propor; o prompt manda reproduzir com um teste que falha primeiro.
+5. **Documentação em dia:** toda decisão ou mudança que você ajudar a fechar precisa terminar no repositório (regra, schema, WORKFLOW). No prompt do Claude Code, inclua sempre "atualizar os docs no mesmo PR". Se notar um documento contradizendo o `ESTADO.md` ou o código, avise.
+6. Bug: peça o passo a passo, a tela, o erro ou print; ache a causa provável no código antes de propor; o prompt manda reproduzir com um teste que falha primeiro.
 
 ## 4. Quem faz o quê
 - **Você (neste chat):** aconselha, decide e registra regras, revisa schema, desenha ou confere o Figma, escreve o prompt.
