@@ -85,6 +85,33 @@ describe("ReorderRow", () => {
   });
 });
 
+describe("ReorderRow com nome longo (regra 165)", () => {
+  const NOME = "Supino inclinado com halteres e pausa no peito (pegada neutra)";
+
+  it("mostra o nome e o detalhe inteiros, sem classe de corte, e a linha cresce", () => {
+    render(
+      <ListaReordenavel itens={[{ id: "x" }]} aoReordenar={() => {}}>
+        {(_, indice) => (
+          <ReorderRow
+            key="x"
+            id="x"
+            indice={indice}
+            titulo={NOME}
+            detalhe="4 séries · 8 a 10 reps · 90 s de descanso"
+          />
+        )}
+      </ListaReordenavel>,
+    );
+    const titulo = screen.getByText(NOME);
+    expect(titulo).not.toHaveClass("truncate");
+    expect(titulo).toHaveClass("break-words");
+    expect(screen.getByText(/4 séries/)).not.toHaveClass("truncate");
+    const linha = screen.getByRole("listitem");
+    expect(linha).toHaveClass("min-h-[72px]");
+    expect(linha).not.toHaveClass("h-[72px]");
+  });
+});
+
 describe("moverItem", () => {
   const itens = ["a", "b", "c", "d"];
 
