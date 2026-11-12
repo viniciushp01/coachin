@@ -452,6 +452,7 @@ begin
 
   perform t.login('s2');
   perform t.err(format($q$ select public.mark_done(%L, current_date, gen_random_uuid()) $q$, dA), 'no_teacher_link');
+  perform t.ok(public.my_request_status() = 'none', 'estado do pedido (aluno): sem vínculo não é erro');
   perform t.login('t1');
   perform t.ok((select count(*) from public.completions) = 2, 'professor lê as marcações do aluno');
   perform t.err($q$ delete from public.completions $q$, 'permission denied');
@@ -517,15 +518,24 @@ do $$
 declare v_s uuid := (t.get('st_s1'))::uuid;
 begin
   perform t.login('s1');
+  perform t.ok(public.my_request_status() = 'none', 'estado do pedido (aluno): sem pedido');
   perform public.request_new_workout();
+  perform t.ok(public.my_request_status() = 'open', 'estado do pedido (aluno): aberto');
   perform t.err($q$ select public.request_new_workout() $q$, 'request_already_open');
   perform t.login('t1');
   perform t.ok((select has_open_request and request_cancelable from public.teacher_student_list where student_id = v_s), 'lista: pediu treino');
+  perform t.err($q$ select public.my_request_status() $q$, 'forbidden');
   perform t.login('s1');
   perform public.cancel_training_request();
+  perform t.ok(public.my_request_status() = 'none', 'estado do pedido (aluno): cancelado volta a sem pedido');
   perform t.err($q$ select public.cancel_training_request() $q$, 'no_open_request');
   perform t.login('t1');
   perform t.ok(not (select has_open_request from public.teacher_student_list where student_id = v_s), 'pedido cancelado some da lista do professor');
+  perform t.ok((select count(*) from public.training_requests where student_id = v_s and status = 'canceled' and canceled_at is not null) = 1, 'professor lê o pedido cancelado e quando foi cancelado (regra 103)');
+  perform t.login('t2');
+  perform t.ok((select count(*) from public.training_requests) = 0, 'outro professor não lê pedidos');
+  perform t.anon();
+  perform t.err($q$ select public.my_request_status() $q$, 'permission denied');
   perform t.login('s1');
   perform public.request_new_workout();
 end $$;
@@ -539,10 +549,13 @@ begin
   perform t.put('w3', v_w3::text);
   perform t.ok((select has_open_request and not request_cancelable from public.teacher_student_list where student_id = v_s), 'lista: pedido segue aberto, mas não cancelável (professor já agiu)');
   perform t.login('s1');
+  perform t.ok(public.my_request_status() = 'acted', 'estado do pedido (aluno): professor já agiu');
+  perform t.ok((select count(*) from public.workouts where id = v_w3) = 0, 'estado do pedido não expõe o treino agendado ao aluno');
   perform t.err($q$ select public.cancel_training_request() $q$, 'professor_already_acted');
   perform t.login('t1');
   perform public.cancel_scheduled_workout(v_w3);                          -- cancelou o agendamento: volta a "aberto"
   perform t.login('s1');
+  perform t.ok(public.my_request_status() = 'open', 'estado do pedido (aluno): volta a aberto');
   perform public.cancel_training_request();
   perform t.ok(true, 'pedido volta a ser cancelável se o professor cancela o agendamento');
   perform public.request_new_workout();
@@ -573,6 +586,7 @@ begin
   perform t.err(format($q$ select public.mark_done(%L, %L, gen_random_uuid()) $q$, dA, t.today() - 4), 'workout_not_current');
   perform t.err(format($q$ select public.undo_done(%L, %L) $q$, dA, t.today() - 5), 'workout_not_current');
   perform t.ok((select count(*) from public.completions) = 3, 'treino encerrado: marcações antigas só consulta');
+  perform t.ok(public.my_request_status() = 'none', 'estado do pedido (aluno): atendido quando o treino novo entra em vigor');
   perform public.request_new_workout();                                    -- fecha o antigo e abre outro
   perform t.ok((select count(*) from public.training_requests where status = 'open') = 1, 'só um pedido aberto por vez');
 

@@ -112,6 +112,12 @@ const rpc = vi.fn((funcao: string, args: ArgsDoRpc) =>
 );
 vi.mock("@/lib/rpc", () => ({ rpc: (f: string, a: ArgsDoRpc) => rpc(f, a) }));
 
+// O pedido relido durante a montagem (regra 103): por padrão segue aberto.
+const lerPedidoCancelado = vi.hoisted(() =>
+  vi.fn<() => Promise<{ telefone: string | null } | null>>(() => Promise.resolve(null)),
+);
+vi.mock("./alunoDoTreino", () => ({ lerPedidoCancelado }));
+
 /** A tabela `exercises` de agora (regra 162); nulo é sem conexão. */
 let catalogoAtual: { id: string; measure: string }[] | null = [];
 const respostaDoCatalogo = () =>
@@ -291,6 +297,8 @@ beforeEach(() => {
   rpc.mockClear();
   salvar = () => "w-novo";
   ocultos = new Set();
+  lerPedidoCancelado.mockReset();
+  lerPedidoCancelado.mockResolvedValue(null);
 });
 afterEach(cleanup);
 
@@ -1807,5 +1815,42 @@ describe("Aviso ao recarregar ou fechar a aba (regra 161)", () => {
       </ToastProvider>,
     );
     expect(avisa()).toBe(false);
+  });
+});
+
+describe("pedido cancelado durante a montagem (regra 103)", () => {
+  const comPedido = { ...JULIANA, pedidoAberto: true };
+
+  it("ao abrir as fichas, avisa e oferece o WhatsApp; salvar continua possível", async () => {
+    lerPedidoCancelado.mockResolvedValue({ telefone: "+5531987654321" });
+    const u = abrir(comPedido);
+    expect(lerPedidoCancelado).not.toHaveBeenCalled();
+    await irParaFichas(u);
+    expect(await screen.findByText(/cancelou o pedido$/)).toBeVisible();
+    expect(screen.getByText("Você pode terminar e salvar este treino mesmo assim.")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Falar com o aluno no WhatsApp" })).toHaveAttribute(
+      "href",
+      "https://wa.me/5531987654321",
+    );
+    expect(botao("Salvar treino")).toBeEnabled();
+  });
+
+  it("relê quando a aba volta a ficar visível", async () => {
+    const u = abrir(comPedido);
+    await irParaFichas(u);
+    await waitFor(() => expect(lerPedidoCancelado).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText(/cancelou o pedido/)).not.toBeInTheDocument();
+    lerPedidoCancelado.mockResolvedValue({ telefone: null });
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(await screen.findByText(/cancelou o pedido$/)).toBeVisible();
+    expect(screen.queryByRole("link", { name: /WhatsApp/ })).not.toBeInTheDocument();
+  });
+
+  it("sem pedido aberto ao entrar, não relê nem avisa (regra 40)", async () => {
+    const u = abrir();
+    await irParaFichas(u);
+    expect(lerPedidoCancelado).not.toHaveBeenCalled();
   });
 });

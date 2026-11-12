@@ -21,6 +21,7 @@ Arquivos (em `supabase/`):
 | `migrations/20261105121922_similar_exercises_order_hidden.sql` | 0013 · Regra 157 (6) e (7) (#93): `similar_exercises` ordena por nome igual, apelido igual, similaridade e nome, e ignora o que quem chama ocultou |
 | `migrations/20261105200000_set_exercise_settings.sql` | 0011 · Regras 123 e 148 (#94): `set_exercise_settings` ajusta medida e modo de carga do exercício do próprio professor; não toca em carga nem histórico. O número foi reservado no #95; o que vale é a ordem pelo timestamp. Aplicada em 05/11/2026 via MCP, antes do merge (versão registrada `20261105211112`) |
 | `migrations/20261111175653_student_without_invite.sql` | 0015 · Regra 164 (#135): `create_student` cria só o aluno (vínculo `invited`, sem convite); `send_student_invite(aluno)` gera o primeiro convite (7 dias a partir do envio; `invite_already_sent` se já houver convite, `student_already_linked`, `student_not_found`); `teacher_student_list` devolve `sem_convite` para o vínculo `invited` sem nenhum convite. `create_student_with_invite` fica como está (o app deixa de usar). **Aplicada em 11/11/2026** via MCP (versão `20261111175653`) |
+| `migrations/20261112145537_my_request_status.sql` | 0016 · Fatia 7b (#143): `my_request_status()` devolve ao aluno o estado do pedido de novo treino (`none`, `open`, `acted`), para mostrar ou esconder "Cancelar solicitação" (regra 103) sem expor o treino agendado |
 | `tests/` | Simulação do Supabase, 396 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
 
 ## 1. Como o banco funciona (5 ideias)
@@ -76,7 +77,7 @@ Conta **bloqueada** perde acesso a tudo, mas ainda lê o próprio perfil (para m
 
 **Treino:** `save_workout` (cria ou edita o treino inteiro de uma vez; desde a 0012 confere os limites: semanas de 1 a 104, séries de 1 a 20, repetições ou tempo até 20 caracteres, descanso de 0 a 600), `cancel_scheduled_workout`.
 
-**Aluno:** `mark_done`, `undo_done`, `set_load`, `request_new_workout`, `cancel_training_request`, `pending_new_workout_notice`, `acknowledge_new_workout`.
+**Aluno:** `mark_done`, `undo_done`, `set_load`, `request_new_workout`, `cancel_training_request`, `pending_new_workout_notice`, `acknowledge_new_workout`, `my_request_status` (só leitura: estado do pedido, `none`/`open`/`acted`).
 
 **Erros** são códigos curtos para o app traduzir para pt-BR, por exemplo: `invite_expired`, `invite_replaced`, `invite_used`, `invite_declined`, `email_mismatch`, `switch_requires_confirmation`, `scheduled_exists`, `start_in_past`, `workout_needs_day`, `day_needs_exercise`, `date_out_of_range`, `workout_not_current`, `professor_already_acted`, `request_already_open`, `exercise_exists`, `muscle_group_invalid`, `load_mode_invalid`, `measure_invalid`, `phone_invalid`, `height_invalid`, `weight_invalid`, `forbidden`. A lista completa sai de `grep "raise exception" supabase/migrations/*.sql`.
 
@@ -120,7 +121,7 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 2. Rodar o **Security Advisor** do Supabase depois (alertas de RLS ou de função sem `search_path`).
 3. Criar o administrador conforme o comentário no fim da migration 0001.
 
-**Ordem de aplicação:** os arquivos de `supabase/migrations/`, na ordem do timestamp do nome (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link, 0008 invite_preview_teacher_unavailable, 0009 invite_email_claim, 0010 teacher_list_last_done_letter, 0007 exercise_catalog, que roda depois da 0010, 0012 save_workout_limits, 0013 similar_exercises_order_hidden, 0014 short_invite_token, 0011 set_exercise_settings, 0015 student_without_invite, a última), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
+**Ordem de aplicação:** os arquivos de `supabase/migrations/`, na ordem do timestamp do nome (0001 accounts_and_invites, 0002 exercises_and_workouts, 0003 records_requests_views, 0004 seed_predefined_exercises, 0005 advisor_fixes, 0006 workout_before_link, 0008 invite_preview_teacher_unavailable, 0009 invite_email_claim, 0010 teacher_list_last_done_letter, 0007 exercise_catalog, que roda depois da 0010, 0012 save_workout_limits, 0013 similar_exercises_order_hidden, 0014 short_invite_token, 0011 set_exercise_settings, 0015 student_without_invite, 0016 my_request_status, a última), no projeto `kfjjiajxgbsqpuskxbzb`. Só o Claude Code aplica (MCP), e gera os tipos TypeScript em seguida.
 
 **Rodar os testes:** `supabase/tests/run.sh` (precisa de Postgres 16 instalado e Linux/WSL/macOS; sobe e derruba um banco descartável) ou, sem Postgres (Windows), `npm --prefix supabase/tests/pglite install` e `node supabase/tests/pglite/run.mjs` (Postgres 17.5 em WebAssembly, PGlite 0.4.6, banco em memória, um comando por transação como o `psql -f`; `--sem-pgcrypto` troca `digest` e `gen_random_bytes` por equivalentes nativos só no harness). Os dois devem terminar com "TODOS OS TESTES PASSARAM".
 
@@ -210,3 +211,12 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 - **Aplicação:** via MCP, registrada como versão `20261111175653` (arquivo local renomeado para essa versão). O texto aplicado é o do arquivo sem os comentários do cabeçalho. Conferido: `anon` sem `EXECUTE` nas duas funções novas; `authenticated` com.
 - **Advisor:** sem alerta novo além do padrão já aceito (`create_student` e `send_student_invite` entram na lista de RPCs `security definer` para `authenticated`; `get_invite_preview` segue para `anon`).
 - **Tipos:** regerados; `create_student` e `send_student_invite` em `database.types.ts`.
+
+### Resultado da aplicação da 0016 (12/11/2026, issue #143)
+
+- **O que muda:** `my_request_status()` (nova, `security definer`, `stable`, `search_path=public`, `EXECUTE` só para `authenticated`). Só leitura: chama `private.request_state` no pedido aberto do vínculo ativo e devolve `open` ou `acted`; qualquer outro caso (sem pedido, cancelado, atendido, sem vínculo) é `none`. Professor ou administrador: `forbidden`. Não devolve nada do treino agendado, que segue oculto ao aluno (regra 2).
+- **Professor:** não precisou de nada novo. O pedido aberto vem de `teacher_student_list` (`has_open_request`, `request_created_at`, `phone`); o cancelado, de `training_requests` (RLS `requests_select_teacher`, que já deixava ler `status` e `canceled_at`).
+- **Testes (PGlite, Postgres 17.5):** a seção 9 ganhou os estados vistos pelo aluno (sem pedido, aberto, professor já agiu sem expor o agendado, volta a aberto, atendido, sem vínculo), `forbidden` para o professor, `anon` sem `EXECUTE` e o professor lendo o pedido cancelado (outro professor não). Falha sem a migration (`my_request_status` não existe). Com a 0016, **408 verificações**.
+- **Aplicação:** via MCP (`apply_migration`), registrada como versão `20261112145537` (arquivo local renomeado para essa versão), sem os comentários do cabeçalho.
+- **Advisor:** sem alerta novo além do padrão já aceito (`my_request_status` entra na lista de RPCs `security definer` para `authenticated`; nenhuma nova para `anon`).
+- **Tipos:** `my_request_status: { Args: never; Returns: string }` em `database.types.ts` (única diferença do gerado).

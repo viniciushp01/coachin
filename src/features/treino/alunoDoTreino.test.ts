@@ -44,6 +44,7 @@ describe("lerAlunoDoTreino", () => {
       hoje: "2026-10-30",
       temTreinoAtual: false,
       convite: null,
+      pedidoAberto: false,
     });
   });
 

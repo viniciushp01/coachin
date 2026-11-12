@@ -65,7 +65,7 @@ Aplicativo de treinos de academia **gerenciado por um professor**. Três papéis
 10. A home mostra **"Semana 3 de 8"**. A semana do treino conta **a partir do dia de início** (dias 1 a 7 = semana 1), **não** pela semana segunda–domingo do calendário. Conta no fuso do aluno (regra 115).
 11. Treinar além da frequência sugerida: aviso + permitir. Conta como treino normal.
 12. Descanso sugerido **após 2 dias consecutivos de treino**. É só orientação, não bloqueia nada. A home mostra "Descanso recomendado hoje", com opção de treinar mesmo assim.
-13. **Sem pausa no MVP**: quem para de ir simplesmente não marca. O aluno ainda pode solicitar um treino novo.
+13. **Sem pausa no MVP**: quem para de ir simplesmente não marca. ~~O aluno ainda pode solicitar um treino novo.~~ **Alterada pela regra 168 (12/11/2026): no meio do treino o botão de solicitar não aparece.**
 
 ### Rotação e "Ficha de hoje"
 14. As fichas giram sempre em ordem lógica (A-B-C-A-B…), mesmo após dias sem treinar. Faltar não pula nem reinicia a ficha. Não depende do dia da semana.
@@ -99,7 +99,7 @@ Aplicativo de treinos de academia **gerenciado por um professor**. Três papéis
 ### Professor / acompanhamento
 33. **Inatividade fora do MVP**: sem alerta nem encerramento automático. O professor vê o "último treino feito" de cada aluno.
 34. Status do aluno na lista: **ativo · sem treino · quase no fim (faltam 7 dias ou menos para a data de fim)**. (26/10: a regra 55 acrescenta "convite pendente"; 27/10: a regra 102 acrescenta "convite recusado".)
-35. Tela "sem treino": sem aviso ao professor no MVP, só a tela explicativa para o aluno.
+35. ~~Tela "sem treino": sem aviso ao professor no MVP, só a tela explicativa para o aluno.~~ **Substituída pela regra 167 (12/11/2026).**
 36. **Multi-professor preparado**: exercícios criados são **privados de cada professor** (a lista pré-definida é de todos). "Ocultar da busca" vale só para quem ocultou. Desde 27/10, professores entram por convite do administrador (regra 92).
 
 ### Solicitação e conectividade
@@ -309,6 +309,12 @@ Aplicativo de treinos de academia **gerenciado por um professor**. Três papéis
 
 164. **Cadastrar o aluno e convidar são passos separados (11/11/2026; atualiza as regras 55, 57, 58, 122, 142 e 153).** Decidido com o dono do produto: o professor quer cadastrar o aluno, montar o treino e só então enviar o link. (1) **"Cadastrar aluno"** (nome; e-mail e telefone opcionais, regras 57 e 109) **cria só o aluno, sem convite e sem e-mail**, e abre a tela dele. O botão deixa de se chamar "Gerar convite". (2) **Novo estado: "Sem convite"** (chip neutro "SEM CONVITE" na lista e na tela do aluno), antes de "convite pendente", "expirado" e "recusado" (regras 55 e 102). Vale para o aluno que o professor cadastrou e ainda não convidou; o professor já pode criar e editar o treino (regra 122). (3) **"Enviar convite"** é o botão laranja da tela do aluno sem convite; ele gera o primeiro convite e leva a "Convite gerado" (e-mail se houver, "Copiar link", regra 142). **O convite vale 7 dias a partir do envio**, não do cadastro (regra 58), e o intervalo de 60 s da regra 139 conta daí. Depois do envio o aluno passa a "convite pendente" e vale a regra 142. (4) **Ao salvar o treino de um aluno sem convite**, "Treino salvo" traz **"Enviar convite agora"** (laranja) e **"Agora não"**. (5) **Aviso ao criar treino com início hoje** para aluno sem convite (só em Dados, regra 153): **"[nome] ainda não recebeu o convite"** / "O treino começa a contar na data de início, mesmo antes do aceite." (6) O app continua sem dizer ao professor se o e-mail tem conta (regras 135 e 143). (7) Alunos já cadastrados com convite não mudam. Fora do escopo: atalho "Enviar convite" na linha da lista (cadastro de um aluno por vez). Figma: "Professor · Alunos", seção 9 (Cadastrar · 3; Convite do aluno · 8 e 9); "Professor · Treino", seção 12 (Criar treino · 18b e 7d).
 
+166. **Aviso "Pedido de novo treino cancelado" na tela do aluno, visão do professor (12/11/2026, fatia 7b, #143; completa a regra 103).** Decidido com o dono do produto. (1) **Até quando:** sem prazo por tempo; o aviso aparece enquanto o último pedido do aluno estiver cancelado e **nenhum treino tiver sido criado depois do cancelamento**. Some quando o professor cria um treino (ativo ou agendado) ou quando o aluno pede de novo (aí vale o aviso "Pediu um novo treino", regra 70). Estado derivado, sem rotina diária. (2) **Texto:** "[nome] cancelou o pedido em dd/mm." (data no fuso do aluno). Só com o treino ativo **concluído** acrescenta "O treino concluído segue ativo." (Figma Aluno · 4); com o treino em curso ou sem treino ativo, fica só a primeira frase.
+
+167. **A tela "sem treino" tem "Solicitar novo treino" e avisa o professor (12/11/2026; substitui a regra 35).** Confirmado pelo dono do produto: valem as regras 40, 52, 62 e 103 e o Figma ("Aluno · Entrada", seção 7), que desenha o botão nessa tela. O pedido feito dela aparece ao professor como qualquer outro (chip "Pediu treino" e aviso na tela do aluno).
+
+168. **Quando a home mostra "Solicitar novo treino" (12/11/2026, fatia 7b; altera a regra 13 para o meio do treino).** Decidido com o dono do produto: o botão fixo na home convidava a pedir treino novo no meio do treino. O botão da home aparece **só na última semana do treino ("Semana N de N", regra 10: de data de fim − 6 em diante, contando no fuso do aluno, regra 115) e depois da data de fim, até um treino novo ficar ativo**; quando entra o treino novo, a data de fim fica distante e o botão some sozinho. Treino de 1 semana está sempre na janela. **Na tela "sem treino" o botão aparece sempre** (regra 167). **Com pedido aberto ou já atendido pelo professor (treino agendado), a home mostra "Solicitação enviada" em qualquer dia**, e "Cancelar solicitação" só enquanto o professor não agiu (regras 52 e 103). Não muda a regra 40 (o pedido segue aberto até o treino novo ficar ativo). Os frames "Aluno · Home" (Home · 1, 2 e 6) ainda desenham o botão sempre; o Figma será atualizado depois.
+
 ## 4. Telas e comportamento (lado do aluno)
 
 - **Entrada do aluno (26/10; 27/10 ampliada; Figma: arquivo Coach In, páginas "Aluno · Entrada" e "↳ Fluxo · Aluno · Entrada")**. Nenhuma dessas telas mostra a navegação inferior. Os textos são pt-BR e o vermelho aparece só para erro:
@@ -468,6 +474,7 @@ Formato celular (390), sem menu inferior (regra 54). Um único botão laranja po
 Nenhum ponto de produto bloqueando o MVP no momento.
 
 Pendências menores (não são regras ainda):
+- **Pedir treino no meio do treino (regra 168)**: o botão some da home fora da última semana; falta uma entrada permanente de "Solicitar novo treino" no Perfil do aluno (fatia 6), para quem precisa de treino novo antes.
 - **Exclusão da conta (regra 120)**: prazo e retenção legal (E25), com o jurídico (deixado para depois). Premissa a confirmar: o mesmo e-mail pode criar uma conta nova e os dados antigos não voltam (E28).
 - **Jurídico**: dados de menores (regra 84), telefone (regra 108) e retenção.
 - **Aviso de treino novo (regra 117)**: confirmar se o pop-up deve aparecer também ao voltar ao app já aberto (hoje: ao abrir ou voltar a ficar visível).

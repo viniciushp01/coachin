@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { hojeDoAluno } from "@/lib/diaDoAluno";
 import {
   dataPorExtenso,
   diasDaSemana,
   feitaHoje,
   fichaDeHoje,
   lerCarga,
+  naJanelaDeSolicitar,
   textoDaCarga,
   podeMarcar,
   rotuloDaSemana,
@@ -100,6 +102,33 @@ describe("semana", () => {
   it("rótulo com mês só no fim, ou nos dois", () => {
     expect(rotuloDaSemana(diasDaSemana("2026-10-29"))).toBe("26 out – 1 nov");
     expect(rotuloDaSemana(diasDaSemana("2026-11-24"))).toBe("23 – 29 nov");
+  });
+});
+
+describe("naJanelaDeSolicitar (regra 168)", () => {
+  const fim = "2026-11-29";
+  it.each([
+    ["2026-11-22", false], // fim − 7
+    ["2026-11-23", true], // fim − 6
+    ["2026-11-29", true], // dia do fim
+    ["2026-12-31", true], // depois do fim
+  ])("hoje %s: %s", (hoje, esperado) => {
+    expect(naJanelaDeSolicitar(fim, hoje)).toBe(esperado);
+  });
+
+  it("treino de 1 semana está sempre na janela", () => {
+    // início 23/11, fim 29/11
+    expect(naJanelaDeSolicitar(fim, "2026-11-23")).toBe(true);
+  });
+
+  it("vira com o dia do aluno, não com o do aparelho", () => {
+    // 23/11 02h30 UTC ainda é 22/11 em São Paulo (fora); 23/11 12h UTC já é 23/11 (dentro).
+    expect(
+      naJanelaDeSolicitar(fim, hojeDoAluno("America/Sao_Paulo", new Date("2026-11-23T02:30:00Z"))),
+    ).toBe(false);
+    expect(
+      naJanelaDeSolicitar(fim, hojeDoAluno("America/Sao_Paulo", new Date("2026-11-23T12:00:00Z"))),
+    ).toBe(true);
   });
 });
 

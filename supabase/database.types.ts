@@ -960,6 +960,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      my_request_status: { Args: never; Returns: string }
       pending_new_workout_notice: { Args: never; Returns: Json }
       reissue_invite: {
         Args: { p_invite_id: string; p_new_email?: string }
