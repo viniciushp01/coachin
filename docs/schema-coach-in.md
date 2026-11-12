@@ -51,9 +51,9 @@ Arquivos (em `supabase/`):
 | `workout_exercises` | Exercício dentro da ficha (séries, reps, descanso, observação) | |
 | `completions` | Treino feito (ficha + data) | Único por ficha e dia; guarda hora da ação e do recebimento |
 | `student_exercise_loads` / `load_history` | Carga atual e histórico de edições | Por conta e exercício; o histórico guarda o nome do exercício |
-| `training_requests` | Solicitação de novo treino | Só `open`, `canceled`, `closed` gravados |
+| `training_requests` | Solicitação de novo treino. **Inativa no app desde 12/11/2026 (regra 169), sem uso; remover só se a funcionalidade for descartada de vez** | Só `open`, `canceled`, `closed` gravados |
 | `workout_seen` | Controle do pop-up "Seu treino novo chegou" | Uma vez por treino |
-| view `teacher_student_list` | Lista de alunos do professor já com status, treino atual, agendado, pedido e último treino (data em `last_done_on` e ficha em `last_done_letter`, 0010) | Calculada no fuso de cada aluno; respeita a RLS de quem consulta |
+| view `teacher_student_list` | Lista de alunos do professor já com status, treino atual, agendado, pedido (**colunas `has_open_request`, `request_cancelable` e `request_created_at`: inativas no app desde 12/11/2026, regra 169, sem uso; remover só se a funcionalidade for descartada de vez**) e último treino (data em `last_done_on` e ficha em `last_done_letter`, 0010) | Calculada no fuso de cada aluno; respeita a RLS de quem consulta |
 
 ## 3. Quem enxerga o quê
 
@@ -77,7 +77,7 @@ Conta **bloqueada** perde acesso a tudo, mas ainda lê o próprio perfil (para m
 
 **Treino:** `save_workout` (cria ou edita o treino inteiro de uma vez; desde a 0012 confere os limites: semanas de 1 a 104, séries de 1 a 20, repetições ou tempo até 20 caracteres, descanso de 0 a 600), `cancel_scheduled_workout`.
 
-**Aluno:** `mark_done`, `undo_done`, `set_load`, `request_new_workout`, `cancel_training_request`, `pending_new_workout_notice`, `acknowledge_new_workout`, `my_request_status` (só leitura: estado do pedido, `none`/`open`/`acted`).
+**Aluno:** `mark_done`, `undo_done`, `set_load`, `pending_new_workout_notice`, `acknowledge_new_workout`. **Inativas no app desde 12/11/2026 (regra 169), sem uso; remover só se a funcionalidade for descartada de vez:** `request_new_workout`, `cancel_training_request` e `my_request_status` (só leitura: estado do pedido, `none`/`open`/`acted`).
 
 **Erros** são códigos curtos para o app traduzir para pt-BR, por exemplo: `invite_expired`, `invite_replaced`, `invite_used`, `invite_declined`, `email_mismatch`, `switch_requires_confirmation`, `scheduled_exists`, `start_in_past`, `workout_needs_day`, `day_needs_exercise`, `date_out_of_range`, `workout_not_current`, `professor_already_acted`, `request_already_open`, `exercise_exists`, `muscle_group_invalid`, `load_mode_invalid`, `measure_invalid`, `phone_invalid`, `height_invalid`, `weight_invalid`, `forbidden`. A lista completa sai de `grep "raise exception" supabase/migrations/*.sql`.
 
@@ -220,3 +220,7 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 - **Aplicação:** via MCP (`apply_migration`), registrada como versão `20261112145537` (arquivo local renomeado para essa versão), sem os comentários do cabeçalho.
 - **Advisor:** sem alerta novo além do padrão já aceito (`my_request_status` entra na lista de RPCs `security definer` para `authenticated`; nenhuma nova para `anon`).
 - **Tipos:** `my_request_status: { Args: never; Returns: string }` em `database.types.ts` (única diferença do gerado).
+
+### Solicitação de novo treino retirada do app (12/11/2026, regra 169, #149)
+
+O app deixou de usar a solicitação: sem chamadas a `request_new_workout`, `cancel_training_request` e `my_request_status`, e sem ler a coluna `has_open_request` (nem `request_created_at` e `request_cancelable`) de `teacher_student_list` nem a tabela `training_requests`. **O banco fica dormente, sem mudança**: nenhuma migration nova, nenhuma editada (0003, 0010, 0015 e 0016 ficam como estão), testes do banco e `database.types.ts` iguais. Os códigos de erro `request_already_open`, `no_open_request` e `professor_already_acted` seguem traduzidos em `src/lib/erros.ts` porque o teste das migrations exige. Se a funcionalidade for descartada de vez, remover os objetos com uma migration nova.

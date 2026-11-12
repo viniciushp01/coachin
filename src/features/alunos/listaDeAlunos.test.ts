@@ -21,7 +21,6 @@ function aluno(a: Partial<AlunoDaLista> & Pick<AlunoDaLista, "student_id" | "nam
     scheduled_start_date: null,
     last_done_on: null,
     last_done_letter: null,
-    has_open_request: false,
     ...a,
   } as AlunoDaLista;
 }
@@ -228,15 +227,6 @@ describe("detalhe do aluno vinculado (regras 43, 56 e 147 (1); Figma Lista · 1)
   });
 });
 
-describe("pedido de treino (regras 62 e 103)", () => {
-  it("a linha marca o pedido aberto que a view calcula", () => {
-    const linha = (has_open_request: boolean) =>
-      linhaDoAluno(aluno({ student_id: "a1", name: "Ana", has_open_request }), HOJE);
-    expect(linha(true).pediuTreino).toBe(true);
-    expect(linha(false).pediuTreino).toBe(false);
-  });
-});
-
 describe("montarLista (regra 59)", () => {
   it("em ordem alfabética pt-BR, com a data de envio de cada convite", () => {
     const linhas = montarLista(
@@ -265,8 +255,8 @@ describe("montarLista (regra 59)", () => {
 describe("resumoDaLista (regra 147 (2))", () => {
   const linhas = montarLista(
     [
-      aluno({ student_id: "a1", name: "Ana Lima", has_open_request: true }),
-      aluno({ student_id: "a2", name: "Bruno", has_open_request: true }),
+      aluno({ student_id: "a1", name: "Ana Lima" }),
+      aluno({ student_id: "a2", name: "Bruno" }),
       aluno({ student_id: "a3", name: "Carla", list_status: "convite_pendente" }),
     ],
     [],
@@ -275,12 +265,7 @@ describe("resumoDaLista (regra 147 (2))", () => {
 
   it("conta todos os alunos, com convite inclusive, no singular e no plural", () => {
     expect(resumoDaLista(linhas.slice(2))).toBe("1 aluno");
-    expect(resumoDaLista(linhas.map((l) => ({ ...l, pediuTreino: false })))).toBe("3 alunos");
-  });
-
-  it("o trecho do pedido só aparece se houver, no singular e no plural", () => {
-    expect(resumoDaLista(linhas)).toBe("3 alunos · 2 pediram novo treino");
-    expect(resumoDaLista(linhas.slice(1))).toBe("2 alunos · 1 pediu novo treino");
+    expect(resumoDaLista(linhas)).toBe("3 alunos");
   });
 
   it("na busca, conta só os resultados", () => {

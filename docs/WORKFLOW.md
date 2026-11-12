@@ -25,7 +25,7 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 
 ## 3. Estado atual (12/11/2026)
 
-- **Produto:** regras 1 a 168 (a última é a 168, "Solicitar novo treino" só na última semana; o número vivo está no `ESTADO.md`). Nenhum ponto bloqueando o piloto. Pendências menores na seção 8 do `contexto-produto.md`.
+- **Produto:** regras numeradas em `contexto-produto.md` (a solicitação de novo treino foi retirada, regra 169; o número vivo está no `ESTADO.md`). Nenhum ponto bloqueando o piloto. Pendências menores na seção 8 do `contexto-produto.md`.
 - **Banco:** migrations 0001 a 0016 aplicadas (a última, `20261112145537_my_request_status`) no Supabase (`kfjjiajxgbsqpuskxbzb`) e iguais às do repositório (a 0007 e a 0012 entraram pelo SQL Editor; ver `docs/schema-coach-in.md`). 408 verificações passando (PGlite). Administrador criado. Edge Functions `ativar-professor` e `enviar-convite` publicadas (pasta `supabase/functions`, testes em Deno no CI).
 - **Design:** Figma completo até a 24ª rodada. Faltam no FigJam original as seções 19 a 24.
 - **App:** **Fase 0 concluída** em 28/10/2026 (PR #1). Produção em https://coachin.vercel.app. Stack: `docs/adr/0001-stack.md` (Vite + React + TypeScript, SPA na Vercel). Tokens em `src/styles/tokens.css`; componentes base em `src/ui` (catálogo em `/dev/componentes`); camada Supabase em `src/lib` (`supabase.ts`, `rpc.ts`, `erros.ts`); roteamento por papel (`src/lib/destino.ts` e `sessao.ts`, rotas `/entrar`, `/admin`, `/professor`, `/aluno`, `/sem-professor`, `/primeiro-acesso`, `/bloqueado`); CI em `.github/workflows/ci.yml`. `main` protegida (PR obrigatório e os dois jobs do CI verdes). Projeto `coachin` na Vercel com preview por PR.
@@ -34,6 +34,7 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 - **Fatia 3 (Professor: lista de alunos) concluída** em 03/11/2026 (spec #74, PRs #81, #83 e #84): `/professor` deixa de ser provisória e vira a Lista de alunos (resumo, busca sem acento e sem maiúsculas, lista vazia, "Sair" sem a fila local), com os convites (detalhe com as datas, abre a tela do aluno com convite) e os alunos vinculados (chip de status, detalhe "treinou hoje"/último treino com a ficha, chip "Pediu treino"). Migration 0010 (`last_done_letter` na view `teacher_student_list`). Regras 146 e 147. À parte, o #80 (PR #82) fechou os dois casos do convite que ficaram do #49. A tela do aluno vinculado chega com as fatias 4 e 7; a área do aluno continua provisória até a 5.
 - **Fatia 7a (Professor acompanha o aluno, só leitura) concluída** em 12/11/2026 (#141): os quatro atalhos da tela do aluno (só Perfil e Histórico sem treino ativo, como no Figma), Calendário mensal com painel do dia e ficha em modo leitura, Progressão de carga (lista e detalhe com histórico), Histórico de treinos e Perfil com "Abrir WhatsApp". Sem migration (a RLS do professor já cobria as leituras). Componente novo `MonthDay`. A 7b (solicitação de novo treino) continua pendente.
 - **Fatia 7b (Solicitação de novo treino) feita** em 12/11/2026 (#143, PR #144 mergeado e migration 0016 aplicada): o aluno pede um novo treino na home e na tela sem treino, cancela enquanto o professor não agiu (folha de confirmação, toast) e vê a folha "Sem conexão" sem internet; o professor vê o chip e o aviso do pedido na tela do aluno, o aviso de pedido cancelado (regra 166) e, se o pedido for cancelado durante a montagem, o aviso no topo das fichas com o link do WhatsApp. Migration 0016 (`my_request_status`). A regra 35 foi substituída pela 167, e a regra 168 limita o botão da home à última semana e ao depois do fim.
+- **Fatia 7b retirada** em 12/11/2026 (#149, regra 169): por decisão do dono do produto, a solicitação de novo treino saiu do app (aluno e professor), sem mudança no banco, que fica dormente. O aluno que quer um treino novo fala com o professor fora do app.
 
 ## 4. Fases
 
@@ -53,7 +54,9 @@ Ao concluir uma etapa, risque o nome dela na tabela (~~assim~~): o ESTADO.md usa
 **Adiados até o piloto responder:**
 
 - **#97** (botão "Agendar novo treino"). O #98 (treino antes do aceite, regras 122 e 153) e o #94 (ajustar medida e carga, regras 123 e 151 (4)) foram feitos antes do piloto, a pedido.
-- **Fatias 6 e 10** (a 7a, acompanhar o aluno em só leitura, e a 7b, solicitação de novo treino, foram feitas antes do piloto, #141 e #143) e, na fatia 5, o aviso de treinar além da frequência, a sugestão de descanso e o pop-up de treino novo.
+- **Fatias 6 e 10** (a 7a, acompanhar o aluno em só leitura, e a 7b, solicitação de novo treino, foi feita antes do piloto e retirada em seguida, #141, #143 e #149) e, na fatia 5, o aviso de treinar além da frequência, a sugestão de descanso e o pop-up de treino novo.
+
+**Não será explorado enquanto não houver demanda real** (reavaliar se surgir reclamação): a **solicitação de novo treino** pelo app (regra 169). O banco segue dormente (`docs/schema-coach-in.md`).
 
 **Antes de abrir para o público, continuam obrigatórios:** a fatia 9 e a Fase 2. No piloto, combinar o uso dos dados com os participantes e atender à exclusão de conta manualmente, se alguém pedir.
 
@@ -82,7 +85,7 @@ Cada fatia = telas + funções do banco que ela usa + testes. Ordem sugerida pel
 | 4 | ~~Professor: montar e editar treino, biblioteca~~ Concluída para o piloto (#86; adiado #97; #94 e #98 feitos para o piloto; 0011 aplicada, #95 fechado) | 3 | 73 a 77, 104 a 107, 111, 118, 122 |
 | 5 | ~~Aluno: início, ficha, marcar como feito, carga~~ Concluída (#115, versão reduzida do plano do piloto) | 4 | 1 a 29, 43, 110, 117 |
 | 6 | Aluno: Frequência, Progressão, Histórico, Perfil | 5 | 44, 45, 85, 99 |
-| 7 | Professor acompanha, solicitação de novo treino. **7a ~~calendário, progressão, histórico e perfil, só leitura~~ concluída (#141)**; **7b ~~solicitação de novo treino (40, 52, 62, 70, 103)~~ feita (#143)** | 5 | 40, 52, 61 a 72, 103 |
+| 7 | Professor acompanha, solicitação de novo treino. **7a ~~calendário, progressão, histórico e perfil, só leitura~~ concluída (#141)**; **7b ~~solicitação de novo treino (40, 52, 62, 70, 103)~~ feita (#143) e depois retirada (#149, regra 169)** | 5 | 40, 52, 61 a 72, 103 |
 | 8 | ~~PWA e fila offline~~ Concluída (#117) | 5 | 38, 116 |
 | 9 | Conta: excluir, bloquear professor, tela de aluno bloqueado | 2 | 94, 95, 119, 120 |
 | 10 | Cardio na ficha: colunas em `workout_days`, seção na edição da ficha e cartão na ficha do aluno | 4 e 5 | 126 |
@@ -150,6 +153,6 @@ Problema durante o caminho: `/diagnosing-bugs`. Contexto grande demais para uma 
 - Figma: página "↳ Fluxo · Conta e privacidade" com frames antigos sobrepostos; toques numerados e raia própria para os frames novos da 24ª rodada.
 - Fatia 9 (excluir conta): apagar os rascunhos guardados no aparelho com `limparRascunhos(conta, () => false)` (regra 162).
 - Regra 164 (#135), propostas: a linha da Lista do aluno sem convite diz "Convite ainda não enviado" (texto do aviso da tela dele); a mensagem de `invite_already_sent` é "O convite já foi enviado. Use Reenviar convite.". O Figma (Convite do aluno · 8 e 9) mostra "Corrigir e-mail" no aluno sem convite: ficou de fora, porque mudar o e-mail está fora da #135 e pede função nova; e "Agendar novo treino" segue com o #97.
-- Fatia 7b (#143), propostas: (1) a folha "Sem conexão" do pedido usa o mesmo texto ao pedir e ao cancelar ("Para pedir um novo treino, conecte-se à internet. Seu treino continua disponível para leitura."); (2) pedir não mostra toast (o botão vira "Solicitação enviada"); (3) o estado do pedido vai na cópia do treino guardada no aparelho; cópia antiga, sem ele, vale "sem pedido"; (4) a montagem relê o pedido ao abrir a etapa de fichas e quando a aba volta a ficar visível, sem tempo real, e só se o pedido estava aberto ao entrar; um rascunho retomado depois de o pedido ser cancelado não mostra o aviso (o aviso da tela do aluno já mostra); (5) o link do WhatsApp usa o telefone do perfil e, sem ele, o do cadastro; sem nenhum, o aviso aparece sem o link; (6) se o professor agiu entre a leitura e o toque em cancelar, aparece o erro "Seu professor já atendeu o pedido." e a home se atualiza; (7) no professor, o aviso de pedido aberto aparece também quando ele já agendou o treino (o pedido segue aberto até o treino ficar ativo, regra 40).
+- Fatia 7b (#143), propostas: retiradas junto com a funcionalidade (#149, regra 169). Texto proposto no #149 para o treino concluído: "Você pode continuar treinando com as fichas atuais. Para um treino novo, fale com o seu professor." (sem botão, sem gênero e sem culpa).
 - Supabase Auth, antes de abrir ao público (WARN do Security Advisor de 12/11/2026): validade do OTP maior que 1 hora (hoje 86400 s, por decisão) e proteção contra senhas vazadas desligada (decidido em 12/11/2026: não ligar por ora, basta a proteção básica do plano gratuito; o WARN fica aceito). Detalhe em `contexto-produto.md`, seção 8.
 - Jurídico (Fase 2).

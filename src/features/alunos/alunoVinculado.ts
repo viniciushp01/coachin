@@ -11,15 +11,11 @@ export type AcaoDoRodape = "editar" | "agendar" | "criar";
 
 /**
  * As ações do rodapé (regras 68, 77 e 106). O treino agendado manda: sem "Criar treino" e sem
- * "Agendar novo treino", mesmo com pedido aberto. Depois vem o pedido, que pede um treino novo.
+ * "Agendar novo treino".
  */
-export function acoesDoRodape(treinos: {
-  ativo: boolean;
-  agendado: boolean;
-  pedido: boolean;
-}): AcaoDoRodape[] {
+export function acoesDoRodape(treinos: { ativo: boolean; agendado: boolean }): AcaoDoRodape[] {
   if (treinos.agendado) return treinos.ativo ? ["editar"] : [];
-  if (treinos.pedido || !treinos.ativo) return ["criar"];
+  if (!treinos.ativo) return ["criar"];
   return ["editar", "agendar"];
 }
 
@@ -32,13 +28,6 @@ export type TreinoDoCartao = {
   fim: string;
 };
 
-/**
- * O aviso do pedido de novo treino na tela do aluno (regras 70 e 103; Figma Aluno · 2 e 4).
- * `em` é o dia do pedido ou do cancelamento, "dd/mm" no fuso do aluno.
- */
-export type AvisoDoPedido =
-  { tipo: "aberto"; em: string } | { tipo: "cancelado"; em: string; treinoConcluido: boolean };
-
 export type AlunoVinculado = {
   id: string;
   nome: string;
@@ -50,8 +39,6 @@ export type AlunoVinculado = {
   perfilAtualizadoEm: string | null;
   /** Treinos já encerrados, para o atalho do Histórico (regra 68). */
   treinosAnteriores: number;
-  /** Pedido aberto ou cancelado (regras 70, 103 e 166); nulo sem aviso. */
-  pedido?: AvisoDoPedido | null;
 };
 
 export type TelaDoAluno =
@@ -85,7 +72,7 @@ export async function lerTelaDoAluno(
   const resposta = await supabase
     .from("teacher_student_list")
     .select(
-      "student_id, user_id, name, link_status, list_status, current_workout_id, current_workout_name, current_start_date, current_end_date, current_concluded, scheduled_workout_id, has_open_request, request_created_at",
+      "student_id, user_id, name, link_status, list_status, current_workout_id, current_workout_name, current_start_date, current_end_date, current_concluded, scheduled_workout_id",
     )
     .eq("student_id", alunoId)
     .neq("link_status", "archived")
@@ -100,16 +87,18 @@ export async function lerTelaDoAluno(
     if (!dados) return null;
     // O treino montado antes do aceite aparece abaixo do convite (regras 122 e 153).
     const { cartao, agendado } = await lerCartaoDoTreino(aluno, agora, true);
-    const acoes = acoesDoRodape({ ativo: cartao !== null, agendado, pedido: false });
+    const acoes = acoesDoRodape({ ativo: cartao !== null, agendado });
     return { tela: "convite", dados: { ...dados, treino: { cartao, agendado, acoes } } };
   }
 
   const fuso = await lerFuso(aluno.user_id);
   const { cartao: treino, agendado } = await lerCartaoDoTreino(aluno, agora, false, fuso);
-  const [{ perfilAtualizadoEm, treinosAnteriores }, pedido] = await Promise.all([
-    lerResumoDoAcompanhamento(alunoId, aluno.user_id, fuso, agora),
-    lerAvisoDoPedido(alunoId, aluno, fuso),
-  ]);
+  const { perfilAtualizadoEm, treinosAnteriores } = await lerResumoDoAcompanhamento(
+    alunoId,
+    aluno.user_id,
+    fuso,
+    agora,
+  );
   return {
     tela: "vinculado",
     dados: {
@@ -118,61 +107,10 @@ export async function lerTelaDoAluno(
       status: aluno.list_status as StatusDoAluno,
       treino,
       agendado,
-      acoes: acoesDoRodape({
-        ativo: treino !== null,
-        agendado,
-        pedido: aluno.has_open_request ?? false,
-      }),
+      acoes: acoesDoRodape({ ativo: treino !== null, agendado }),
       perfilAtualizadoEm,
       treinosAnteriores,
-      pedido,
     },
-  };
-}
-
-/** "dd/mm" de um instante, no fuso do aluno. */
-const diaDoAluno = (instante: string, fuso: string | null) =>
-  diaEMes(hojeDoAluno(fuso, new Date(instante)));
-
-/**
- * O aviso do pedido (regras 70 e 103). Aberto: vem da view (inclui o que o professor já agendou,
- * regra 40). Cancelado (regra 166): o último pedido do aluno foi cancelado e nenhum treino foi
- * criado depois disso; some também quando o aluno pede de novo (aí o último pedido é outro).
- */
-export async function lerAvisoDoPedido(
-  alunoId: string,
-  aluno: {
-    has_open_request: boolean | null;
-    request_created_at: string | null;
-    current_concluded: boolean | null;
-  },
-  fuso: string | null,
-): Promise<AvisoDoPedido | null> {
-  if (aluno.has_open_request && aluno.request_created_at) {
-    return { tipo: "aberto", em: diaDoAluno(aluno.request_created_at, fuso) };
-  }
-  const ultimo = await supabase
-    .from("training_requests")
-    .select("status, canceled_at")
-    .eq("student_id", alunoId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (ultimo.error) throw erroDaResposta(ultimo.error);
-  const canceladoEm = ultimo.data?.status === "canceled" ? ultimo.data.canceled_at : null;
-  if (!canceladoEm) return null;
-
-  const depois = await supabase
-    .from("workouts")
-    .select("id", { count: "exact", head: true })
-    .eq("student_id", alunoId)
-    .gt("created_at", canceladoEm);
-  if (depois.error) throw erroDaResposta(depois.error);
-  if ((depois.count ?? 0) > 0) return null;
-  return {
-    tipo: "cancelado",
-    em: diaDoAluno(canceladoEm, fuso),
-    treinoConcluido: aluno.current_concluded ?? false,
   };
 }
 

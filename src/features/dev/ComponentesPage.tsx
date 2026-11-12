@@ -150,8 +150,8 @@ function Demonstracoes() {
 
       <Secao titulo="Button">
         <Button>Ver ficha</Button>
-        <Button variante="secondary">Solicitar novo treino</Button>
-        <Button disabled>Solicitação enviada</Button>
+        <Button variante="secondary">Editar treino</Button>
+        <Button disabled>Salvar treino</Button>
       </Secao>
 
       <Secao titulo="ButtonCompact, TextButton, IconButton">
@@ -385,7 +385,6 @@ function Demonstracoes() {
         <StudentRow
           nome="Juliana Costa"
           status={{ tom: "success", texto: "Ativo" }}
-          solicitacao={{ tom: "brand", texto: "Pediu treino" }}
           detalhe="Treino concluído em 25/10 · treinou ontem"
         />
         <StudentRow

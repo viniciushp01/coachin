@@ -14,8 +14,6 @@ import { FolhaContinuar } from "./FolhaContinuar";
 import { FolhaDescartar } from "./FolhaDescartar";
 import { FolhaRemoverFicha } from "./FolhaRemoverFicha";
 import type { Medida } from "./medida";
-import { AvisoPedidoCancelado } from "./PedidoCancelado";
-import { usePedidoCancelado } from "./usePedidoCancelado";
 import {
   criarRascunho,
   fichaComMedida,
@@ -125,11 +123,6 @@ export function CriarTreinoPage({
   const alterouFicha = editandoFicha && fichaMudou(rascunho, edicao);
   const treinoMudou = mudou(inicial, rascunho);
   const temAlteracao = treinoMudou || (edicao !== null && fichaMudou(rascunho, edicao));
-  // Pedido aberto ao entrar e cancelado no meio: aviso no topo das fichas (regra 103).
-  const pedidoCancelado = usePedidoCancelado(
-    aluno.id,
-    !treino && aluno.pedidoAberto === true && dadosConfirmados && passo === "fichas",
-  );
   const passoAtual = passoParaGuardar({
     passo,
     dadosConfirmados,
@@ -353,11 +346,6 @@ export function CriarTreinoPage({
           }
         }
         salvando={salvando}
-        aviso={
-          pedidoCancelado && (
-            <AvisoPedidoCancelado nome={aluno.nome} telefone={pedidoCancelado.telefone} />
-          )
-        }
         aoVoltar={sairDoFluxo}
         aoAbrirFicha={abrirFicha}
         aoAdicionarFicha={() => abrirFicha(novaFicha())}

@@ -15,49 +15,43 @@ vi.mock("@tanstack/react-router", async (original) => ({
 const sair = vi.fn();
 vi.mock("@/lib/sessao", () => ({ sair: () => sair() }));
 
-// As linhas da Lista · 1 do Figma ("Professor · Alunos"), com o pedido de treino só na Juliana.
+// As linhas da Lista · 1 do Figma ("Professor · Alunos").
 const linhas: LinhaDoAluno[] = [
   {
     id: "a1",
     nome: "Beatriz Nunes",
     status: "convite_expirado",
     detalhe: "Convite expirou em 24/10",
-    pediuTreino: false,
   },
   {
     id: "a2",
     nome: "Carla Mendes",
     status: "sem_treino",
     detalhe: "Último treino em 20/09",
-    pediuTreino: false,
   },
   {
     id: "a3",
     nome: "Juliana Costa",
     status: "ativo",
     detalhe: "Treino concluído em 25/10 · treinou ontem",
-    pediuTreino: true,
   },
   {
     id: "a4",
     nome: "Marcos Lima",
     status: "quase_no_fim",
     detalhe: "Fim em 03/11 · treinou ontem",
-    pediuTreino: false,
   },
   {
     id: "a5",
     nome: "Rafael Torres",
     status: "convite_pendente",
     detalhe: "Convite enviado em 27/10 · vale até 03/11",
-    pediuTreino: false,
   },
   {
     id: "a6",
     nome: "Sérgio Dias",
     status: "convite_recusado",
     detalhe: "Recusou o convite em 27/10",
-    pediuTreino: false,
   },
 ];
 
@@ -84,7 +78,7 @@ describe("Lista de alunos (regras 54, 55, 59, 102, 114 e 147)", () => {
   it("mostra o resumo e uma linha por aluno com o chip do status, na ordem recebida", () => {
     abrir();
     expect(screen.getByRole("heading", { name: "Alunos" })).toBeVisible();
-    expect(screen.getByText("6 alunos · 1 pediu novo treino")).toBeVisible();
+    expect(screen.getByText("6 alunos")).toBeVisible();
     const itens = screen.getAllByRole("listitem") as HTMLElement[];
     expect(itens.map((i) => within(i).getAllByText(/./)[0]?.textContent)).toEqual(
       linhas.map((l) => l.nome),
@@ -97,23 +91,6 @@ describe("Lista de alunos (regras 54, 55, 59, 102, 114 e 147)", () => {
     expect(within(itens[5]!).getByText("Recusou o convite em 27/10")).toBeVisible();
     expect(within(itens[1]!).getByText("Último treino em 20/09")).toBeVisible();
     expect(within(itens[3]!).getByText("Fim em 03/11 · treinou ontem")).toBeVisible();
-  });
-
-  it("chip Pediu treino só na linha com pedido, ao lado do chip do status (regra 62)", () => {
-    abrir();
-    const itens = screen.getAllByRole("listitem") as HTMLElement[];
-    expect(screen.getAllByText("Pediu treino")).toHaveLength(1);
-    const pedido = within(itens[2]!).getByText("Pediu treino");
-    expect(pedido.parentElement).toBe(within(itens[2]!).getByText("Ativo").parentElement);
-    expect(pedido.parentElement).toHaveClass("flex-nowrap");
-    expect(itens[2]!.textContent).toBe(
-      "Juliana CostaAtivoPediu treinoTreino concluído em 25/10 · treinou ontem",
-    );
-  });
-
-  it("sem pedido, o resumo fica só com a contagem", () => {
-    abrir(linhas.map((l) => ({ ...l, pediuTreino: false })));
-    expect(screen.getByText("6 alunos")).toBeVisible();
   });
 
   it("um aluno: resumo no singular", () => {
@@ -149,7 +126,7 @@ describe("Lista de alunos (regras 54, 55, 59, 102, 114 e 147)", () => {
     expect(screen.getAllByRole("listitem")).toHaveLength(1);
     expect(screen.getByText("Sérgio Dias")).toBeVisible();
     await usuario.clear(busca);
-    expect(screen.getByText("6 alunos · 1 pediu novo treino")).toBeVisible();
+    expect(screen.getByText("6 alunos")).toBeVisible();
     expect(screen.getAllByRole("listitem")).toHaveLength(6);
   });
 

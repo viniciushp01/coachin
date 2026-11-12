@@ -100,7 +100,8 @@ export const MENSAGENS = {
   exercise_not_in_workout: "Este exercício não está no seu treino.",
   load_invalid: "Confira a carga.",
 
-  // Solicitação de novo treino
+  // Funções do banco sem uso no app desde 12/11/2026 (regra 169); o teste das migrations exige a
+  // tradução enquanto elas existirem.
   request_already_open: "Você já pediu um treino novo.",
   no_open_request: "Não há pedido aberto.",
   professor_already_acted: "Seu professor já atendeu o pedido.",

@@ -61,7 +61,6 @@ const VINCULO = {
   link_status: "active",
   current_workout_id: "w1",
   scheduled_workout_id: null,
-  has_open_request: false,
 };
 
 describe("rascunhoDoTreino", () => {
@@ -94,11 +93,8 @@ describe("lerTreinoParaEditar", () => {
     expect(lido?.aluno).toMatchObject({ id: "a1", nome: "Juliana Costa", hoje: "2026-10-30" });
   });
 
-  it.each([
-    ["sem treino ativo", { current_workout_id: null }],
-    ["com pedido aberto, em que o rodapé só oferece criar", { has_open_request: true }],
-  ])("%s: nulo", async (_caso, mudanca) => {
-    respostas.teacher_student_list = { data: { ...VINCULO, ...mudanca } };
+  it("sem treino ativo: nulo", async () => {
+    respostas.teacher_student_list = { data: { ...VINCULO, current_workout_id: null } };
     expect(await lerTreinoParaEditar("a1")).toBeNull();
   });
 

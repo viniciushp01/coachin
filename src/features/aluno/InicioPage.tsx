@@ -26,11 +26,9 @@ import {
   fichaDeHoje,
   podeMarcar,
   rotuloDaSemana,
-  naJanelaDeSolicitar,
   ultimaMarcacao,
 } from "./logica";
 import { PainelDoDia } from "./PainelDoDia";
-import { SolicitarTreino } from "./SolicitarTreino";
 
 const INICIAIS = ["S", "T", "Q", "Q", "S", "S", "D"];
 
@@ -70,9 +68,7 @@ function Semana({
 
 /**
  * Início do aluno (Figma "Aluno · Home", Home · 1, 3, 4 e 5; regras 1, 5, 9, 10, 14 a 18 e 163).
- * "Solicitar novo treino" fica abaixo das fichas só na última semana e depois do fim do treino, e
- * sempre na tela sem treino; com pedido aberto, "Solicitação enviada" aparece em qualquer dia
- * (regras 40, 52, 103 e 168).
+ * O aluno não pede treino novo pelo app: fala com o professor (regra 169).
  * O menu inferior só entra quando houver mais de uma aba (fatia 6): por ora, o "Sair" fica no topo.
  */
 export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno }) {
@@ -128,12 +124,9 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
       ) : null}
 
       {!treino ? (
-        <>
-          <EmptyState icone="fitness_center" titulo="Sem treino por enquanto">
-            Você ainda não tem um treino ativo. Peça um novo ao seu professor.
-          </EmptyState>
-          <SolicitarTreino pedido={dados.pedido ?? "nenhum"} />
-        </>
+        <EmptyState icone="fitness_center" titulo="Sem treino por enquanto">
+          Você ainda não tem um treino ativo. Peça um novo ao seu professor.
+        </EmptyState>
       ) : (
         <>
           <ActiveWorkoutCard
@@ -150,8 +143,8 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
           />
           {treino.concluido && (
             <Notice tom="info" titulo="Treino concluído">
-              Você pode continuar treinando com as fichas atuais. Peça um treino novo ao seu
-              professor.
+              Você pode continuar treinando com as fichas atuais. Para um treino novo, fale com o
+              seu professor.
             </Notice>
           )}
           <Semana treino={treino} aoEscolher={setDia} />
@@ -215,11 +208,6 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
                 })}
             </section>
           )}
-
-          {(dados.pedido ?? "nenhum") !== "nenhum" ||
-          naJanelaDeSolicitar(treino.fim, treino.hoje) ? (
-            <SolicitarTreino pedido={dados.pedido ?? "nenhum"} />
-          ) : null}
 
           <PainelDoDia
             treino={treino}
