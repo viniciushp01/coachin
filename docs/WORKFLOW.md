@@ -33,7 +33,7 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 - **Fatia 2 (Convites e vínculo) concluída** em 30/10/2026 (spec #39, PRs #55 a #72): convite de aluno (abrir o link e voltar a ele depois do login, vincular, trocar de professor, recusar), primeiro acesso com aviso de dados e perfil em 2 passos, cadastro de aluno e "Convite gerado", aluno com convite pendente, expirado e recusado, lista de professores e "Convidar professor" do administrador com os estados do convite, convite de professor com conta, sem conta ("Ative seu acesso", Edge Function `ativar-professor`) e de outra conta, os casos da regra 137 e o envio do convite por e-mail com intervalo de 60 s (Edge Function `enviar-convite`). Migrations 0008 e 0009. Regras 132 a 145 (29ª rodada). A área do professor ainda é provisória (lista de alunos com convite) até a fatia 3, e a do aluno até a 5.
 - **Fatia 3 (Professor: lista de alunos) concluída** em 03/11/2026 (spec #74, PRs #81, #83 e #84): `/professor` deixa de ser provisória e vira a Lista de alunos (resumo, busca sem acento e sem maiúsculas, lista vazia, "Sair" sem a fila local), com os convites (detalhe com as datas, abre a tela do aluno com convite) e os alunos vinculados (chip de status, detalhe "treinou hoje"/último treino com a ficha, chip "Pediu treino"). Migration 0010 (`last_done_letter` na view `teacher_student_list`). Regras 146 e 147. À parte, o #80 (PR #82) fechou os dois casos do convite que ficaram do #49. A tela do aluno vinculado chega com as fatias 4 e 7; a área do aluno continua provisória até a 5.
 - **Fatia 7a (Professor acompanha o aluno, só leitura) concluída** em 12/11/2026 (#141): os quatro atalhos da tela do aluno (só Perfil e Histórico sem treino ativo, como no Figma), Calendário mensal com painel do dia e ficha em modo leitura, Progressão de carga (lista e detalhe com histórico), Histórico de treinos e Perfil com "Abrir WhatsApp". Sem migration (a RLS do professor já cobria as leituras). Componente novo `MonthDay`. A 7b (solicitação de novo treino) continua pendente.
-- **Fatia 7b (Solicitação de novo treino) feita** em 12/11/2026 (#143, aguarda o ok do Vinicius para o merge por mexer no banco): o aluno pede um novo treino na home e na tela sem treino, cancela enquanto o professor não agiu (folha de confirmação, toast) e vê a folha "Sem conexão" sem internet; o professor vê o chip e o aviso do pedido na tela do aluno, o aviso de pedido cancelado (regra 166) e, se o pedido for cancelado durante a montagem, o aviso no topo das fichas com o link do WhatsApp. Migration 0016 (`my_request_status`). A regra 35 foi substituída pela 167, e a regra 168 limita o botão da home à última semana e ao depois do fim.
+- **Fatia 7b (Solicitação de novo treino) feita** em 12/11/2026 (#143, PR #144 mergeado e migration 0016 aplicada): o aluno pede um novo treino na home e na tela sem treino, cancela enquanto o professor não agiu (folha de confirmação, toast) e vê a folha "Sem conexão" sem internet; o professor vê o chip e o aviso do pedido na tela do aluno, o aviso de pedido cancelado (regra 166) e, se o pedido for cancelado durante a montagem, o aviso no topo das fichas com o link do WhatsApp. Migration 0016 (`my_request_status`). A regra 35 foi substituída pela 167, e a regra 168 limita o botão da home à última semana e ao depois do fim.
 
 ## 4. Fases
 
@@ -116,7 +116,7 @@ Problema durante o caminho: `/diagnosing-bugs`. Contexto grande demais para uma 
 - **Sem paralelo e sem sessão coordenadora:** uma etapa de cada vez, em worktree próprio. Ninguém trabalha na `main` direto.
 - **Migrations:** uma por vez, com o número conferido antes de começar. Quem aplica roda os testes inteiros depois.
 - **Componentes base:** a sessão da etapa cria o que precisar em `src/ui`, seguindo o `design.md`.
-- **Numeração de regras:** a próxima é a **166** (a 164 está reservada no PR #136, ainda aberto; a 165 já está na `main`).
+- **Numeração de regras:** a próxima está no `ESTADO.md` ("Próxima regra"), calculada a partir do `contexto-produto.md`. Não escreva o número aqui: ele envelhece a cada regra.
 
 ## 7. Quando uma regra de negócio muda ou aparece
 
@@ -128,6 +128,7 @@ Problema durante o caminho: `/diagnosing-bugs`. Contexto grande demais para uma 
 
 - **Edição:** sempre no repositório (`docs/contexto/`).
 - **Project do claude.ai:** não é mais espelhado. O que estiver lá pode estar desatualizado; decisão tomada lá precisa entrar no repositório para valer. Os chats do Project leem, no começo de cada conversa, `ESTADO.md` e `INDICE-REGRAS.md` da branch `claude-estado` (gerados por `.github/workflows/estado.yml`; URL: https://raw.githubusercontent.com/viniciushp01/coachin/claude-estado/ESTADO.md). O texto das instruções do Project fica versionado em `docs/agents/instrucoes-do-project.md`.
+- **Documentação sempre atualizada (regra permanente):** o repositório alimenta tudo (Project do claude.ai via `ESTADO.md`, pasta local por `git pull`). Todo PR que muda comportamento, regra, tela, banco, plano ou fluxo de trabalho atualiza, **no mesmo PR**, os documentos que ele atinge: `contexto-produto.md` (regra numerada), `design.md`, `schema-coach-in.md` (e a lista de migrations aplicadas no `CLAUDE.md`), a tabela e o resumo de fatias da seção 4 deste arquivo e as pendências da seção 10. Ao fechar a tarefa, confira se algum documento ficou dizendo o contrário do código. O `ESTADO.md` é gerado (não edite) e já avisa quando o WORKFLOW diverge. Mudou o texto das instruções do Project? Edite `docs/agents/instrucoes-do-project.md` e avise o Vinicius para colar de novo no claude.ai, o único texto que não se atualiza sozinho.
 - **Figma:** referência visual, sem obrigação de desenhar cada caso raro. Mudança de texto decidida no código não exige atualização imediata.
 
 ## 9. Definição de pronto (qualquer ticket)
@@ -137,7 +138,7 @@ Problema durante o caminho: `/diagnosing-bugs`. Contexto grande demais para uma 
 - [ ] Testes passando; mudança de banco com migration nova, testada e aplicada pelo Claude Code.
 - [ ] Security Advisor sem alerta novo.
 - [ ] Tipos do banco regerados, se o banco mudou.
-- [ ] Docs atualizados (`contexto-produto.md`, `design.md`, `schema-coach-in.md`, conforme o caso).
+- [ ] Docs atualizados **no mesmo PR** (`contexto-produto.md`, `design.md`, `schema-coach-in.md`, tabela de fatias e pendências do WORKFLOW, lista de migrations do `CLAUDE.md`, conforme o caso). Nada mudou nos docs? Diga no PR por quê (seção 8).
 - [ ] CI verde. Preview no celular uma vez por etapa (seção 5).
 
 ## 10. Pendências conhecidas
