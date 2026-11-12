@@ -33,6 +33,7 @@ vi.mock("@/lib/supabase", () => ({
         select: () => passo,
         eq: (...filtro: unknown[]) => (consulta.filtros.push(filtro), passo),
         neq: () => passo,
+        lte: (...filtro: unknown[]) => (consulta.filtros.push(filtro), passo),
         order: () => passo,
         limit: () => passo,
         maybeSingle: () => passo,
@@ -65,6 +66,11 @@ function responder(linha: unknown) {
   respostas.teacher_student_list = { data: linha };
   respostas.profiles = { data: { timezone: "America/Sao_Paulo" } };
   respostas.completions = { count: 12 };
+  // 21/10 01h30 em UTC é 20/10 22h30 em São Paulo; 3 treinos começados = 2 anteriores ao ativo.
+  respostas.student_profiles = {
+    data: { updated_at: "2026-10-21T01:30:00Z", completed_at: "2026-10-01T12:00:00Z" },
+  };
+  respostas.workouts = { count: 3 };
 }
 
 beforeEach(() => {
@@ -187,10 +193,38 @@ describe("lerTelaDoAluno: a tela sai do status do vínculo", () => {
         },
         agendado: false,
         acoes: ["editar", "agendar"],
+        perfilAtualizadoEm: "2026-10-20",
+        treinosAnteriores: 2,
       },
     });
     const contagem = consultas.find((c) => c.tabela === "completions");
     expect(contagem?.filtros).toEqual([["workout_id", "w1"]]);
+  });
+
+  it("atalhos: o perfil sem preenchimento não tem data, e sem treino anterior o número é 0", async () => {
+    responder(vinculo);
+    respostas.student_profiles = {
+      data: { updated_at: "2026-10-21T01:30:00Z", completed_at: null },
+    };
+    respostas.workouts = { count: 1 };
+    expect(await lerTelaDoAluno("a1", AGORA)).toMatchObject({
+      dados: { perfilAtualizadoEm: null, treinosAnteriores: 0 },
+    });
+    respostas.student_profiles = { data: null };
+    respostas.workouts = { count: 0 };
+    expect(await lerTelaDoAluno("a1", AGORA)).toMatchObject({
+      dados: { perfilAtualizadoEm: null, treinosAnteriores: 0 },
+    });
+  });
+
+  it("os treinos anteriores contam os que já começaram no fuso do aluno (o agendado fica fora)", async () => {
+    responder(vinculo);
+    await lerTelaDoAluno("a1", AGORA);
+    const contagem = consultas.find((c) => c.tabela === "workouts");
+    expect(contagem?.filtros).toEqual([
+      ["student_id", "a1"],
+      ["start_date", "2026-10-29"],
+    ]);
   });
 
   it("a semana segue o fuso do aluno, não o do aparelho", async () => {

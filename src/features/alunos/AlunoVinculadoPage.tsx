@@ -1,8 +1,18 @@
 import { useNavigate, type NavigateOptions } from "@tanstack/react-router";
 import { primeiroNome } from "@/lib/listas";
-import { ActiveWorkoutCard, BackButton, BarraFixa, Button, Chip, Notice, Tela } from "@/ui";
+import { textoDosAnteriores } from "@/features/acompanhar/logica";
+import {
+  ActiveWorkoutCard,
+  BackButton,
+  BarraFixa,
+  Button,
+  Chip,
+  Notice,
+  SectionRow,
+  Tela,
+} from "@/ui";
 import type { AcaoDoRodape, AlunoVinculado } from "./alunoVinculado";
-import { CHIP_DO_ALUNO } from "./listaDeAlunos";
+import { CHIP_DO_ALUNO, diaEMes } from "./listaDeAlunos";
 
 type DestinoDaAcao = (alunoId: string) => NavigateOptions;
 
@@ -22,12 +32,21 @@ const BOTAO_DA_ACAO: Record<AcaoDoRodape, { texto: string; variante: "primary" |
   criar: { texto: "Criar treino", variante: "primary" },
 };
 
+/** Os atalhos de acompanhamento (regra 68; Figma "Professor · Acompanhar", seção 1). */
+const ATALHOS = {
+  calendario: "/professor/alunos/$alunoId/calendario",
+  progressao: "/professor/alunos/$alunoId/progressao",
+  perfil: "/professor/alunos/$alunoId/perfil",
+  historico: "/professor/alunos/$alunoId/historico",
+} as const;
+
 const BARRA_POR_QUANTIDADE = [undefined, "um", "dois"] as const;
 
 /**
  * Tela do aluno com o acesso ativo, na visão do professor (regra 68; Figma "Professor ·
  * Acompanhar", seção 1, Aluno · 1 e 3): nome, status e o cartão do treino ou o aviso de sem treino.
- * Atalhos e avisos de pedido são da fatia 7; o aviso do treino agendado, do #97 (regra 152 (4)).
+ * Os quatro atalhos levam ao acompanhamento, só leitura (fatia 7a); sem treino ativo, só Perfil e
+ * Histórico, como no Figma (Aluno · 3). Avisos de pedido são da 7b; o do treino agendado, do #97.
  */
 export function AlunoVinculadoPage({
   aluno,
@@ -57,6 +76,44 @@ export function AlunoVinculadoPage({
           </Notice>
         )
       )}
+      <nav aria-label="Acompanhar" className="flex flex-col gap-8">
+        {aluno.treino && (
+          <>
+            <SectionRow
+              icone="calendar_month"
+              titulo="Calendário"
+              detalhe="Marcações dos treinos feitos"
+              onClick={() =>
+                void navegar({ to: ATALHOS.calendario, params: { alunoId: aluno.id } })
+              }
+            />
+            <SectionRow
+              icone="trending_up"
+              titulo="Progressão de carga"
+              detalhe="Última carga de cada exercício"
+              onClick={() =>
+                void navegar({ to: ATALHOS.progressao, params: { alunoId: aluno.id } })
+              }
+            />
+          </>
+        )}
+        <SectionRow
+          icone="person"
+          titulo="Perfil"
+          detalhe={
+            aluno.perfilAtualizadoEm
+              ? `Atualizado em ${diaEMes(aluno.perfilAtualizadoEm)}`
+              : "Ainda sem dados"
+          }
+          onClick={() => void navegar({ to: ATALHOS.perfil, params: { alunoId: aluno.id } })}
+        />
+        <SectionRow
+          icone="history"
+          titulo="Histórico de treinos"
+          detalhe={textoDosAnteriores(aluno.treinosAnteriores)}
+          onClick={() => void navegar({ to: ATALHOS.historico, params: { alunoId: aluno.id } })}
+        />
+      </nav>
       {acoes.length > 0 && (
         <BarraFixa>
           {acoes.map((acao) => (

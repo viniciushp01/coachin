@@ -10,6 +10,7 @@ export { DataField, FormField, PhoneField, TextAreaField } from "./FormField";
 export { Icon, type NomeIcone } from "./Icon";
 export { BackButton, IconButton } from "./IconButton";
 export { Logo } from "./Logo";
+export { MonthDay } from "./MonthDay";
 export { ESPACO_NAVBAR, NavBar, type AbaAluno } from "./NavBar";
 export { Notice } from "./Notice";
 export { NumberField, type FormatoDoNumero } from "./NumberField";
