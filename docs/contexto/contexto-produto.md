@@ -65,7 +65,7 @@ Aplicativo de treinos de academia **gerenciado por um professor**. Três papéis
 10. A home mostra **"Semana 3 de 8"**. A semana do treino conta **a partir do dia de início** (dias 1 a 7 = semana 1), **não** pela semana segunda–domingo do calendário. Conta no fuso do aluno (regra 115).
 11. Treinar além da frequência sugerida: aviso + permitir. Conta como treino normal.
 12. Descanso sugerido **após 2 dias consecutivos de treino**. É só orientação, não bloqueia nada. A home mostra "Descanso recomendado hoje", com opção de treinar mesmo assim.
-13. **Sem pausa no MVP**: quem para de ir simplesmente não marca. O aluno ainda pode solicitar um treino novo.
+13. **Sem pausa no MVP**: quem para de ir simplesmente não marca. ~~O aluno ainda pode solicitar um treino novo.~~ **Alterada pela regra 168 (12/11/2026): no meio do treino o botão de solicitar não aparece.**
 
 ### Rotação e "Ficha de hoje"
 14. As fichas giram sempre em ordem lógica (A-B-C-A-B…), mesmo após dias sem treinar. Faltar não pula nem reinicia a ficha. Não depende do dia da semana.
@@ -313,6 +313,8 @@ Aplicativo de treinos de academia **gerenciado por um professor**. Três papéis
 
 167. **A tela "sem treino" tem "Solicitar novo treino" e avisa o professor (12/11/2026; substitui a regra 35).** Confirmado pelo dono do produto: valem as regras 40, 52, 62 e 103 e o Figma ("Aluno · Entrada", seção 7), que desenha o botão nessa tela. O pedido feito dela aparece ao professor como qualquer outro (chip "Pediu treino" e aviso na tela do aluno).
 
+168. **Quando a home mostra "Solicitar novo treino" (12/11/2026, fatia 7b; altera a regra 13 para o meio do treino).** Decidido com o dono do produto: o botão fixo na home convidava a pedir treino novo no meio do treino. O botão da home aparece **só na última semana do treino ("Semana N de N", regra 10: de data de fim − 6 em diante, contando no fuso do aluno, regra 115) e depois da data de fim, até um treino novo ficar ativo**; quando entra o treino novo, a data de fim fica distante e o botão some sozinho. Treino de 1 semana está sempre na janela. **Na tela "sem treino" o botão aparece sempre** (regra 167). **Com pedido aberto ou já atendido pelo professor (treino agendado), a home mostra "Solicitação enviada" em qualquer dia**, e "Cancelar solicitação" só enquanto o professor não agiu (regras 52 e 103). Não muda a regra 40 (o pedido segue aberto até o treino novo ficar ativo). Os frames "Aluno · Home" (Home · 1, 2 e 6) ainda desenham o botão sempre; o Figma será atualizado depois.
+
 ## 4. Telas e comportamento (lado do aluno)
 
 - **Entrada do aluno (26/10; 27/10 ampliada; Figma: arquivo Coach In, páginas "Aluno · Entrada" e "↳ Fluxo · Aluno · Entrada")**. Nenhuma dessas telas mostra a navegação inferior. Os textos são pt-BR e o vermelho aparece só para erro:
@@ -472,6 +474,7 @@ Formato celular (390), sem menu inferior (regra 54). Um único botão laranja po
 Nenhum ponto de produto bloqueando o MVP no momento.
 
 Pendências menores (não são regras ainda):
+- **Pedir treino no meio do treino (regra 168)**: o botão some da home fora da última semana; falta uma entrada permanente de "Solicitar novo treino" no Perfil do aluno (fatia 6), para quem precisa de treino novo antes.
 - **Exclusão da conta (regra 120)**: prazo e retenção legal (E25), com o jurídico (deixado para depois). Premissa a confirmar: o mesmo e-mail pode criar uma conta nova e os dados antigos não voltam (E28).
 - **Jurídico**: dados de menores (regra 84), telefone (regra 108) e retenção.
 - **Aviso de treino novo (regra 117)**: confirmar se o pop-up deve aparecer também ao voltar ao app já aberto (hoje: ao abrir ou voltar a ficar visível).

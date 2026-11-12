@@ -26,6 +26,7 @@ import {
   fichaDeHoje,
   podeMarcar,
   rotuloDaSemana,
+  naJanelaDeSolicitar,
   ultimaMarcacao,
 } from "./logica";
 import { PainelDoDia } from "./PainelDoDia";
@@ -69,7 +70,9 @@ function Semana({
 
 /**
  * Início do aluno (Figma "Aluno · Home", Home · 1, 3, 4 e 5; regras 1, 5, 9, 10, 14 a 18 e 163).
- * "Solicitar novo treino" fica abaixo das fichas e na tela sem treino (regras 40, 52 e 103).
+ * "Solicitar novo treino" fica abaixo das fichas só na última semana e depois do fim do treino, e
+ * sempre na tela sem treino; com pedido aberto, "Solicitação enviada" aparece em qualquer dia
+ * (regras 40, 52, 103 e 168).
  * O menu inferior só entra quando houver mais de uma aba (fatia 6): por ora, o "Sair" fica no topo.
  */
 export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno }) {
@@ -213,7 +216,10 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
             </section>
           )}
 
-          <SolicitarTreino pedido={dados.pedido ?? "nenhum"} />
+          {(dados.pedido ?? "nenhum") !== "nenhum" ||
+          naJanelaDeSolicitar(treino.fim, treino.hoje) ? (
+            <SolicitarTreino pedido={dados.pedido ?? "nenhum"} />
+          ) : null}
 
           <PainelDoDia
             treino={treino}

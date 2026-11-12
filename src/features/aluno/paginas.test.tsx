@@ -335,14 +335,47 @@ describe("sem conexão (regra 116)", () => {
   });
 });
 
-describe("solicitar novo treino (regras 40, 52, 103 e 116)", () => {
-  const comPedido = (estado: "nenhum" | "aberto" | "atendendo", comTreino = true) => ({
-    hoje: "2026-10-29",
-    treino: comTreino ? treino : null,
+describe("solicitar novo treino (regras 40, 52, 103, 116 e 168)", () => {
+  // O treino termina em 29/11: 24/11 é a "Semana 8 de 8", dentro da janela do botão.
+  const comPedido = (
+    estado: "nenhum" | "aberto" | "atendendo",
+    comTreino = true,
+    hoje = "2026-11-24",
+  ) => ({
+    hoje,
+    treino: comTreino ? { ...treino, hoje, semana: { atual: 8, total: 8 } } : null,
     pedido: estado,
   });
 
-  it("na home com treino, o botão secundário pede um novo treino (Home · 1)", async () => {
+  it("o botão só aparece na última semana e depois do fim (regra 168)", () => {
+    const botao = () => screen.queryByRole("button", { name: "Solicitar novo treino" });
+    const casos: [string, boolean][] = [
+      ["2026-10-29", false], // meio do treino (Home · 1)
+      ["2026-11-22", false], // fim − 7
+      ["2026-11-23", true], // fim − 6: começa a Semana 8 de 8
+      ["2026-11-29", true], // dia do fim
+      ["2026-12-05", true], // depois do fim, até entrar um treino novo
+    ];
+    for (const [hoje, aparece] of casos) {
+      const { unmount } = renderizar(
+        <InicioPage nome="Vinicius" dados={comPedido("nenhum", true, hoje)} />,
+      );
+      expect(botao() !== null, hoje).toBe(aparece);
+      unmount();
+    }
+  });
+
+  it("pedido aberto ou atendido mostra Solicitação enviada mesmo fora da janela", () => {
+    renderizar(<InicioPage nome="Vinicius" dados={comPedido("aberto", true, "2026-10-29")} />);
+    expect(screen.getByRole("button", { name: "Solicitação enviada" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Cancelar solicitação" })).toBeInTheDocument();
+    cleanup();
+    renderizar(<InicioPage nome="Vinicius" dados={comPedido("atendendo", true, "2026-10-29")} />);
+    expect(screen.getByRole("button", { name: "Solicitação enviada" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Cancelar solicitação" })).not.toBeInTheDocument();
+  });
+
+  it("na janela, o botão secundário pede um novo treino", async () => {
     renderizar(<InicioPage nome="Vinicius" dados={comPedido("nenhum")} />);
     await userEvent.click(screen.getByRole("button", { name: "Solicitar novo treino" }));
     expect(pedido.pedirNovoTreino).toHaveBeenCalled();
