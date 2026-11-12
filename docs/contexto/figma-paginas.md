@@ -24,7 +24,7 @@ Arquivo: Coach In (`IDP8M2IKanbn60dyqmzjh1`).
 | | Fluxo completo | (nova) quadro da jornada de ponta a ponta, com os casos de borda E1 a E29 e a raia "Aluno · Sem conexão" no fim |
 | 👤 ALUNO | Aluno · Entrada | Entrada do aluno (seções 1 a 7, **8 · Casos de borda**, **9 · Conta aberta e sem convite**, **13 · Convites: casos sem regra (29ª rodada)**) |
 | | ↳ Fluxo · Aluno · Entrada | Fluxo · Entrada do aluno (com as trilhas F a J no fim) |
-| | Aluno · Home | Home do aluno (seção "Home do aluno · estados": **Home · 6 Treino de hoje feito**, regra 163; em 12/11/2026 o botão "Solicitar novo treino" saiu de Home · 1, 2 e 6, regra 168, e Home · 9 ganhou a nota da regra 168) |
+| | Aluno · Home | Home do aluno (seção "Home do aluno · estados": **Home · 6 Treino de hoje feito**, regra 163; em 12/11/2026 o botão "Solicitar novo treino" saiu de Home · 1, 2 e 6, regra 168, e Home · 9 ganhou a nota da regra 168; **Home · 9 e o botão da Home · 1 e 4 estão descartados pela regra 169**) |
 | | Aluno · Ficha e painel do dia | Ficha e painel do dia (seção 1 · Ficha: **Ficha · 7 Próxima ficha (já treinou hoje)**, regra 163; seção 3 · Sem internet, 23ª rodada) |
 | | ↳ Fluxo · Aluno · Painel do dia | Fluxo · Painel do dia |
 | | Aluno · Abas | Abas do aluno |
@@ -44,3 +44,12 @@ Arquivo: Coach In (`IDP8M2IKanbn60dyqmzjh1`).
 | | ↳ [Backup] Fluxo · Aluno · Painel do dia | [Backup] Fluxo · Painel do dia |
 | | [Backup] Aluno · Abas | [Backup] Abas do aluno |
 | | Arquivo (versões antigas) | Arquivo (versões antigas) |
+
+
+## Telas de solicitação de novo treino: descartadas (regra 169, 12/11/2026)
+A solicitação foi retirada do app. O Vinicius arquiva estas telas no Figma; o código não as implementa:
+- **Aluno · Entrada**, seção "7 · Solicitar novo treino" (Solicitação · 1 a 6) e a trilha D e E do fluxo.
+- **Aluno · Ficha e painel do dia**, seção "3 · Sem internet": Home · 9 Solicitar treino sem conexão.
+- **Aluno · Home**: o botão "Solicitar novo treino" das Home · 1 e 4 (e o estado "Solicitação enviada").
+- **Professor · Acompanhar**, seção "1 · Tela do aluno": Aluno · 2 Com solicitação e Aluno · 4 Pedido cancelado.
+- **Professor · Treino**: Criar treino · 15 Fichas · pedido cancelado e o chip "Pediu treino" da Lista · 1.

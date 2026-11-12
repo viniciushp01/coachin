@@ -72,9 +72,7 @@ export async function lerTreinoParaEditar(
 ): Promise<{ aluno: AlunoDoTreino; treino: TreinoParaEditar } | null> {
   const resposta = await supabase
     .from("teacher_student_list")
-    .select(
-      "user_id, name, link_status, list_status, current_workout_id, scheduled_workout_id, has_open_request",
-    )
+    .select("user_id, name, link_status, list_status, current_workout_id, scheduled_workout_id")
     .eq("student_id", alunoId)
     .neq("link_status", "archived")
     .maybeSingle();
@@ -86,7 +84,6 @@ export async function lerTreinoParaEditar(
   const acoes = acoesDoRodape({
     ativo: true,
     agendado: vinculo.scheduled_workout_id !== null,
-    pedido: vinculo.has_open_request ?? false,
   });
   if (!acoes.includes("editar")) return null;
 

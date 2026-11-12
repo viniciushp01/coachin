@@ -28,7 +28,6 @@ const vinculo = {
   link_status: "active",
   current_workout_id: null,
   scheduled_workout_id: null,
-  has_open_request: false,
 };
 
 beforeEach(() => {
@@ -44,15 +43,7 @@ describe("lerAlunoDoTreino", () => {
       hoje: "2026-10-30",
       temTreinoAtual: false,
       convite: null,
-      pedidoAberto: false,
     });
-  });
-
-  it("com pedido aberto e treino atual, cria e sabe do anterior (regra 150 (1))", async () => {
-    respostas.teacher_student_list = {
-      data: { ...vinculo, current_workout_id: "w1", has_open_request: true },
-    };
-    expect(await lerAlunoDoTreino("a1", AGORA)).toMatchObject({ temTreinoAtual: true });
   });
 
   it.each([
@@ -76,7 +67,7 @@ describe("lerAlunoDoTreino", () => {
 
   it.each([
     ["não existe", null],
-    ["tem treino ativo sem pedido", { ...vinculo, current_workout_id: "w1" }],
+    ["tem treino ativo", { ...vinculo, current_workout_id: "w1" }],
     ["tem treino agendado", { ...vinculo, scheduled_workout_id: "w2" }],
   ])("nulo quando o aluno %s: o rodapé não oferece criar", async (_, data) => {
     respostas.teacher_student_list = { data };

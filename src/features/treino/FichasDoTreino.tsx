@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { plural } from "@/lib/listas";
 import { BackButton, BarraFixa, Button, Notice, Tela } from "@/ui";
 import { ListaReordenavel, ReorderRow } from "@/ui/ReorderRow";
@@ -34,8 +34,6 @@ type FichasDoTreinoProps = {
   aoAdicionarFicha: () => void;
   aoReordenar: (fichas: Ficha[]) => void;
   aoSalvar: () => void;
-  /** Aviso no topo, ex.: o pedido do aluno foi cancelado durante a montagem (regra 103). */
-  aviso?: ReactNode;
 };
 
 /** Passo 2: as fichas do rascunho e "Salvar treino" (regras 66, 73, 104 e 149 (3)). */
@@ -48,7 +46,6 @@ export function FichasDoTreino({
   aoAdicionarFicha,
   aoReordenar,
   aoSalvar,
-  aviso,
 }: FichasDoTreinoProps) {
   const [tentouSalvar, setTentouSalvar] = useState(false);
   // Calculado a cada tela: reordenar muda a letra que o aviso cita.
@@ -79,7 +76,6 @@ export function FichasDoTreino({
           {temFicha && <p>Arraste para reordenar.</p>}
         </div>
       </div>
-      {aviso}
       {erro && <AvisoDoTreino erro={erro} />}
       {temFicha && (
         <ListaReordenavel itens={rascunho.fichas} aoReordenar={aoReordenar}>

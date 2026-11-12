@@ -9,7 +9,7 @@ type LinhaDaView = Database["public"]["Views"]["teacher_student_list"]["Row"];
 
 // Um literal só: o cliente do Supabase tipa a resposta a partir do texto das colunas.
 const COLUNAS_DA_VIEW =
-  "student_id, name, list_status, invite_id, invite_expires_at, invite_declined_at, current_end_date, current_concluded, scheduled_start_date, last_done_on, last_done_letter, has_open_request";
+  "student_id, name, list_status, invite_id, invite_expires_at, invite_declined_at, current_end_date, current_concluded, scheduled_start_date, last_done_on, last_done_letter";
 export type AlunoDaLista = Pick<
   LinhaDaView,
   | "student_id"
@@ -22,7 +22,6 @@ export type AlunoDaLista = Pick<
   | "scheduled_start_date"
   | "last_done_on"
   | "last_done_letter"
-  | "has_open_request"
 > & { list_status: StatusDoAluno };
 
 /** Data de envio do convite, lida direto de `invites` (a view não a traz). */
@@ -45,14 +44,6 @@ export type LinhaDoAluno = {
   status: StatusDoAluno;
   /** Linha de detalhe: as datas do convite ou o treino do aluno vinculado (regra 147 (1)). */
   detalhe: string | undefined;
-  /** Pedido de treino aberto, chip "Pediu treino" (regras 62 e 103; a view já calcula). */
-  pediuTreino: boolean;
-};
-
-/** Chip do pedido de treino aberto (Figma Lista · 1, camada `Solicitação`). */
-export const CHIP_DO_PEDIDO: { tom: TomChip; texto: string } = {
-  tom: "brand",
-  texto: "Pediu treino",
 };
 
 /** Chip de cada status (design.md, `Chip`). */
@@ -157,7 +148,6 @@ export function linhaDoAluno(
     nome: aluno.name ?? "",
     status: aluno.list_status,
     detalhe: doConvite ?? detalheDoVinculado(aluno, hoje),
-    pediuTreino: aluno.has_open_request ?? false,
   };
 }
 
@@ -173,18 +163,11 @@ export function montarLista(
   );
 }
 
-/**
- * "6 alunos", contando os alunos com convite, e o pedido só se houver: "6 alunos · 1 pediu novo
- * treino", "· 2 pediram novo treino" (regra 147 (2)). Durante a busca, "N resultados".
- */
+/** "6 alunos", contando os alunos com convite (regra 147 (2)). Durante a busca, "N resultados". */
 export function resumoDaLista(linhas: LinhaDoAluno[], termo = "") {
   const busca = resumoDaBusca(linhas, termo);
   if (busca !== null) return busca;
-  const alunos = plural(linhas.length, "aluno", "alunos");
-  const pedidos = linhas.filter((l) => l.pediuTreino).length;
-  return pedidos > 0
-    ? `${alunos} · ${plural(pedidos, "pediu novo treino", "pediram novo treino")}`
-    : alunos;
+  return plural(linhas.length, "aluno", "alunos");
 }
 
 /** Hoje no aparelho, "aaaa-mm-dd" (o mesmo dia do aluno na maioria dos casos, regra 115). */

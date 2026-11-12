@@ -39,21 +39,21 @@ describe("rpc", () => {
   });
 
   it("chama função sem argumento sem objeto", async () => {
-    await rpc("cancel_training_request");
-    expect(falso.chamadas).toEqual([["cancel_training_request", undefined]]);
+    await rpc("accept_data_notice");
+    expect(falso.chamadas).toEqual([["accept_data_notice", undefined]]);
   });
 
   it("lança ErroApp com o código do banco", async () => {
     falso.responder = () =>
-      Promise.resolve({ data: null, error: { code: "P0001", message: "request_already_open" } });
-    const erro = await capturar(rpc("request_new_workout"));
-    expect(erro.codigo).toBe("request_already_open");
-    expect(erro.message).toBe("Você já pediu um treino novo.");
+      Promise.resolve({ data: null, error: { code: "P0001", message: "invite_expired" } });
+    const erro = await capturar(rpc("get_invite_preview", { p_token: "abc" }));
+    expect(erro.codigo).toBe("invite_expired");
+    expect(erro.message).toBe("Este convite expirou.");
   });
 
   it("transforma falha de rede em sem_conexao", async () => {
     falso.responder = () => Promise.reject(new TypeError("Failed to fetch"));
-    const erro = await capturar(rpc("cancel_training_request"));
+    const erro = await capturar(rpc("accept_data_notice"));
     expect(erro.codigo).toBe("sem_conexao");
   });
 });

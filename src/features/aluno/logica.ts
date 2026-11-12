@@ -63,15 +63,6 @@ export function rotuloDaSemana(dias: string[]) {
   return `${diaDoMes(primeiro)} ${mesCurto(primeiro)} – ${diaDoMes(ultimo)} ${mesCurto(ultimo)}`;
 }
 
-/**
- * O botão "Solicitar novo treino" da home só aparece na última semana do treino ("Semana N de N",
- * regra 10: de fim − 6 em diante) e depois do fim, enquanto o treino for o ativo (regra 168). Um
- * treino de 1 semana está sempre na janela. `hoje` e `fim` são "aaaa-mm-dd" (fuso do aluno).
- */
-export function naJanelaDeSolicitar(fim: string, hoje: string) {
-  return hoje >= somarDias(fim, -6);
-}
-
 /** Marcar vale do dia de início até hoje; dias futuros ficam neutros (regras 23 e 24). */
 export function podeMarcar(inicio: string, dia: string, hoje: string) {
   return dia >= inicio && dia <= hoje;
