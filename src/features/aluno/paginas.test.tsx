@@ -3,6 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ErroApp } from "@/lib/erros";
 import { ToastProvider } from "@/ui";
 import { FichaPage } from "./FichaPage";
 import { InicioPage } from "./InicioPage";
@@ -23,6 +24,12 @@ const acoes = vi.hoisted(() => ({
   salvarCarga: vi.fn(() => Promise.resolve()),
 }));
 vi.mock("./acoes", () => acoes);
+
+const pedido = vi.hoisted(() => ({
+  pedirNovoTreino: vi.fn(() => Promise.resolve()),
+  cancelarPedido: vi.fn(() => Promise.resolve()),
+}));
+vi.mock("./pedido", () => pedido);
 
 const exercicio = (nome: string, extra: Partial<ExercicioDaFicha> = {}): ExercicioDaFicha => ({
   exercicioId: `ex-${nome}`,
@@ -283,7 +290,8 @@ describe("sem conexão (regra 116)", () => {
         dados={{ hoje: "2026-10-29", treino, offline: true, pendentes: 2 }}
       />,
     );
-    expect(screen.getByText("Sem conexão")).toBeInTheDocument();
+    // O aviso no topo; a folha "Sem conexão" do pedido fica fechada no DOM.
+    expect(screen.getByRole("status")).toHaveTextContent("Sem conexão");
     expect(
       screen.getByText("Mostrando o treino salvo neste aparelho. 2 registros aguardam envio."),
     ).toBeInTheDocument();
@@ -291,7 +299,7 @@ describe("sem conexão (regra 116)", () => {
 
   it("Início com conexão e nada na fila não mostra aviso", () => {
     renderizar(<InicioPage nome="Vinicius" dados={{ hoje: "2026-10-29", treino, pendentes: 0 }} />);
-    expect(screen.queryByText("Sem conexão")).not.toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(screen.queryByText("Aguardando envio")).not.toBeInTheDocument();
   });
 
@@ -324,5 +332,77 @@ describe("sem conexão (regra 116)", () => {
       screen.getByText("Sem conexão: a carga fica neste aparelho e é enviada depois."),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Salvar carga" })).toBeEnabled();
+  });
+});
+
+describe("solicitar novo treino (regras 40, 52, 103 e 116)", () => {
+  const comPedido = (estado: "nenhum" | "aberto" | "atendendo", comTreino = true) => ({
+    hoje: "2026-10-29",
+    treino: comTreino ? treino : null,
+    pedido: estado,
+  });
+
+  it("na home com treino, o botão secundário pede um novo treino (Home · 1)", async () => {
+    renderizar(<InicioPage nome="Vinicius" dados={comPedido("nenhum")} />);
+    await userEvent.click(screen.getByRole("button", { name: "Solicitar novo treino" }));
+    expect(pedido.pedirNovoTreino).toHaveBeenCalled();
+    expect(invalidar).toHaveBeenCalled();
+  });
+
+  it("na tela sem treino também aparece (cópia antiga sem pedido vale nenhum)", () => {
+    renderizar(<InicioPage nome="Vinicius" dados={{ hoje: "2026-10-29", treino: null }} />);
+    expect(screen.getByRole("button", { name: "Solicitar novo treino" })).toBeEnabled();
+  });
+
+  it("pedido aberto: Solicitação enviada desabilitado e cancelar com confirmação (Solicitação · 1 a 4)", async () => {
+    renderizar(<InicioPage nome="Vinicius" dados={comPedido("aberto", false)} />);
+    expect(screen.getByRole("button", { name: "Solicitação enviada" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Solicitar novo treino" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Cancelar solicitação" }));
+    const folha = screen.getByRole("dialog", { name: "Cancelar solicitação?" });
+    expect(within(folha).getByText(/O professor deixa de ver o seu pedido/)).toBeInTheDocument();
+    await userEvent.click(within(folha).getByRole("button", { name: "Manter solicitação" }));
+    expect(pedido.cancelarPedido).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole("button", { name: "Cancelar solicitação" }));
+    await userEvent.click(
+      within(screen.getByRole("dialog", { name: "Cancelar solicitação?" })).getByRole("button", {
+        name: "Cancelar solicitação",
+      }),
+    );
+    expect(pedido.cancelarPedido).toHaveBeenCalled();
+    expect(await screen.findByText("Solicitação cancelada.")).toBeInTheDocument();
+  });
+
+  it("professor já agiu: só Solicitação enviada, sem cancelar (Solicitação · 6)", () => {
+    renderizar(<InicioPage nome="Vinicius" dados={comPedido("atendendo", false)} />);
+    expect(screen.getByRole("button", { name: "Solicitação enviada" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Cancelar solicitação" })).not.toBeInTheDocument();
+  });
+
+  it("treino concluído com pedido aberto não oferece continuar treinando (regra 117)", () => {
+    const concluido = { ...treino, concluido: true, progresso: 1 };
+    renderizar(
+      <InicioPage
+        nome="Vinicius"
+        dados={{ hoje: "2026-12-01", treino: concluido, pedido: "aberto" }}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Solicitação enviada" })).toBeDisabled();
+    expect(screen.queryByText(/Continuar treinando/)).not.toBeInTheDocument();
+  });
+
+  it("sem conexão abre a folha e Tentar de novo repete a tentativa (Home · 9)", async () => {
+    pedido.pedirNovoTreino.mockRejectedValueOnce(new ErroApp("sem_conexao"));
+    renderizar(<InicioPage nome="Vinicius" dados={{ ...comPedido("nenhum"), offline: true }} />);
+    await userEvent.click(screen.getByRole("button", { name: "Solicitar novo treino" }));
+    const folha = await screen.findByRole("dialog", { name: "Sem conexão" });
+    expect(
+      within(folha).getByText(/Para pedir um novo treino, conecte-se à internet/),
+    ).toBeInTheDocument();
+    expect(invalidar).not.toHaveBeenCalled();
+    await userEvent.click(within(folha).getByRole("button", { name: "Tentar de novo" }));
+    expect(pedido.pedirNovoTreino).toHaveBeenCalledTimes(2);
+    expect(invalidar).toHaveBeenCalled();
   });
 });

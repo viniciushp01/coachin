@@ -12,7 +12,7 @@ import {
   Tela,
 } from "@/ui";
 import type { AcaoDoRodape, AlunoVinculado } from "./alunoVinculado";
-import { CHIP_DO_ALUNO, diaEMes } from "./listaDeAlunos";
+import { CHIP_DO_ALUNO, CHIP_DO_PEDIDO, diaEMes } from "./listaDeAlunos";
 
 type DestinoDaAcao = (alunoId: string) => NavigateOptions;
 
@@ -46,7 +46,8 @@ const BARRA_POR_QUANTIDADE = [undefined, "um", "dois"] as const;
  * Tela do aluno com o acesso ativo, na visão do professor (regra 68; Figma "Professor ·
  * Acompanhar", seção 1, Aluno · 1 e 3): nome, status e o cartão do treino ou o aviso de sem treino.
  * Os quatro atalhos levam ao acompanhamento, só leitura (fatia 7a); sem treino ativo, só Perfil e
- * Histórico, como no Figma (Aluno · 3). Avisos de pedido são da 7b; o do treino agendado, do #97.
+ * Histórico, como no Figma (Aluno · 3). Pedido aberto: chip e aviso (regra 70, Aluno · 2); pedido
+ * cancelado: aviso neutro (regras 103 e 166, Aluno · 4). O aviso do treino agendado é do #97.
  */
 export function AlunoVinculadoPage({
   aluno,
@@ -64,9 +65,23 @@ export function AlunoVinculadoPage({
     <Tela barra={BARRA_POR_QUANTIDADE[acoes.length]}>
       <BackButton onClick={() => void navegar({ to: "/professor" })} />
       <h1 className="w-full truncate text-title-screen">{aluno.nome}</h1>
-      <div className="flex">
+      <div className="flex gap-8">
         <Chip tom={chip.tom}>{chip.texto}</Chip>
+        {aluno.pedido?.tipo === "aberto" && (
+          <Chip tom={CHIP_DO_PEDIDO.tom}>{CHIP_DO_PEDIDO.texto}</Chip>
+        )}
       </div>
+      {aluno.pedido?.tipo === "aberto" && (
+        <Notice tom="info" titulo={`Pediu um novo treino em ${aluno.pedido.em}`}>
+          A solicitação fecha quando o novo treino ficar ativo.
+        </Notice>
+      )}
+      {aluno.pedido?.tipo === "cancelado" && (
+        <Notice tom="neutral" titulo="Pedido de novo treino cancelado">
+          {nome} cancelou o pedido em {aluno.pedido.em}.
+          {aluno.pedido.treinoConcluido && " O treino concluído segue ativo."}
+        </Notice>
+      )}
       {aluno.treino ? (
         <ActiveWorkoutCard {...aluno.treino} />
       ) : (

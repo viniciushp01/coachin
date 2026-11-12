@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { acoesDoRodape, lerTelaDoAluno } from "./alunoVinculado";
+import { acoesDoRodape, lerAvisoDoPedido, lerTelaDoAluno } from "./alunoVinculado";
 
 describe("acoesDoRodape (regras 68, 77 e 106)", () => {
   const casos = [
@@ -34,6 +34,7 @@ vi.mock("@/lib/supabase", () => ({
         eq: (...filtro: unknown[]) => (consulta.filtros.push(filtro), passo),
         neq: () => passo,
         lte: (...filtro: unknown[]) => (consulta.filtros.push(filtro), passo),
+        gt: (...filtro: unknown[]) => (consulta.filtros.push(filtro), passo),
         order: () => passo,
         limit: () => passo,
         maybeSingle: () => passo,
@@ -195,6 +196,7 @@ describe("lerTelaDoAluno: a tela sai do status do vínculo", () => {
         acoes: ["editar", "agendar"],
         perfilAtualizadoEm: "2026-10-20",
         treinosAnteriores: 2,
+        pedido: null,
       },
     });
     const contagem = consultas.find((c) => c.tabela === "completions");
@@ -269,5 +271,56 @@ describe("lerTelaDoAluno: a tela sai do status do vínculo", () => {
     responder(vinculo);
     respostas.completions = { error: { message: "falhou", code: "500" } };
     await expect(lerTelaDoAluno("a1", AGORA)).rejects.toBeInstanceOf(Error);
+  });
+});
+
+describe("lerAvisoDoPedido (regras 70, 103 e 166)", () => {
+  const SP = "America/Sao_Paulo";
+  const semPedido = { has_open_request: false, request_created_at: null, current_concluded: true };
+
+  it("pedido aberto: o dia do pedido no fuso do aluno, sem ler mais nada", async () => {
+    // 28/10 01h em UTC é 27/10 22h em São Paulo.
+    const aviso = await lerAvisoDoPedido(
+      "a1",
+      {
+        has_open_request: true,
+        request_created_at: "2026-10-28T01:00:00Z",
+        current_concluded: true,
+      },
+      SP,
+    );
+    expect(aviso).toEqual({ tipo: "aberto", em: "27/10" });
+    expect(consultas).toHaveLength(0);
+  });
+
+  it("último pedido cancelado e nenhum treino criado depois: aviso com o dia do cancelamento", async () => {
+    respostas.training_requests = {
+      data: { status: "canceled", canceled_at: "2026-10-27T15:00:00Z" },
+    };
+    respostas.workouts = { count: 0 };
+    await expect(lerAvisoDoPedido("a1", semPedido, SP)).resolves.toEqual({
+      tipo: "cancelado",
+      em: "27/10",
+      treinoConcluido: true,
+    });
+    expect(consultas.find((c) => c.tabela === "workouts")?.filtros).toContainEqual([
+      "created_at",
+      "2026-10-27T15:00:00Z",
+    ]);
+  });
+
+  it("treino criado depois do cancelamento: o aviso some", async () => {
+    respostas.training_requests = {
+      data: { status: "canceled", canceled_at: "2026-10-27T15:00:00Z" },
+    };
+    respostas.workouts = { count: 1 };
+    await expect(lerAvisoDoPedido("a1", semPedido, SP)).resolves.toBeNull();
+  });
+
+  it("sem pedido ou último pedido atendido: sem aviso", async () => {
+    respostas.training_requests = { data: null };
+    await expect(lerAvisoDoPedido("a1", semPedido, SP)).resolves.toBeNull();
+    respostas.training_requests = { data: { status: "closed", canceled_at: null } };
+    await expect(lerAvisoDoPedido("a1", semPedido, SP)).resolves.toBeNull();
   });
 });

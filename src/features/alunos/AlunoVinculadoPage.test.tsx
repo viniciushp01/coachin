@@ -187,3 +187,52 @@ describe("Rodapé: o botão só aparece quando o destino existe", () => {
     expect(screen.queryByRole("button", { name: "Agendar novo treino" })).toBeNull();
   });
 });
+
+describe("pedido de novo treino na tela do aluno (regras 62, 70, 103 e 166)", () => {
+  const concluido = { ...comTreino.treino!, situacao: "Treino concluído", progresso: 1 };
+
+  it("pedido aberto: chip, aviso com o dia e só Criar treino (Aluno · 2)", () => {
+    render(
+      <AlunoVinculadoPage
+        aluno={{
+          ...comTreino,
+          treino: concluido,
+          acoes: ["criar"],
+          pedido: { tipo: "aberto", em: "27/10" },
+        }}
+      />,
+    );
+    expect(screen.getByText("Pediu treino")).toBeVisible();
+    expect(screen.getByText("Pediu um novo treino em 27/10")).toBeVisible();
+    expect(screen.getByText("A solicitação fecha quando o novo treino ficar ativo.")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Criar treino" })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Editar treino" })).toBeNull();
+  });
+
+  it("pedido cancelado com treino concluído: aviso neutro e rodapé de volta a Editar (Aluno · 4)", () => {
+    render(
+      <AlunoVinculadoPage
+        aluno={{
+          ...comTreino,
+          treino: concluido,
+          pedido: { tipo: "cancelado", em: "27/10", treinoConcluido: true },
+        }}
+      />,
+    );
+    expect(screen.getByText("Pedido de novo treino cancelado")).toBeVisible();
+    expect(
+      screen.getByText("Vinicius cancelou o pedido em 27/10. O treino concluído segue ativo."),
+    ).toBeVisible();
+    expect(screen.queryByText("Pediu treino")).toBeNull();
+    expect(screen.getByRole("button", { name: "Editar treino" })).toBeVisible();
+  });
+
+  it("pedido cancelado com treino em curso: só a primeira frase", () => {
+    render(
+      <AlunoVinculadoPage
+        aluno={{ ...comTreino, pedido: { tipo: "cancelado", em: "27/10", treinoConcluido: false } }}
+      />,
+    );
+    expect(screen.getByText("Vinicius cancelou o pedido em 27/10.")).toBeVisible();
+  });
+});

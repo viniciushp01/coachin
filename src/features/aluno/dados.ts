@@ -6,6 +6,7 @@ import { ErroApp, erroDaResposta } from "@/lib/erros";
 import { comLimite, guardarCopia, lerCopia, listarFila } from "@/lib/filaLocal";
 import { supabase } from "@/lib/supabase";
 import type { DiaDaFicha, Marcacao } from "./logica";
+import { lerEstadoDoPedido, type EstadoDoPedido } from "./pedido";
 import { aplicarFila, atualizarDia } from "./pendencias";
 
 export type ExercicioDaFicha = {
@@ -47,6 +48,8 @@ export type DadosDoAluno = {
   offline?: boolean;
   /** Registros que aguardam envio (regra 116). */
   pendentes?: number;
+  /** Pedido de novo treino (regras 40, 52 e 103). Vai na cópia; cópia antiga sem ele vale "nenhum". */
+  pedido?: EstadoDoPedido;
 };
 
 /** O treino ativo é o de início mais recente que já começou (o agendado fica oculto, regra 2). */
@@ -56,15 +59,18 @@ export async function lerTreinoDoAluno(agora = new Date()): Promise<DadosDoAluno
   const fuso = await lerFuso(contaId);
   const hoje = hojeDoAluno(fuso, agora);
 
-  const treinos = await supabase
-    .from("workouts")
-    .select("id, name, start_date, end_date")
-    .lte("start_date", hoje)
-    .order("start_date", { ascending: false })
-    .limit(1);
+  const [treinos, pedido] = await Promise.all([
+    supabase
+      .from("workouts")
+      .select("id, name, start_date, end_date")
+      .lte("start_date", hoje)
+      .order("start_date", { ascending: false })
+      .limit(1),
+    lerEstadoDoPedido(),
+  ]);
   if (treinos.error) throw erroDaResposta(treinos.error);
   const treino = treinos.data[0];
-  if (!treino?.end_date) return { hoje, fuso, treino: null };
+  if (!treino?.end_date) return { hoje, fuso, pedido, treino: null };
 
   const [dias, marcacoes, cargas] = await Promise.all([
     supabase
@@ -84,6 +90,7 @@ export async function lerTreinoDoAluno(agora = new Date()): Promise<DadosDoAluno
   return {
     hoje,
     fuso,
+    pedido,
     treino: {
       id: treino.id,
       nome: treino.name,
