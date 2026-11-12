@@ -24,6 +24,12 @@ const acoes = vi.hoisted(() => ({
 }));
 vi.mock("./acoes", () => acoes);
 
+// Pop-up de treino novo (regra 170): por padrão o banco não tem aviso.
+const rpc = vi.hoisted(() =>
+  vi.fn<(f: string, a?: object) => Promise<unknown>>(() => Promise.resolve(null)),
+);
+vi.mock("@/lib/rpc", () => ({ rpc }));
+
 const exercicio = (nome: string, extra: Partial<ExercicioDaFicha> = {}): ExercicioDaFicha => ({
   exercicioId: `ex-${nome}`,
   nome,
@@ -283,6 +289,108 @@ describe("FichaPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Salvar carga" }));
     expect(screen.getByText("Digite uma carga entre 0,1 e 1000 kg.")).toBeInTheDocument();
     expect(acoes.salvarCarga).not.toHaveBeenCalled();
+  });
+});
+
+describe("pop-up de treino novo (regras 117 e 170)", () => {
+  const dados = { hoje: "2026-10-29", treino };
+  const aviso = {
+    workout_id: "w3",
+    workout_name: "Hipertrofia · Fase 3",
+    start_date: "2026-10-29",
+    teacher_name: "Carlos Almeida",
+  };
+  const comAviso = () => {
+    let visto = false;
+    rpc.mockImplementation((f: string) => {
+      if (f === "acknowledge_new_workout") visto = true;
+      return Promise.resolve(f === "pending_new_workout_notice" && !visto ? aviso : null);
+    });
+  };
+  const chamadas = (f: string) => rpc.mock.calls.filter(([nome]) => nome === f);
+  const voltarAoApp = () => document.dispatchEvent(new Event("visibilitychange"));
+
+  afterEach(() => rpc.mockImplementation(() => Promise.resolve(null)));
+
+  it("aparece ao abrir o Início, com o nome do professor e do treino (Figma, Treino novo · 1)", async () => {
+    comAviso();
+    renderizar(<InicioPage nome="Vinicius" dados={dados} />);
+    const folha = await screen.findByRole("dialog", { name: "Seu treino novo chegou" });
+    expect(
+      within(folha).getByText(
+        "Carlos Almeida ativou “Hipertrofia · Fase 3”. O treino já está no seu Início.",
+      ),
+    ).toBeInTheDocument();
+    expect(within(folha).getByRole("button", { name: "Ver meu treino" })).toBeInTheDocument();
+    expect(within(folha).getByRole("button", { name: "Fechar" })).toBeInTheDocument();
+  });
+
+  it("Fechar marca o treino como visto uma vez e não reaparece ao voltar ao app", async () => {
+    comAviso();
+    renderizar(<InicioPage nome="Vinicius" dados={dados} />);
+    await userEvent.click(await screen.findByRole("button", { name: "Fechar" }));
+    expect(chamadas("acknowledge_new_workout")).toEqual([
+      ["acknowledge_new_workout", { p_workout_id: "w3" }],
+    ]);
+    voltarAoApp();
+    await vi.waitFor(() => expect(chamadas("pending_new_workout_notice")).toHaveLength(2));
+    expect(
+      screen.queryByRole("dialog", { name: "Seu treino novo chegou" }),
+    ).not.toBeInTheDocument();
+    expect(invalidar).not.toHaveBeenCalled();
+  });
+
+  it("Ver meu treino fecha, marca como visto e lê o treino de novo no Início", async () => {
+    comAviso();
+    renderizar(<InicioPage nome="Vinicius" dados={dados} />);
+    await userEvent.click(await screen.findByRole("button", { name: "Ver meu treino" }));
+    expect(chamadas("acknowledge_new_workout")).toHaveLength(1);
+    expect(invalidar).toHaveBeenCalledTimes(1);
+    expect(navegar).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("dialog", { name: "Seu treino novo chegou" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("tocar fora também marca como visto", async () => {
+    comAviso();
+    renderizar(<InicioPage nome="Vinicius" dados={dados} />);
+    const folha = await screen.findByRole("dialog", { name: "Seu treino novo chegou" });
+    await userEvent.click(within(folha).getByTestId("escurecimento"));
+    expect(chamadas("acknowledge_new_workout")).toHaveLength(1);
+  });
+
+  it("aparece quando o app volta a ficar visível com um treino novo", async () => {
+    renderizar(<InicioPage nome="Vinicius" dados={dados} />);
+    await vi.waitFor(() => expect(chamadas("pending_new_workout_notice")).toHaveLength(1));
+    expect(
+      screen.queryByRole("dialog", { name: "Seu treino novo chegou" }),
+    ).not.toBeInTheDocument();
+    await new Promise((r) => setTimeout(r, 0)); // a 1ª consulta termina
+    comAviso();
+    voltarAoApp();
+    expect(
+      await screen.findByRole("dialog", { name: "Seu treino novo chegou" }),
+    ).toBeInTheDocument();
+  });
+
+  it("sem conexão a consulta não roda e nada aparece", async () => {
+    comAviso();
+    renderizar(<InicioPage nome="Vinicius" dados={{ ...dados, offline: true }} />);
+    voltarAoApp();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(rpc).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("dialog", { name: "Seu treino novo chegou" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("falha da consulta fica em silêncio", async () => {
+    rpc.mockImplementation(() => Promise.reject(new Error("Failed to fetch")));
+    renderizar(<InicioPage nome="Vinicius" dados={dados} />);
+    await vi.waitFor(() => expect(rpc).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });
 

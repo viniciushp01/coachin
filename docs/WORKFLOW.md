@@ -35,6 +35,7 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 - **Fatia 7a (Professor acompanha o aluno, só leitura) concluída** em 12/11/2026 (#141): os quatro atalhos da tela do aluno (só Perfil e Histórico sem treino ativo, como no Figma), Calendário mensal com painel do dia e ficha em modo leitura, Progressão de carga (lista e detalhe com histórico), Histórico de treinos e Perfil com "Abrir WhatsApp". Sem migration (a RLS do professor já cobria as leituras). Componente novo `MonthDay`. A 7b (solicitação de novo treino) continua pendente.
 - **Fatia 7b (Solicitação de novo treino) feita** em 12/11/2026 (#143, PR #144 mergeado e migration 0016 aplicada): o aluno pede um novo treino na home e na tela sem treino, cancela enquanto o professor não agiu (folha de confirmação, toast) e vê a folha "Sem conexão" sem internet; o professor vê o chip e o aviso do pedido na tela do aluno, o aviso de pedido cancelado (regra 166) e, se o pedido for cancelado durante a montagem, o aviso no topo das fichas com o link do WhatsApp. Migration 0016 (`my_request_status`). A regra 35 foi substituída pela 167, e a regra 168 limita o botão da home à última semana e ao depois do fim.
 - **Fatia 7b retirada** em 12/11/2026 (#149, regra 169): por decisão do dono do produto, a solicitação de novo treino saiu do app (aluno e professor), sem mudança no banco, que fica dormente. O aluno que quer um treino novo fala com o professor fora do app.
+- **Pop-up "Seu treino novo chegou" feito** em 12/11/2026 (#151, regra 170; item adiado da fatia 5): a home do aluno avisa do treino ativo novo ao abrir o app e ao voltar a ele, uma vez por treino, em silêncio sem conexão. Migration 0017 (backfill do `workout_seen` para quem já usava o app, sem mudar funções).
 
 ## 4. Fases
 
@@ -54,7 +55,7 @@ Ao concluir uma etapa, risque o nome dela na tabela (~~assim~~): o ESTADO.md usa
 **Adiados até o piloto responder:**
 
 - **#97** (botão "Agendar novo treino"). O #98 (treino antes do aceite, regras 122 e 153) e o #94 (ajustar medida e carga, regras 123 e 151 (4)) foram feitos antes do piloto, a pedido.
-- **Fatias 6 e 10** (a 7a, acompanhar o aluno em só leitura, e a 7b, solicitação de novo treino, foi feita antes do piloto e retirada em seguida, #141, #143 e #149) e, na fatia 5, o aviso de treinar além da frequência, a sugestão de descanso e o pop-up de treino novo.
+- **Fatias 6 e 10** (a 7a, acompanhar o aluno em só leitura, e a 7b, solicitação de novo treino, foi feita antes do piloto e retirada em seguida, #141, #143 e #149) e, na fatia 5, o aviso de treinar além da frequência e a sugestão de descanso. O pop-up de treino novo foi feito antes do piloto (#151, regra 170).
 
 **Não será explorado enquanto não houver demanda real** (reavaliar se surgir reclamação): a **solicitação de novo treino** pelo app (regra 169). O banco segue dormente (`docs/schema-coach-in.md`).
 
@@ -97,7 +98,7 @@ A 8 só começa depois que a 5 estiver estável.
 - Jurídico: prazo e retenção da exclusão de conta (regra 120), dados de menores (84), telefone (108).
 - Security e Performance Advisor do Supabase sem alertas novos (hoje: só índices ainda não usados, esperado em banco vazio, e políticas permissivas múltiplas, aceitas pelo desenho).
 - Teste de ponta a ponta dos três papéis; teste em iOS e Android instalado na tela inicial.
-- Confirmar as premissas abertas: e-mail reutilizável após excluir conta (E28), sessão de 30 dias, pop-up de treino novo.
+- Confirmar as premissas abertas: e-mail reutilizável após excluir conta (E28), sessão de 30 dias.
 
 ## 5. Ciclo de cada fatia
 
@@ -155,4 +156,5 @@ Problema durante o caminho: `/diagnosing-bugs`. Contexto grande demais para uma 
 - Regra 164 (#135), propostas: a linha da Lista do aluno sem convite diz "Convite ainda não enviado" (texto do aviso da tela dele); a mensagem de `invite_already_sent` é "O convite já foi enviado. Use Reenviar convite.". O Figma (Convite do aluno · 8 e 9) mostra "Corrigir e-mail" no aluno sem convite: ficou de fora, porque mudar o e-mail está fora da #135 e pede função nova; e "Agendar novo treino" segue com o #97.
 - Fatia 7b (#143), propostas: retiradas junto com a funcionalidade (#149, regra 169). Texto proposto no #149 para o treino concluído: "Você pode continuar treinando com as fichas atuais. Para um treino novo, fale com o seu professor." (sem botão, sem gênero e sem culpa).
 - Supabase Auth, antes de abrir ao público (WARN do Security Advisor de 12/11/2026): validade do OTP maior que 1 hora (hoje 86400 s, por decisão) e proteção contra senhas vazadas desligada (decidido em 12/11/2026: não ligar por ora, basta a proteção básica do plano gratuito; o WARN fica aceito). Detalhe em `contexto-produto.md`, seção 8.
+- Pop-up de treino novo (#151), proposta: o texto do Figma "O professor Carlos ativou “…”. Ele já está no seu Início." virou "[nome] ativou “[treino]”. O treino já está no seu Início." (regra 144: nome sem artigo de gênero; "Ele" podia parecer o professor). Sem nome do professor: "Seu professor ativou…". Corrigir no Figma.
 - Jurídico (Fase 2).

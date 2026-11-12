@@ -16,6 +16,7 @@ import {
   useToast,
   WeekDay,
 } from "@/ui";
+import { AvisoDeTreinoNovo } from "./AvisoDeTreinoNovo";
 import { desfazerMarcacao, marcarComoFeito, type SituacaoDoEnvio } from "./acoes";
 import { AVISO_GUARDADO, registrosAguardando } from "./textos";
 import type { DadosDoAluno, TreinoDoAluno } from "./dados";
@@ -224,6 +225,7 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
         </>
       )}
       <FolhaSair aberta={sair} aoFechar={() => setSair(false)} />
+      <AvisoDeTreinoNovo offline={dados.offline} />
     </Tela>
   );
 }

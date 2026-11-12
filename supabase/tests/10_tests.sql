@@ -1381,4 +1381,88 @@ begin
   perform t.su();
 end $$;
 
-select 'FIM: todos os testes passaram' as resultado;
+-- ---------------------------------------------------------------------
+-- Backfill do workout_seen (regra 117, #151): quem já usa o app não vê o
+-- pop-up do treino que já usa; treino novo e aluno sem marcação veem.
+-- ---------------------------------------------------------------------
+create function t.login_uid(p uuid) returns void language plpgsql as $$
+begin
+  execute 'reset role';
+  perform set_config('request.jwt.claims', json_build_object('sub', p, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+end $$;
+create function t.bf_aluno(p_uid uuid, p_nome text) returns uuid language plpgsql as $$
+declare v uuid;
+begin
+  insert into auth.users (id, email, email_confirmed_at) values (p_uid, lower(p_nome) || '@bf.com', now());
+  insert into public.students (teacher_id, user_id, name, status, linked_at)
+  values (t.uid('t1'), p_uid, p_nome, 'active', now()) returning id into v;
+  return v;
+end $$;
+create function t.bf_treino(p_student uuid, p_nome text, p_inicio date, p_marcado boolean) returns uuid
+language plpgsql as $$
+declare v_w uuid; v_d uuid;
+begin
+  insert into public.workouts (student_id, teacher_id, name, start_date, weeks)
+  values (p_student, t.uid('t1'), p_nome, p_inicio, 8) returning id into v_w;
+  insert into public.workout_days (workout_id, letter, name, position) values (v_w, 'A', 'A', 1) returning id into v_d;
+  if p_marcado then
+    insert into public.completions (student_id, workout_id, day_id, done_on, marked_at, client_action_id)
+    values (p_student, v_w, v_d, least(p_inicio, t.today()), now(), gen_random_uuid());
+  end if;
+  return v_w;
+end $$;
+
+do $$
+declare
+  u_a uuid := '00000000-0000-0000-0000-0000000000d1'; u_b uuid := '00000000-0000-0000-0000-0000000000d2';
+  u_c uuid := '00000000-0000-0000-0000-0000000000d3'; u_d uuid := '00000000-0000-0000-0000-0000000000d4';
+  s_a uuid; s_b uuid; s_c uuid; s_d uuid; s_e uuid;
+  w_a1 uuid; w_a2 uuid; w_b1 uuid; w_b2 uuid; w_c uuid; w_d1 uuid; w_d2 uuid; w_e uuid;
+  v_n integer;
+begin
+  perform t.su();
+  s_a := t.bf_aluno(u_a, 'Bfa'); s_b := t.bf_aluno(u_b, 'Bfb');
+  s_c := t.bf_aluno(u_c, 'Bfc'); s_d := t.bf_aluno(u_d, 'Bfd');
+  insert into public.students (teacher_id, name) values (t.uid('t1'), 'Bfe') returning id into s_e;
+
+  w_a1 := t.bf_treino(s_a, 'A antigo', t.today() - 40, true);
+  w_a2 := t.bf_treino(s_a, 'A ativo',  t.today() - 10, true);    -- marcou no ativo
+  w_b1 := t.bf_treino(s_b, 'B usado',  t.today() - 30, true);
+  w_b2 := t.bf_treino(s_b, 'B novo',   t.today() - 2,  false);   -- começou depois da última marcação
+  w_c  := t.bf_treino(s_c, 'C ativo',  t.today() - 5,  false);   -- nunca marcou
+  w_d1 := t.bf_treino(s_d, 'D ativo',  t.today() - 10, true);
+  w_d2 := t.bf_treino(s_d, 'D agendado', t.today() + 5, false);  -- agendado
+  w_e  := t.bf_treino(s_e, 'E convite', t.today() - 1, false);   -- convite pendente
+
+  perform t.ok(private.backfill_workout_seen() > 0, 'backfill marca os treinos já usados');
+  v_n := (select count(*) from public.workout_seen);
+  perform t.ok(private.backfill_workout_seen() = 0 and (select count(*) from public.workout_seen) = v_n,
+               'backfill é idempotente (rodar duas vezes não muda nada)');
+
+  perform t.ok(exists (select 1 from public.workout_seen where user_id = u_a and workout_id = w_a1)
+               and exists (select 1 from public.workout_seen where user_id = u_a and workout_id = w_a2),
+               'backfill: treino usado e os anteriores ficam vistos');
+  perform t.ok(not exists (select 1 from public.workout_seen where workout_id in (w_b2, w_c, w_d2, w_e)),
+               'backfill: treino novo, sem marcação, agendado ou de convite pendente não é marcado');
+  perform t.ok(has_function_privilege('authenticated', 'private.backfill_workout_seen()', 'execute') is false,
+               'backfill fora do alcance do app');
+
+  perform t.login_uid(u_a);
+  perform t.ok(public.pending_new_workout_notice() is null, 'backfill: quem já marcou no treino ativo não vê o pop-up');
+  perform t.login_uid(u_b);
+  perform t.ok(public.pending_new_workout_notice() ->> 'workout_id' = w_b2::text, 'backfill: treino novo depois da última marcação mostra o pop-up');
+  perform public.acknowledge_new_workout(w_b2);
+  perform t.ok(public.pending_new_workout_notice() is null, 'backfill: depois de reconhecido, o pop-up não volta');
+  perform t.login_uid(u_c);
+  perform t.ok(public.pending_new_workout_notice() ->> 'workout_id' = w_c::text, 'backfill: aluno sem marcação vê o pop-up');
+  perform t.login_uid(u_d);
+  perform t.ok(public.pending_new_workout_notice() is null, 'backfill: agendado não mostra o pop-up antes de começar');
+
+  perform t.su();
+  update public.workouts set start_date = t.today() where id = w_d2;    -- chegou o dia do agendado
+  perform t.login_uid(u_d);
+  perform t.ok(public.pending_new_workout_notice() ->> 'workout_id' = w_d2::text, 'backfill: agendado mostra o pop-up quando começa');
+  perform t.su();
+end $$;
+
