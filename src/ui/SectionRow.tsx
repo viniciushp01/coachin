@@ -33,8 +33,8 @@ export function SectionRow({
         <Icon nome={icone} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-2">
-        <span className="break-words text-body-strong text-text-primary">{titulo}</span>
-        {detalhe && <span className="break-words text-caption text-text-secondary">{detalhe}</span>}
+        <span className="text-body-strong break-words text-text-primary">{titulo}</span>
+        {detalhe && <span className="text-caption break-words text-text-secondary">{detalhe}</span>}
       </span>
       <span className="shrink-0 text-text-secondary">
         <Icon nome={iconeDireita} />

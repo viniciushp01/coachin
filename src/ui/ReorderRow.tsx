@@ -123,10 +123,10 @@ export function ReorderRow({
         {...props}
       >
         <span className="flex min-w-0 flex-1 flex-col gap-2">
-          <span className="break-words text-body-strong text-text-primary">{titulo}</span>
+          <span className="text-body-strong break-words text-text-primary">{titulo}</span>
           <span
             className={clsx(
-              "break-words text-caption",
+              "text-caption break-words",
               comProblema ? "text-status-danger" : "text-text-secondary",
             )}
           >
