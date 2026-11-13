@@ -22,7 +22,7 @@ Arquivos (em `supabase/`):
 | `migrations/20261105200000_set_exercise_settings.sql` | 0011 · Regras 123 e 148 (#94): `set_exercise_settings` ajusta medida e modo de carga do exercício do próprio professor; não toca em carga nem histórico. O número foi reservado no #95; o que vale é a ordem pelo timestamp. Aplicada em 05/11/2026 via MCP, antes do merge (versão registrada `20261105211112`) |
 | `migrations/20261111175653_student_without_invite.sql` | 0015 · Regra 164 (#135): `create_student` cria só o aluno (vínculo `invited`, sem convite); `send_student_invite(aluno)` gera o primeiro convite (7 dias a partir do envio; `invite_already_sent` se já houver convite, `student_already_linked`, `student_not_found`); `teacher_student_list` devolve `sem_convite` para o vínculo `invited` sem nenhum convite. `create_student_with_invite` fica como está (o app deixa de usar). **Aplicada em 11/11/2026** via MCP (versão `20261111175653`) |
 | `migrations/20261112145537_my_request_status.sql` | 0016 · Fatia 7b (#143): `my_request_status()` devolve ao aluno o estado do pedido de novo treino (`none`, `open`, `acted`), para mostrar ou esconder "Cancelar solicitação" (regra 103) sem expor o treino agendado |
-| `migrations/20261112180000_backfill_workout_seen.sql` | 0017 · #151 (regra 170): só dados. `private.backfill_workout_seen()` marca em `workout_seen`, para cada aluno com conta, o treino mais recente já começado com marcação dele e os anteriores, e roda uma vez. Sem mudar schema nem funções existentes |
+| `migrations/20261112180000_backfill_workout_seen.sql` | 0017 · #151 (regra 170): só dados. `private.backfill_workout_seen()` marca em `workout_seen`, para cada aluno com conta, o treino mais recente já começado com marcação dele e os anteriores, e roda uma vez. Sem mudar schema nem funções existentes. **Aplicada em 13/11/2026** (via MCP; registrada no Supabase como `20261113121930`). |
 | `tests/` | Simulação do Supabase, 396 verificações, `run.sh` (sobe um Postgres descartável) e `pglite/` (o mesmo, sem Postgres instalado) |
 
 ## 1. Como o banco funciona (5 ideias)
@@ -221,6 +221,16 @@ Testei localmente com a autenticação **simulada**. Três pontos só se confirm
 - **Aplicação:** via MCP (`apply_migration`), registrada como versão `20261112145537` (arquivo local renomeado para essa versão), sem os comentários do cabeçalho.
 - **Advisor:** sem alerta novo além do padrão já aceito (`my_request_status` entra na lista de RPCs `security definer` para `authenticated`; nenhuma nova para `anon`).
 - **Tipos:** `my_request_status: { Args: never; Returns: string }` em `database.types.ts` (única diferença do gerado).
+
+### Resultado da aplicação da 0017 (13/11/2026, issue #151)
+
+- **Como:** via MCP (`apply_migration`), antes do merge do front. Registrada no Supabase como `20261113121930 backfill_workout_seen` (timestamp próprio, como a 0014); o arquivo do repositório segue `20261112180000_backfill_workout_seen.sql`, com o mesmo conteúdo.
+- **O que muda:** `private.backfill_workout_seen()` (nova, `security definer`, `search_path=public`, sem `EXECUTE` para `public`, `anon` e `authenticated`), chamada uma vez pela própria migration. Schema e funções existentes iguais.
+- **Antes:** `workout_seen` vazio; 3 alunos com conta, 5 treinos, 6 marcações. A prévia (mesma consulta, só leitura) indicou 2 treinos a marcar.
+- **Depois:** 2 linhas em `workout_seen`, exatamente as da prévia (os treinos em que os alunos já marcaram ficha). O aluno com conta e sem marcação verá o pop-up uma vez, como manda a regra 170.
+- **Testes (PGlite, Postgres 17.5):** aluno que marcou no ativo (sem aviso), treino novo depois da última marcação (aviso), aluno sem marcação (aviso), agendado (sem aviso até começar, aviso no dia), convite pendente ignorado, idempotência e função fora do alcance do app. **419 verificações**.
+- **Advisor:** sem alerta novo (a função é do schema `private`, fora da API). Seguem só os WARN já aceitos.
+- **Tipos:** sem mudança em `database.types.ts` (nada novo em `public`).
 
 ### Solicitação de novo treino retirada do app (12/11/2026, regra 169, #149)
 
