@@ -25,8 +25,11 @@ import {
   diasDaSemana,
   feitaHoje,
   fichaDeHoje,
+  podeAvancarSemana,
   podeMarcar,
+  podeVoltarSemana,
   rotuloDaSemana,
+  somarSemanas,
   ultimaMarcacao,
 } from "./logica";
 import { PainelDoDia } from "./PainelDoDia";
@@ -42,10 +45,30 @@ function Semana({
   treino: TreinoDoAluno;
   aoEscolher: (dia: string) => void;
 }) {
-  const dias = diasDaSemana(treino.hoje);
+  // Qualquer data da semana mostrada; começa na semana de hoje, no fuso do aluno (regras 115 e 171).
+  const [semana, setSemana] = useState(treino.hoje);
+  const dias = diasDaSemana(semana);
   return (
     <section aria-label="Semana" className="flex flex-col gap-12 rounded-card bg-bg-surface p-16">
-      <p className="text-label text-text-secondary">{rotuloDaSemana(dias)}</p>
+      <div className="flex items-center justify-between">
+        <p className="text-label text-text-secondary">{rotuloDaSemana(dias)}</p>
+        <div className="flex gap-4">
+          <IconButton
+            icone="chevron_left"
+            rotulo="Semana anterior"
+            tamanho="sm"
+            disabled={!podeVoltarSemana(semana, treino.inicio)}
+            onClick={() => setSemana(somarSemanas(semana, -1))}
+          />
+          <IconButton
+            icone="chevron_right"
+            rotulo="Próxima semana"
+            tamanho="sm"
+            disabled={!podeAvancarSemana(semana, treino.hoje, treino.fim)}
+            onClick={() => setSemana(somarSemanas(semana, 1))}
+          />
+        </div>
+      </div>
       <div className="flex">
         {dias.map((dia, i) => (
           <WeekDay
@@ -68,7 +91,7 @@ function Semana({
 }
 
 /**
- * Início do aluno (Figma "Aluno · Home", Home · 1, 3, 4 e 5; regras 1, 5, 9, 10, 14 a 18 e 163).
+ * Início do aluno (Figma "Aluno · Home", Home · 1, 3, 4 e 5; regras 1, 5, 9, 10, 14 a 18, 163 e 171).
  * O aluno não pede treino novo pelo app: fala com o professor (regra 169).
  * O menu inferior só entra quando houver mais de uma aba (fatia 6): por ora, o "Sair" fica no topo.
  */
