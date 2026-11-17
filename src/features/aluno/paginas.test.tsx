@@ -217,6 +217,51 @@ describe("InicioPage", () => {
     renderizar(<InicioPage nome="Vinicius" dados={dados} />);
     expect(screen.getByRole("button", { name: /^Sexta, 30 de outubro/ })).toBeDisabled();
   });
+
+  describe("setas de semana (regra 171)", () => {
+    it("começa na semana de hoje, com as duas setas habilitadas", () => {
+      renderizar(<InicioPage nome="Vinicius" dados={dados} />);
+      expect(screen.getByRole("button", { name: "Semana anterior" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Próxima semana" })).toBeEnabled();
+    });
+
+    it("volta uma semana, troca rótulo e dias, e marca um dia passado", async () => {
+      renderizar(<InicioPage nome="Vinicius" dados={dados} />);
+      await userEvent.click(screen.getByRole("button", { name: "Semana anterior" }));
+      expect(screen.getByText("19 – 25 out")).toBeInTheDocument();
+      await userEvent.click(screen.getByRole("button", { name: /^Quinta, 22 de outubro/ }));
+      const painel = screen.getByRole("dialog", { name: "Quinta, 22 de outubro" });
+      await userEvent.click(within(painel).getByRole("button", { name: "Marcar ficha C" }));
+      expect(acoes.marcarComoFeito).toHaveBeenCalledWith("dC", "2026-10-22");
+    });
+
+    it("‹ desabilita na semana do início do treino", async () => {
+      renderizar(<InicioPage nome="Vinicius" dados={dados} />);
+      const voltar = screen.getByRole("button", { name: "Semana anterior" });
+      for (let i = 0; i < 3; i++) await userEvent.click(voltar);
+      expect(screen.getByText("5 – 11 out")).toBeInTheDocument();
+      expect(voltar).toBeDisabled();
+    });
+
+    it("› avança até a semana da data de fim, e os dias futuros ficam sem toque", async () => {
+      renderizar(<InicioPage nome="Vinicius" dados={dados} />);
+      const avancar = screen.getByRole("button", { name: "Próxima semana" });
+      for (let i = 0; i < 4; i++) await userEvent.click(avancar);
+      expect(screen.getByText("23 – 29 nov")).toBeInTheDocument();
+      expect(avancar).toBeDisabled();
+      expect(screen.getByRole("button", { name: /^Segunda, 23 de novembro/ })).toBeDisabled();
+    });
+
+    it("depois da data de fim, › para na semana de hoje e marcar funciona (regras 23 e 43)", async () => {
+      const concluido = { ...treino, concluido: true, progresso: 1, hoje: "2026-12-01" };
+      renderizar(<InicioPage nome="Vinicius" dados={{ hoje: "2026-12-01", treino: concluido }} />);
+      expect(screen.getByRole("button", { name: "Próxima semana" })).toBeDisabled();
+      await userEvent.click(screen.getByRole("button", { name: /^Segunda, 30 de novembro/ }));
+      const painel = screen.getByRole("dialog", { name: "Segunda, 30 de novembro" });
+      await userEvent.click(within(painel).getByRole("button", { name: "Marcar ficha C" }));
+      expect(acoes.marcarComoFeito).toHaveBeenCalledWith("dC", "2026-11-30");
+    });
+  });
 });
 
 describe("FichaPage", () => {

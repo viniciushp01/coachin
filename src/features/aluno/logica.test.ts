@@ -6,7 +6,10 @@ import {
   fichaDeHoje,
   lerCarga,
   textoDaCarga,
+  podeAvancarSemana,
   podeMarcar,
+  podeVoltarSemana,
+  somarSemanas,
   rotuloDaSemana,
   textoDaSerie,
   type DiaDaFicha,
@@ -141,5 +144,29 @@ describe("carga (regra 26)", () => {
     expect(lerCarga("abc")).toBeNull();
     expect(textoDaCarga(62.5)).toBe("62,5");
     expect(textoDaCarga(60)).toBe("60");
+  });
+});
+
+describe("navegar entre semanas (regra 171)", () => {
+  it("soma semanas inteiras", () => {
+    expect(somarSemanas("2026-10-29", -1)).toBe("2026-10-22");
+    expect(somarSemanas("2026-10-29", 1)).toBe("2026-11-05");
+  });
+  it("‹ vai até a semana que contém o início do treino", () => {
+    // início quarta 07/10/2026: a semana de 05 a 11/10 é a primeira
+    expect(podeVoltarSemana("2026-10-12", "2026-10-07")).toBe(true);
+    expect(podeVoltarSemana("2026-10-08", "2026-10-07")).toBe(false);
+    expect(podeVoltarSemana("2026-10-05", "2026-10-07")).toBe(false);
+  });
+  it("› vai até a semana de hoje quando o treino já passou do fim", () => {
+    expect(podeAvancarSemana("2026-11-24", "2026-12-01", "2026-11-29")).toBe(true);
+    expect(podeAvancarSemana("2026-12-01", "2026-12-01", "2026-11-29")).toBe(false);
+  });
+  it("› vai até a semana da data de fim quando ela ainda é futura", () => {
+    expect(podeAvancarSemana("2026-10-29", "2026-10-29", "2026-11-29")).toBe(true);
+    expect(podeAvancarSemana("2026-11-24", "2026-10-29", "2026-11-29")).toBe(false);
+  });
+  it("› fica desabilitada na semana de hoje se o fim cai nela", () => {
+    expect(podeAvancarSemana("2026-10-29", "2026-10-29", "2026-11-01")).toBe(false);
   });
 });

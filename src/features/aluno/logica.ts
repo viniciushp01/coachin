@@ -51,6 +51,19 @@ export function diasDaSemana(data: string) {
   return Array.from({ length: 7 }, (_, i) => somarDias(segunda, i));
 }
 
+/** Move `data` por semanas inteiras (negativo = para trás). */
+export const somarSemanas = (data: string, semanas: number) => somarDias(data, semanas * 7);
+
+const segundaDe = (data: string) => diasDaSemana(data)[0]!;
+
+/** ‹ vai até a semana que contém o início do treino (regra 171). */
+export const podeVoltarSemana = (semana: string, inicio: string) =>
+  segundaDe(semana) > segundaDe(inicio);
+
+/** › vai até a semana de hoje ou, se a data de fim ainda é futura, a dela (regra 171). */
+export const podeAvancarSemana = (semana: string, hoje: string, fim: string) =>
+  segundaDe(semana) < segundaDe(fim > hoje ? fim : hoje);
+
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const diaDoMes = (data: string) => Number(data.slice(8, 10));
 const mesCurto = (data: string) => MESES[Number(data.slice(5, 7)) - 1];
