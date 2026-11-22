@@ -37,6 +37,7 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 - **Fatia 7b retirada** em 12/11/2026 (#149, regra 169): por decisão do dono do produto, a solicitação de novo treino saiu do app (aluno e professor), sem mudança no banco, que fica dormente. O aluno que quer um treino novo fala com o professor fora do app.
 - **Pop-up "Seu treino novo chegou" feito** em 12/11/2026 (#151, regra 170; item adiado da fatia 5): a home do aluno avisa do treino ativo novo ao abrir o app e ao voltar a ele, uma vez por treino, em silêncio sem conexão. Migration 0017 (backfill do `workout_seen` para quem já usava o app, sem mudar funções), aplicada em 13/11/2026.
 - **Setas de semana na home do aluno feitas** em 17/11/2026 (regra 171), fora da ordem do plano: o aluno volta às semanas anteriores (e avança até a semana de hoje ou a da data de fim) para marcar ou alterar um dia que esqueceu. Só app, sem mudança de banco.
+- **Convite sobrevive à confirmação em outro navegador feito** em 22/11/2026 (#155, regra 172): o token vai em `?convite=` no link de confirmação e o Login o guarda de novo; `/sem-professor` orienta a abrir o link do convite de novo. Só app, sem mudança de banco.
 
 ## 4. Fases
 
