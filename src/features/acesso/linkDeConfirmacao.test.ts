@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { guardarConvite } from "@/features/convite/conviteGuardado";
 import { resolverLinkDeConfirmacao, urlDeVoltaDaConfirmacao } from "./linkDeConfirmacao";
 
 const getSession = vi.fn();
@@ -24,6 +25,15 @@ beforeEach(() => {
 });
 
 describe("urlDeVoltaDaConfirmacao", () => {
+  beforeEach(() => localStorage.clear());
+
+  it("com convite guardado, leva o token no endereço (regra 172)", () => {
+    guardarConvite("abc23xyz");
+    expect(urlDeVoltaDaConfirmacao(1_800_000_000_000)).toBe(
+      `${window.location.origin}/confirmar-email?pedido=1800000000000&convite=abc23xyz`,
+    );
+  });
+
   it("volta para a tela do link com a hora do pedido", () => {
     expect(urlDeVoltaDaConfirmacao(1_800_000_000_000)).toBe(
       `${window.location.origin}/confirmar-email?pedido=1800000000000`,

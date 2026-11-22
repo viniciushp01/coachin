@@ -12,6 +12,9 @@ export function SemProfessorPage() {
       >
         Peça um convite ao seu professor para o seu treino aparecer aqui. Se você é professor, fale
         com quem administra o Coach In para liberar seu acesso.
+        <br />
+        Se você recebeu um link de convite, abra-o de novo: ele leva direto para vincular ao
+        professor.
       </EmptyState>
       <BarraFixa>
         <Button variante="secondary" onClick={sair}>

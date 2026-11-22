@@ -1,13 +1,17 @@
+import { lerConviteGuardado } from "@/features/convite/conviteGuardado";
 import { supabase } from "@/lib/supabase";
 import { situacaoDoLink } from "./retornoDoLink";
 import { urlDoApp } from "./urlDoApp";
 
 /**
  * Para onde volta o link de confirmação do e-mail (criar conta e "Reenviar link"). A hora do
- * pedido vai no endereço para separar link vencido de link já usado (`situacaoDoLink`).
+ * pedido vai no endereço para separar link vencido de link já usado (`situacaoDoLink`). Com
+ * convite guardado, o token vai junto (`convite`), para o convite sobreviver à confirmação em
+ * outro navegador ou app (regra 172).
  */
 export function urlDeVoltaDaConfirmacao(agora = Date.now()) {
-  return urlDoApp(`/confirmar-email?pedido=${agora}`);
+  const convite = lerConviteGuardado();
+  return urlDoApp(`/confirmar-email?pedido=${agora}${convite ? `&convite=${convite}` : ""}`);
 }
 
 type VoltaDoLink = { hash: string; pedidoEm?: number; agora: number };
