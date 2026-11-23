@@ -176,30 +176,14 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
       );
     case "vincular":
       return (
-        <ConviteComProfessor
-          titulo="Vincular ao professor?"
-          texto={`Com o vínculo, o professor ${tela.professor} monta os seus treinos e acompanha a sua frequência.`}
+        <TelaVincular
           professor={tela.professor}
-          botao="Vincular ao professor"
-          aoTocar={() => void aceitar(tela.professor, false, tela.email)}
-          secundario={{
-            texto: "Agora não",
-            aoTocar: () => void recusar((codigo) => telaDoErroDoConvite(codigo, tela.professor)),
-          }}
+          email={tela.email}
           enviando={enviando}
-        >
-          <div className="flex flex-col items-start">
-            <p className="text-body text-text-secondary">Você entrou com {tela.email}.</p>
-            <TextButton onClick={() => void usarOutraConta()} disabled={enviando}>
-              Usar outra conta
-            </TextButton>
-          </div>
-          <Notice tom="info" titulo="O professor vê seus dados">
-            Nome, nascimento, telefone, altura, peso e restrições ou dores, para montar o treino e
-            falar com você. Altura e peso podem ser compartilhados em qualquer idade; restrições ou
-            dores são dados de saúde (LGPD).
-          </Notice>
-        </ConviteComProfessor>
+          aoVincular={() => void aceitar(tela.professor, false, tela.email)}
+          aoRecusar={() => void recusar((codigo) => telaDoErroDoConvite(codigo, tela.professor))}
+          aoUsarOutraConta={() => void usarOutraConta()}
+        />
       );
     case "trocar":
       return (
@@ -234,13 +218,10 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
       );
     case "vinculada":
       return (
-        <ConviteSemValor
-          icone="check_circle"
-          titulo="Conta vinculada"
-          botao={{ texto: "Ir para o início", aoTocar: () => navegar({ to: "/", replace: true }) }}
-        >
-          O professor {tela.professor} agora monta os seus treinos. Eles aparecem no seu início.
-        </ConviteSemValor>
+        <TelaContaVinculada
+          professor={tela.professor}
+          aoIrParaInicio={() => void navegar({ to: "/", replace: true })}
+        />
       );
     case "expirado":
       return (
@@ -364,6 +345,64 @@ export function ConvitePage({ tela: telaInicial, token }: ConvitePageProps) {
         </ConviteSemValor>
       );
   }
+}
+
+type TelaVincularProps = {
+  professor: string;
+  email: string;
+  enviando: boolean;
+  aoVincular: () => void;
+  aoRecusar: () => void;
+  aoUsarOutraConta: () => void;
+};
+
+/** "Vincular ao professor?" (regras 79 e 97), pelo link ou pelo e-mail da conta (regra 173). */
+export function TelaVincular({
+  professor,
+  email,
+  enviando,
+  aoVincular,
+  aoRecusar,
+  aoUsarOutraConta,
+}: TelaVincularProps) {
+  return (
+    <ConviteComProfessor
+      titulo="Vincular ao professor?"
+      texto={`Com o vínculo, o professor ${professor} monta os seus treinos e acompanha a sua frequência.`}
+      professor={professor}
+      botao="Vincular ao professor"
+      aoTocar={aoVincular}
+      secundario={{ texto: "Agora não", aoTocar: aoRecusar }}
+      enviando={enviando}
+    >
+      <div className="flex flex-col items-start">
+        <p className="text-body text-text-secondary">Você entrou com {email}.</p>
+        <TextButton onClick={aoUsarOutraConta} disabled={enviando}>
+          Usar outra conta
+        </TextButton>
+      </div>
+      <Notice tom="info" titulo="O professor vê seus dados">
+        Nome, nascimento, telefone, altura, peso e restrições ou dores, para montar o treino e falar
+        com você. Altura e peso podem ser compartilhados em qualquer idade; restrições ou dores são
+        dados de saúde (LGPD).
+      </Notice>
+    </ConviteComProfessor>
+  );
+}
+
+type TelaContaVinculadaProps = { professor: string; aoIrParaInicio: () => void };
+
+/** "Conta vinculada" (regra 79). */
+export function TelaContaVinculada({ professor, aoIrParaInicio }: TelaContaVinculadaProps) {
+  return (
+    <ConviteSemValor
+      icone="check_circle"
+      titulo="Conta vinculada"
+      botao={{ texto: "Ir para o início", aoTocar: aoIrParaInicio }}
+    >
+      O professor {professor} agora monta os seus treinos. Eles aparecem no seu início.
+    </ConviteSemValor>
+  );
 }
 
 const esquemaDaSenha = z.object({ senha: senhaNova });
