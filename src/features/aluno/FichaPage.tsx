@@ -6,6 +6,7 @@ import { desfazerMarcacao, marcarComoFeito, salvarCarga, type SituacaoDoEnvio } 
 import { AVISO_GUARDADO } from "./textos";
 import type { ExercicioDaFicha, TreinoDoAluno } from "./dados";
 import { FolhaCarga } from "./FolhaCarga";
+import { useVirarDia } from "./useVirarDia";
 import { diaDaEdicao, fichaDeHoje, textoDaCarga, textoDaSerie } from "./logica";
 
 /**
@@ -16,7 +17,10 @@ export function FichaPage({
   treino,
   fichaId,
   offline = false,
+  fuso,
 }: {
+  /** Fuso do aluno: a etiqueta "FICHA DE HOJE" vira na meia-noite dele (regra 163, item 5). */
+  fuso?: string | null;
   treino: TreinoDoAluno;
   fichaId: string;
   /** Mostrando a cópia guardada no aparelho (regra 116). */
@@ -25,6 +29,7 @@ export function FichaPage({
   const navegar = useNavigate();
   const router = useRouter();
   const mostrarToast = useToast();
+  useVirarDia(treino.hoje, fuso);
   const [carga, setCarga] = useState<ExercicioDaFicha | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const ficha = treino.fichas.find((f) => f.id === fichaId);

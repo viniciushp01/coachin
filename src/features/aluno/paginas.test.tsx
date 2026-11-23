@@ -103,8 +103,17 @@ HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
   this.open = false;
 };
 
-beforeEach(() => vi.clearAllMocks());
-afterEach(cleanup);
+// Só o relógio fica fixo no dia dos dados (29/10/2026): senão a virada do dia (regra 163, item 5)
+// releria a rota a cada render. Os timers continuam reais.
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-29T12:00:00-03:00"));
+});
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 describe("InicioPage", () => {
   const dados = { hoje: "2026-10-29", treino };
@@ -136,6 +145,36 @@ describe("InicioPage", () => {
           { diaId: "dC", feitoEm: "2026-10-29", marcadaEm: "2026-10-29T08:00:00Z", pendente },
         ],
       },
+    });
+
+    it("na virada do dia a home relê a rota e, com o hoje novo, volta ao estado 1 (item 5)", () => {
+      // Segunda 26/10 tem a marcação de A; domingo 01/11 vira segunda 02/11.
+      const domingo = { hoje: "2026-11-01", treino: { ...treino, hoje: "2026-11-01" } };
+      domingo.treino.marcacoes = [
+        { diaId: "dC", feitoEm: "2026-11-01", marcadaEm: "2026-11-01T08:00:00Z" },
+      ];
+      vi.setSystemTime(new Date("2026-11-01T23:59:00-03:00"));
+      const { rerender } = renderizar(<InicioPage nome="Vinicius" dados={domingo} />);
+      expect(screen.getByRole("region", { name: "Treino de hoje feito" })).toBeInTheDocument();
+      expect(screen.getByText("26 out – 1 nov")).toBeInTheDocument();
+      expect(invalidar).not.toHaveBeenCalled();
+
+      vi.setSystemTime(new Date("2026-11-02T00:01:00-03:00"));
+      document.dispatchEvent(new Event("visibilitychange"));
+      expect(invalidar).toHaveBeenCalledTimes(1);
+
+      // O loader devolve o hoje novo; a tira (que o aluno não navegou) acompanha.
+      const segunda = { hoje: "2026-11-02", treino: { ...domingo.treino, hoje: "2026-11-02" } };
+      rerender(
+        <ToastProvider>
+          <InicioPage nome="Vinicius" dados={segunda} />
+        </ToastProvider>,
+      );
+      expect(
+        screen.queryByRole("region", { name: "Treino de hoje feito" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Ver ficha" })).toBeInTheDocument();
+      expect(screen.getByText("2 – 8 nov")).toBeInTheDocument();
     });
 
     it("mostra o card Feita hoje sem o próximo treino dentro dele (regra 174)", () => {

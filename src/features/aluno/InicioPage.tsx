@@ -34,6 +34,7 @@ import {
   ultimaMarcacao,
 } from "./logica";
 import { PainelDoDia } from "./PainelDoDia";
+import { useVirarDia } from "./useVirarDia";
 
 const INICIAIS = ["S", "T", "Q", "Q", "S", "S", "D"];
 
@@ -46,8 +47,10 @@ function Semana({
   treino: TreinoDoAluno;
   aoEscolher: (dia: string) => void;
 }) {
-  // Qualquer data da semana mostrada; começa na semana de hoje, no fuso do aluno (regras 115 e 171).
-  const [semana, setSemana] = useState(treino.hoje);
+  // Qualquer data da semana mostrada. Sem navegação do aluno, acompanha o "hoje" no fuso dele,
+  // inclusive na virada do dia (regras 115, 163 item 5 e 171).
+  const [escolhida, setSemana] = useState<string | null>(null);
+  const semana = escolhida ?? treino.hoje;
   const dias = diasDaSemana(semana);
   return (
     <section aria-label="Semana" className="flex flex-col gap-12 rounded-card bg-bg-surface p-16">
@@ -104,6 +107,7 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
   const [dia, setDia] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const { treino } = dados;
+  useVirarDia(dados.hoje, dados.fuso);
   const primeiroNome = nome.trim().split(/\s+/)[0] || nome;
 
   async function agir(acao: () => Promise<SituacaoDoEnvio>, sucesso: string) {

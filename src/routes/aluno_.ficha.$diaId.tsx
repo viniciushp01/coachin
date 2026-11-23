@@ -9,12 +9,12 @@ export const Route = createFileRoute("/aluno_/ficha/$diaId")({
   loader: async () => {
     const dados = await lerTreinoParaExibir();
     if (!dados.treino) throw redirect({ to: "/aluno", replace: true });
-    return { treino: dados.treino, offline: dados.offline === true };
+    return { treino: dados.treino, offline: dados.offline === true, fuso: dados.fuso };
   },
   staleTime: 0,
   component: function Ficha() {
     const { diaId } = Route.useParams();
-    const { treino, offline } = Route.useLoaderData();
-    return <FichaPage treino={treino} offline={offline} fichaId={diaId} />;
+    const { treino, offline, fuso } = Route.useLoaderData();
+    return <FichaPage treino={treino} offline={offline} fuso={fuso} fichaId={diaId} />;
   },
 });
