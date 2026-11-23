@@ -1466,3 +1466,199 @@ begin
   perform t.su();
 end $$;
 
+
+-- ---------------------------------------------------------------------
+-- Convite pendente do e-mail da conta, sem o link (regra 173)
+-- ---------------------------------------------------------------------
+create function t.cp_conta(p_uid uuid, p_email text, p_confirmado boolean default true) returns uuid
+language plpgsql as $$
+begin
+  insert into auth.users (id, email, email_confirmed_at)
+  values (p_uid, p_email, case when p_confirmado then now() end);
+  return p_uid;
+end $$;
+create function t.cp_convite(p_teacher uuid, p_email text, p_token text, p_criado timestamptz default now()) returns uuid
+language plpgsql as $$
+declare v_s uuid; v_i uuid;
+begin
+  insert into public.students (teacher_id, name, email) values (p_teacher, 'Cp ' || p_token, p_email) returning id into v_s;
+  insert into public.invites (kind, token_hash, inviter_id, student_id, email, expires_at, created_at)
+  values ('student', private.hash_token(p_token), p_teacher, v_s, p_email, p_criado + interval '7 days', p_criado)
+  returning id into v_i;
+  return v_i;
+end $$;
+
+do $$
+declare
+  u_tb uuid := '00000000-0000-0000-0000-0000000000e0'; u_tc uuid := '00000000-0000-0000-0000-0000000000e9';
+  u_a uuid := '00000000-0000-0000-0000-0000000000e1'; u_b uuid := '00000000-0000-0000-0000-0000000000e2';
+  u_c uuid := '00000000-0000-0000-0000-0000000000e3'; u_d uuid := '00000000-0000-0000-0000-0000000000e4';
+  u_e uuid := '00000000-0000-0000-0000-0000000000e5'; u_f uuid := '00000000-0000-0000-0000-0000000000e6';
+  i_old uuid; i_new uuid; i_exp uuid; i_nc uuid; i_f uuid; i_tk uuid; i_null uuid; i_prof uuid;
+  r jsonb; r2 jsonb;
+begin
+  perform t.su();
+  perform t.cp_conta(u_tb, 'cp-tb@x.com'); perform t.cp_conta(u_tc, 'cp-tc@x.com');
+  update public.profiles set role = 'professor', full_name = 'Prof Cp' where id in (u_tb, u_tc);
+  perform t.cp_conta(u_a, 'Cp-A@X.com');            -- maiúsculas: casa normalizado
+  perform t.cp_conta(u_b, 'cp-b@x.com');
+  perform t.cp_conta(u_c, 'cp-c@x.com', false);     -- e-mail não confirmado
+  perform t.cp_conta(u_d, 'cp-d@x.com');
+  perform t.cp_conta(u_e, 'cp-e@x.com');
+  perform t.cp_conta(u_f, 'cp-f@x.com');
+
+  -- Acesso às funções
+  perform t.ok(not has_function_privilege('anon', 'public.my_pending_student_invite()', 'execute')
+               and not has_function_privilege('anon', 'public.accept_my_student_invite(uuid)', 'execute')
+               and not has_function_privilege('anon', 'public.decline_my_student_invite(uuid)', 'execute'),
+               'convite da conta: anon não executa nenhuma das três');
+  perform t.ok(has_function_privilege('authenticated', 'public.my_pending_student_invite()', 'execute')
+               and has_function_privilege('authenticated', 'public.accept_my_student_invite(uuid)', 'execute')
+               and has_function_privilege('authenticated', 'public.decline_my_student_invite(uuid)', 'execute'),
+               'convite da conta: authenticated executa');
+  perform t.ok((select count(*) = 4 and bool_and(not has_function_privilege('authenticated', p.oid, 'execute')
+                                              and not has_function_privilege('anon', p.oid, 'execute'))
+                  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                 where n.nspname = 'private'
+                   and p.proname in ('require_confirmed_student', 'link_student_by_invite',
+                                     'my_confirmed_email', 'lock_my_student_invite')),
+               'convite da conta: partes comuns fora do alcance do app');
+
+  -- Sem convite, sem e-mail no convite
+  i_null := t.cp_convite(u_tb, null, 'cp-null');
+  perform t.login_uid(u_a);
+  perform t.ok(public.my_pending_student_invite() is null, 'convite da conta: sem convite para o e-mail, nulo (convite sem e-mail não casa)');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_null), 'invite_invalid');
+  perform t.err(format($q$ select public.decline_my_student_invite(%L) $q$, i_null), 'invite_invalid');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, gen_random_uuid()), 'invite_invalid');
+
+  -- Dois pendentes: o mais recente; o outro segue valendo pelo link
+  perform t.su();
+  i_old := t.cp_convite(u_tb, 'cp-a@x.com', 'cp-old', now() - interval '2 days');
+  i_new := t.cp_convite(u_tc, 'cp-a@x.com', 'cp-new', now() - interval '1 day');
+  i_exp := t.cp_convite(u_tb, 'cp-e@x.com', 'cp-exp', now() - interval '8 days');
+  i_nc  := t.cp_convite(u_tb, 'cp-c@x.com', 'cp-nc');
+  i_f   := t.cp_convite(u_tb, 'cp-f@x.com', 'cp-f');
+  i_prof := t.cp_convite(u_tb, 'cp-tc@x.com', 'cp-prof');
+  perform t.login_uid(u_a);
+  r := public.my_pending_student_invite();
+  perform t.ok(r ->> 'invite_id' = i_new::text and r ->> 'inviter_name' = 'Prof Cp' and r ->> 'state' = 'valid',
+               'convite da conta: dois pendentes devolve o mais recente, com o nome de quem convidou');
+  perform t.ok((select count(*) from jsonb_object_keys(r)) = 3, 'convite da conta: devolve só id, nome e estado');
+
+  -- Outro e-mail não enxerga, não aceita, não recusa
+  perform t.login_uid(u_b);
+  perform t.ok(public.my_pending_student_invite() is null, 'convite da conta: outro e-mail não enxerga');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_new), 'invite_invalid');
+  perform t.err(format($q$ select public.decline_my_student_invite(%L) $q$, i_new), 'invite_invalid');
+
+  -- E-mail não confirmado
+  perform t.login_uid(u_c);
+  perform t.err($q$ select public.my_pending_student_invite() $q$, 'email_not_confirmed');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_nc), 'email_not_confirmed');
+  perform t.err(format($q$ select public.decline_my_student_invite(%L) $q$, i_nc), 'email_not_confirmed');
+
+  -- Vale o e-mail de auth.users (o confirmado), não o do perfil
+  perform t.su();
+  update auth.users set email = 'cp-trocado@x.com' where id = u_f;
+  perform t.login_uid(u_f);
+  perform t.ok(public.my_pending_student_invite() is null, 'convite da conta: vale o e-mail confirmado da conta, não o do perfil');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_f), 'invite_invalid');
+  perform t.su();
+  update auth.users set email = null where id = u_f;
+  perform t.login_uid(u_f);
+  perform t.ok(public.my_pending_student_invite() is null, 'convite da conta: conta sem e-mail não casa com nada');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_null), 'invite_invalid');
+  perform t.su();
+  update auth.users set email = 'cp-f@x.com' where id = u_f;
+
+  -- Professor, administrador, bloqueado e sem login
+  perform t.login_uid(u_tc);
+  perform t.err($q$ select public.my_pending_student_invite() $q$, 'role_not_allowed');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_prof), 'role_not_allowed');
+  perform t.err(format($q$ select public.decline_my_student_invite(%L) $q$, i_prof), 'role_not_allowed');
+  perform t.login('admin');
+  perform t.err($q$ select public.my_pending_student_invite() $q$, 'role_not_allowed');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_new), 'role_not_allowed');
+  perform t.err(format($q$ select public.decline_my_student_invite(%L) $q$, i_new), 'role_not_allowed');
+  perform t.su();
+  update public.profiles set status = 'blocked' where id = u_f;
+  perform t.login_uid(u_f);
+  perform t.err($q$ select public.my_pending_student_invite() $q$, 'account_blocked');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_f), 'account_blocked');
+  perform t.err(format($q$ select public.decline_my_student_invite(%L) $q$, i_f), 'account_blocked');
+  perform t.su();
+  update public.profiles set status = 'active' where id = u_f;
+  perform t.anon();
+  perform t.err($q$ select public.my_pending_student_invite() $q$, 'permission denied');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_f), 'permission denied');
+  perform t.err(format($q$ select public.decline_my_student_invite(%L) $q$, i_f), 'permission denied');
+
+  -- Vencido e substituído não aparecem nem são aceitos
+  perform t.login_uid(u_e);
+  perform t.ok(public.my_pending_student_invite() is null, 'convite da conta: vencido não aparece');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_exp), 'invite_expired');
+  perform t.err(format($q$ select public.decline_my_student_invite(%L) $q$, i_exp), 'invite_not_pending');
+  perform t.su();
+  update public.invites set status = 'replaced', replaced_at = now(), expires_at = now() + interval '1 day' where id = i_exp;
+  perform t.login_uid(u_e);
+  perform t.ok(public.my_pending_student_invite() is null, 'convite da conta: substituído não aparece');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_exp), 'invite_replaced');
+
+  -- Cadastro já vinculado a outra conta
+  perform t.su();
+  update public.students set status = 'active', user_id = u_b, linked_at = now()
+   where id = (select student_id from public.invites where id = i_f);
+  perform t.login_uid(u_f);
+  perform t.ok(public.my_pending_student_invite() is null, 'convite da conta: cadastro já vinculado não aparece');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_f), 'invite_used');
+  perform t.su();
+  update public.students set status = 'invited', user_id = null, linked_at = null
+   where id = (select student_id from public.invites where id = i_f);
+
+  -- Professor bloqueado (regra 133)
+  perform t.su();
+  update public.profiles set status = 'blocked' where id = u_tb;
+  perform t.login_uid(u_f);
+  perform t.ok(public.my_pending_student_invite() ->> 'state' = 'teacher_unavailable', 'convite da conta: professor bloqueado vem como teacher_unavailable');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_f), 'teacher_unavailable');
+  perform t.su();
+  update public.profiles set status = 'active' where id = u_tb;
+
+  -- "Agora não" (regra 102)
+  perform t.login_uid(u_a);
+  perform public.decline_my_student_invite(i_new);
+  perform t.ok(public.my_pending_student_invite() ->> 'invite_id' = i_old::text, 'convite da conta: recusado não aparece mais');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_new), 'invite_declined');
+  perform t.err(format($q$ select public.decline_my_student_invite(%L) $q$, i_new), 'invite_not_pending');
+  perform t.su();
+  perform t.ok((select status = 'declined' and declined_at is not null from public.invites where id = i_new), 'convite da conta: "Agora não" registra o convite como recusado');
+
+  -- Aceitar por id = aceitar pelo link
+  i_tk := t.cp_convite(u_tb, 'cp-d@x.com', 'cp-tk');
+  perform t.login_uid(u_d);
+  r2 := public.accept_student_invite('cp-tk');
+  perform t.login_uid(u_a);
+  r := public.accept_my_student_invite(i_old);
+  perform t.ok((r - 'student_id') = (r2 - 'student_id') and (r ->> 'needs_first_access')::boolean and not (r ->> 'switched')::boolean,
+               'convite da conta: aceitar por id devolve o mesmo que accept_student_invite');
+  perform t.ok(public.my_pending_student_invite() is null, 'convite da conta: com professor, nulo');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_old), 'invite_used');
+  perform t.su();
+  perform t.ok((select s.status = 'active' and s.user_id = u_a and s.linked_at is not null
+                  and i.status = 'accepted' and i.accepted_by = u_a and i.accepted_at is not null
+                  from public.invites i join public.students s on s.id = i.student_id where i.id = i_old),
+               'convite da conta: vínculo ativo e convite aceito');
+
+  -- Quem já tem professor segue só pelo link (regra 98)
+  i_new := t.cp_convite(u_tc, 'cp-a@x.com', 'cp-troca');
+  i_old := t.cp_convite(u_tb, 'cp-a@x.com', 'cp-mesmo', now() - interval '1 hour');
+  perform t.login_uid(u_a);
+  perform t.ok(public.my_pending_student_invite() is null, 'convite da conta: quem tem professor não vê outro convite aqui');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_new), 'switch_requires_confirmation');
+  perform t.err(format($q$ select public.accept_my_student_invite(%L) $q$, i_old), 'already_linked');
+  perform t.err(format($q$ select public.decline_my_student_invite(%L) $q$, i_new), 'forbidden');
+  r := public.accept_student_invite('cp-troca', true);
+  perform t.ok((r ->> 'switched')::boolean, 'convite da conta: a troca pelo link segue igual');
+  perform t.su();
+end $$;

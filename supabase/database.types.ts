@@ -886,6 +886,7 @@ export type Database = {
     }
     Functions: {
       accept_data_notice: { Args: never; Returns: undefined }
+      accept_my_student_invite: { Args: { p_invite_id: string }; Returns: Json }
       accept_student_invite: {
         Args: { p_confirm_switch?: boolean; p_token: string }
         Returns: Json
@@ -949,6 +950,10 @@ export type Database = {
         Returns: Json
       }
       decline_invite: { Args: { p_token: string }; Returns: undefined }
+      decline_my_student_invite: {
+        Args: { p_invite_id: string }
+        Returns: undefined
+      }
       delete_my_account: { Args: never; Returns: undefined }
       get_invite_preview: { Args: { p_token: string }; Returns: Json }
       mark_done: {
@@ -960,6 +965,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      my_pending_student_invite: { Args: never; Returns: Json }
       my_request_status: { Args: never; Returns: string }
       pending_new_workout_notice: { Args: never; Returns: Json }
       reissue_invite: {
