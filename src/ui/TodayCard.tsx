@@ -47,21 +47,17 @@ export function TodayCard({
 
 /**
  * Depois de treinar no dia (Figma: Componentes › TodayCardFeito, regra 163): sem borda laranja e
- * sem botão principal; o "Próximo treino" é só informação (o toque abre a ficha).
+ * sem botão principal. O "Próximo treino" é uma seção própria da home (FichaTile, regra 174).
  */
 export function TodayCardFeito({
   letra,
   nome,
   pendente = false,
-  proxima,
-  aoAbrirProxima,
 }: {
   letra: string;
   nome?: string;
   /** Marcação ainda na fila de envio (regra 116). */
   pendente?: boolean;
-  proxima?: Titulo;
-  aoAbrirProxima: () => void;
 }) {
   return (
     <section
@@ -79,19 +75,6 @@ export function TodayCardFeito({
         <p className="text-title-md text-text-primary">Ficha {letra}</p>
         {nome && <p className="line-clamp-2 text-body text-text-secondary">{nome}</p>}
       </div>
-      {proxima && (
-        <button
-          type="button"
-          onClick={aoAbrirProxima}
-          aria-label={`Próximo treino: Ficha ${proxima.letra}, ${proxima.nome}`}
-          className="flex flex-col gap-4 text-left"
-        >
-          <span className="text-caption text-text-secondary">Próximo treino</span>
-          <span className="line-clamp-2 text-body text-text-primary">
-            Ficha {proxima.letra} · {proxima.nome}
-          </span>
-        </button>
-      )}
     </section>
   );
 }

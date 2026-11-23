@@ -138,14 +138,49 @@ describe("InicioPage", () => {
       },
     });
 
-    it("reconhece o treino feito e mostra a próxima ficha sem botão principal", () => {
+    it("mostra o card Feita hoje sem o próximo treino dentro dele (regra 174)", () => {
       renderizar(<InicioPage nome="Vinicius" dados={treinou()} />);
       const card = screen.getByRole("region", { name: "Treino de hoje feito" });
       expect(within(card).getByText("✓ FEITA HOJE")).toBeInTheDocument();
-      expect(within(card).getByText("Próximo treino")).toBeInTheDocument();
+      expect(within(card).queryByText("Próximo treino")).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Ver ficha" })).not.toBeInTheDocument();
       expect(screen.queryByText(/Segue a sequência/)).not.toBeInTheDocument();
       expect(screen.queryByText("Ficha de hoje")).not.toBeInTheDocument();
+    });
+
+    it("mostra a seção Próximo treino entre o card feito e Outras fichas", () => {
+      renderizar(<InicioPage nome="Vinicius" dados={treinou()} />);
+      const feito = screen.getByRole("region", { name: "Treino de hoje feito" });
+      const proximo = screen.getByRole("region", { name: "Próximo treino" });
+      const outras = screen.getByRole("region", { name: "Outras fichas" });
+      expect(
+        feito.compareDocumentPosition(proximo) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(
+        proximo.compareDocumentPosition(outras) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(within(proximo).getByText("Ficha A")).toBeInTheDocument();
+      expect(within(outras).queryByText("Ficha A")).not.toBeInTheDocument();
+    });
+
+    it("sem ficha viva para ser a próxima, a seção não aparece (regra 163, item 8)", () => {
+      const base = treinou();
+      const semFichaViva = {
+        hoje: base.hoje,
+        treino: {
+          ...base.treino,
+          fichas: base.treino.fichas.map((f) => ({ ...f, removida: true })),
+        },
+      };
+      renderizar(<InicioPage nome="Vinicius" dados={semFichaViva} />);
+      expect(screen.getByRole("region", { name: "Treino de hoje feito" })).toBeInTheDocument();
+      expect(screen.queryByRole("region", { name: "Próximo treino" })).not.toBeInTheDocument();
+    });
+
+    it("sem marcação hoje (marcação desfeita) volta ao estado 1, sem a seção Próximo treino", () => {
+      renderizar(<InicioPage nome="Vinicius" dados={dados} />);
+      expect(screen.queryByRole("region", { name: "Próximo treino" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Ver ficha" })).toBeInTheDocument();
     });
 
     it("a próxima ficha continua abrindo, sem bloquear nada (regras 11 e 15)", async () => {

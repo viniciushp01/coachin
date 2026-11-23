@@ -39,6 +39,7 @@ Os dois lados conversam por **arquivos**: pendências voltam para `contexto-prod
 - **Setas de semana na home do aluno feitas** em 17/11/2026 (regra 171), fora da ordem do plano: o aluno volta às semanas anteriores (e avança até a semana de hoje ou a da data de fim) para marcar ou alterar um dia que esqueceu. Só app, sem mudança de banco.
 - **Convite sobrevive à confirmação em outro navegador feito** em 22/11/2026 (#155, regra 172): o token vai em `?convite=` no link de confirmação e o Login o guarda de novo; `/sem-professor` orienta a abrir o link do convite de novo. Só app, sem mudança de banco.
 - **Convite pendente do e-mail da conta feito** em 23/11/2026 (#157, regra 173): aluno sem professor e com e-mail confirmado vê "Vincular ao professor?" em `/sem-professor` mesmo sem o link, e aceita ou recusa pelo id do convite. Migration 0018 (três funções novas; `accept_student_invite` com a parte comum extraída, sem mudar o comportamento).
+- **Home: "Próximo treino" em seção própria feito** em 23/11/2026 (#159, regra 174): depois de treinar no dia, a home mostra o card Feita hoje, a seção "Próximo treino" (FichaTile com seta, abre a ficha) e "Outras fichas". Figma atualizado (TodayCardFeito e Home · 6)..
 
 ## 4. Fases
 

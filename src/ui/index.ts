@@ -24,6 +24,7 @@ export { SeletorDeData } from "./SeletorDeData";
 export { Sheet } from "./Sheet";
 export { StepIndicator } from "./StepIndicator";
 export { Stepper } from "./Stepper";
+export { FichaTile } from "./FichaTile";
 export { TodayCard, TodayCardFeito } from "./TodayCard";
 export { WeekDay, type EstadoDoDia } from "./WeekDay";
 export { StudentRow } from "./StudentRow";
