@@ -7,6 +7,7 @@ import {
   ActiveWorkoutCard,
   Chip,
   EmptyState,
+  FichaTile,
   IconButton,
   Logo,
   Notice,
@@ -178,8 +179,6 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
               letra={feitaFicha?.letra ?? ""}
               nome={feitaFicha?.nome}
               pendente={feita.pendente}
-              proxima={hoje ? { letra: hoje.letra, nome: hoje.nome } : undefined}
-              aoAbrirProxima={() => hoje && abrir(hoje.id)}
             />
           ) : (
             hoje && (
@@ -201,33 +200,36 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
             )
           )}
 
+          {feita && hoje && (
+            <section aria-label="Próximo treino" className="flex flex-col gap-8">
+              <p className="text-overline text-text-secondary">Próximo treino</p>
+              <FichaTile
+                letra={hoje.letra}
+                detalhe={`${hoje.nome} · ${exercicios(hoje.exercicios.length)}`}
+                rotulo={`Próximo treino: Ficha ${hoje.letra}, ${hoje.nome}`}
+                seta
+                aoAbrir={() => abrir(hoje.id)}
+              />
+            </section>
+          )}
+
           {treino.fichas.filter((f) => !f.removida && f.id !== hoje?.id).length > 0 && (
-            <section className="flex flex-col gap-8">
+            <section aria-label="Outras fichas" className="flex flex-col gap-8">
               <p className="text-overline text-text-secondary">Outras fichas</p>
               {treino.fichas
                 .filter((f) => !f.removida && f.id !== hoje?.id)
                 .map((f) => {
-                  const feita = ultimaMarcacao(treino.marcacoes.filter((m) => m.diaId === f.id));
+                  const ultimaDela = ultimaMarcacao(
+                    treino.marcacoes.filter((m) => m.diaId === f.id),
+                  );
                   return (
-                    <button
+                    <FichaTile
                       key={f.id}
-                      type="button"
-                      onClick={() => abrir(f.id)}
-                      className="flex items-center gap-16 rounded-tile bg-bg-surface p-16 text-left"
-                    >
-                      <span className="flex size-40 shrink-0 items-center justify-center rounded-control bg-bg-surface-raised text-body-strong">
-                        {f.letra}
-                      </span>
-                      <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate text-body-strong text-text-primary">
-                          Ficha {f.letra}
-                        </span>
-                        <span className="truncate text-caption text-text-secondary">
-                          {f.nome} · {exercicios(f.exercicios.length)}
-                        </span>
-                      </span>
-                      {feita && <Chip tom="neutral">{diaEMes(feita.feitoEm)}</Chip>}
-                    </button>
+                      letra={f.letra}
+                      detalhe={`${f.nome} · ${exercicios(f.exercicios.length)}`}
+                      aoAbrir={() => abrir(f.id)}
+                      fim={ultimaDela && <Chip tom="neutral">{diaEMes(ultimaDela.feitoEm)}</Chip>}
+                    />
                   );
                 })}
             </section>
