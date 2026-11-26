@@ -1,6 +1,5 @@
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
-import { FolhaSair } from "@/features/acesso/FolhaSair";
 import { diaEMes } from "@/features/alunos/listaDeAlunos";
 import { ErroApp } from "@/lib/erros";
 import {
@@ -33,6 +32,7 @@ import {
   somarSemanas,
   ultimaMarcacao,
 } from "./logica";
+import { MenuDoAluno } from "./MenuDoAluno";
 import { PainelDoDia } from "./PainelDoDia";
 import { useVirarDia } from "./useVirarDia";
 
@@ -97,13 +97,12 @@ function Semana({
 /**
  * Início do aluno (Figma "Aluno · Home", Home · 1, 3, 4 e 5; regras 1, 5, 9, 10, 14 a 18, 163 e 171).
  * O aluno não pede treino novo pelo app: fala com o professor (regra 169).
- * O menu inferior só entra quando houver mais de uma aba (fatia 6): por ora, o "Sair" fica no topo.
+ * O "Sair" mora no Perfil (regras 121 e 129), na aba do menu inferior.
  */
 export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno }) {
   const navegar = useNavigate();
   const router = useRouter();
   const mostrarToast = useToast();
-  const [sair, setSair] = useState(false);
   const [dia, setDia] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const { treino } = dados;
@@ -131,10 +130,9 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
   const abrir = (diaId: string) => void navegar({ to: "/aluno/ficha/$diaId", params: { diaId } });
 
   return (
-    <Tela logo={false}>
+    <Tela logo={false} menu>
       <div className="flex h-[28px] items-center justify-between">
         <Logo />
-        <IconButton icone="logout" rotulo="Sair" tamanho="sm" onClick={() => setSair(true)} />
       </div>
       <div className="flex flex-col gap-4">
         <p className="text-caption text-text-secondary">{dataPorExtenso(dados.hoje)}</p>
@@ -253,8 +251,8 @@ export function InicioPage({ nome, dados }: { nome: string; dados: DadosDoAluno 
           />
         </>
       )}
-      <FolhaSair aberta={sair} aoFechar={() => setSair(false)} />
       <AvisoDeTreinoNovo offline={dados.offline} />
+      <MenuDoAluno ativa="inicio" />
     </Tela>
   );
 }

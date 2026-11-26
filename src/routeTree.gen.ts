@@ -24,12 +24,18 @@ import { Route as PrimeiroAcessoRouteImport } from './routes/primeiro-acesso'
 import { Route as ProfessorRouteImport } from './routes/professor'
 import { Route as SemProfessorRouteImport } from './routes/sem-professor'
 import { Route as AdminConvidarProfessorRouteImport } from './routes/admin_.convidar-professor'
+import { Route as AlunoFrequenciaRouteImport } from './routes/aluno_.frequencia'
+import { Route as AlunoHistoricoRouteImport } from './routes/aluno_.historico'
+import { Route as AlunoPerfilRouteImport } from './routes/aluno_.perfil'
+import { Route as AlunoProgressaoRouteImport } from './routes/aluno_.progressao'
 import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as ConviteTokenRouteImport } from './routes/convite.$token'
 import { Route as DevComponentesRouteImport } from './routes/dev.componentes'
 import { Route as ProfessorCadastrarAlunoRouteImport } from './routes/professor_.cadastrar-aluno'
 import { Route as AdminConviteConviteIdRouteImport } from './routes/admin_.convite.$conviteId'
 import { Route as AlunoFichaDiaIdRouteImport } from './routes/aluno_.ficha.$diaId'
+import { Route as AlunoPerfilEditarRouteImport } from './routes/aluno_.perfil_.editar'
+import { Route as AlunoProgressaoExercicioIdRouteImport } from './routes/aluno_.progressao_.$exercicioId'
 import { Route as ProfessorAlunosAlunoIdRouteImport } from './routes/professor_.alunos.$alunoId'
 import { Route as ProfessorAlunosAlunoIdCalendarioRouteImport } from './routes/professor_.alunos.$alunoId_.calendario'
 import { Route as ProfessorAlunosAlunoIdCriarTreinoRouteImport } from './routes/professor_.alunos.$alunoId_.criar-treino'
@@ -115,6 +121,26 @@ const AdminConvidarProfessorRoute = AdminConvidarProfessorRouteImport.update({
   path: '/admin/convidar-professor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AlunoFrequenciaRoute = AlunoFrequenciaRouteImport.update({
+  id: '/aluno_/frequencia',
+  path: '/aluno/frequencia',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlunoHistoricoRoute = AlunoHistoricoRouteImport.update({
+  id: '/aluno_/historico',
+  path: '/aluno/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlunoPerfilRoute = AlunoPerfilRouteImport.update({
+  id: '/aluno_/perfil',
+  path: '/aluno/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlunoProgressaoRoute = AlunoProgressaoRouteImport.update({
+  id: '/aluno_/progressao',
+  path: '/aluno/progressao',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CTokenRoute = CTokenRouteImport.update({
   id: '/c/$token',
   path: '/c/$token',
@@ -145,6 +171,17 @@ const AlunoFichaDiaIdRoute = AlunoFichaDiaIdRouteImport.update({
   path: '/aluno/ficha/$diaId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AlunoPerfilEditarRoute = AlunoPerfilEditarRouteImport.update({
+  id: '/aluno_/perfil_/editar',
+  path: '/aluno/perfil/editar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlunoProgressaoExercicioIdRoute =
+  AlunoProgressaoExercicioIdRouteImport.update({
+    id: '/aluno_/progressao_/$exercicioId',
+    path: '/aluno/progressao/$exercicioId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ProfessorAlunosAlunoIdRoute = ProfessorAlunosAlunoIdRouteImport.update({
   id: '/professor_/alunos/$alunoId',
   path: '/professor/alunos/$alunoId',
@@ -215,12 +252,18 @@ export interface FileRoutesByFullPath {
   '/professor': typeof ProfessorRoute
   '/sem-professor': typeof SemProfessorRoute
   '/admin/convidar-professor': typeof AdminConvidarProfessorRoute
+  '/aluno/frequencia': typeof AlunoFrequenciaRoute
+  '/aluno/historico': typeof AlunoHistoricoRoute
+  '/aluno/perfil': typeof AlunoPerfilRoute
+  '/aluno/progressao': typeof AlunoProgressaoRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/dev/componentes': typeof DevComponentesRoute
   '/professor/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
   '/admin/convite/$conviteId': typeof AdminConviteConviteIdRoute
   '/aluno/ficha/$diaId': typeof AlunoFichaDiaIdRoute
+  '/aluno/perfil/editar': typeof AlunoPerfilEditarRoute
+  '/aluno/progressao/$exercicioId': typeof AlunoProgressaoExercicioIdRoute
   '/professor/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
   '/professor/alunos/$alunoId/calendario': typeof ProfessorAlunosAlunoIdCalendarioRoute
   '/professor/alunos/$alunoId/criar-treino': typeof ProfessorAlunosAlunoIdCriarTreinoRoute
@@ -247,12 +290,18 @@ export interface FileRoutesByTo {
   '/professor': typeof ProfessorRoute
   '/sem-professor': typeof SemProfessorRoute
   '/admin/convidar-professor': typeof AdminConvidarProfessorRoute
+  '/aluno/frequencia': typeof AlunoFrequenciaRoute
+  '/aluno/historico': typeof AlunoHistoricoRoute
+  '/aluno/perfil': typeof AlunoPerfilRoute
+  '/aluno/progressao': typeof AlunoProgressaoRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/dev/componentes': typeof DevComponentesRoute
   '/professor/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
   '/admin/convite/$conviteId': typeof AdminConviteConviteIdRoute
   '/aluno/ficha/$diaId': typeof AlunoFichaDiaIdRoute
+  '/aluno/perfil/editar': typeof AlunoPerfilEditarRoute
+  '/aluno/progressao/$exercicioId': typeof AlunoProgressaoExercicioIdRoute
   '/professor/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
   '/professor/alunos/$alunoId/calendario': typeof ProfessorAlunosAlunoIdCalendarioRoute
   '/professor/alunos/$alunoId/criar-treino': typeof ProfessorAlunosAlunoIdCriarTreinoRoute
@@ -280,12 +329,18 @@ export interface FileRoutesById {
   '/professor': typeof ProfessorRoute
   '/sem-professor': typeof SemProfessorRoute
   '/admin_/convidar-professor': typeof AdminConvidarProfessorRoute
+  '/aluno_/frequencia': typeof AlunoFrequenciaRoute
+  '/aluno_/historico': typeof AlunoHistoricoRoute
+  '/aluno_/perfil': typeof AlunoPerfilRoute
+  '/aluno_/progressao': typeof AlunoProgressaoRoute
   '/c/$token': typeof CTokenRoute
   '/convite/$token': typeof ConviteTokenRoute
   '/dev/componentes': typeof DevComponentesRoute
   '/professor_/cadastrar-aluno': typeof ProfessorCadastrarAlunoRoute
   '/admin_/convite/$conviteId': typeof AdminConviteConviteIdRoute
   '/aluno_/ficha/$diaId': typeof AlunoFichaDiaIdRoute
+  '/aluno_/perfil_/editar': typeof AlunoPerfilEditarRoute
+  '/aluno_/progressao_/$exercicioId': typeof AlunoProgressaoExercicioIdRoute
   '/professor_/alunos/$alunoId': typeof ProfessorAlunosAlunoIdRoute
   '/professor_/alunos/$alunoId_/calendario': typeof ProfessorAlunosAlunoIdCalendarioRoute
   '/professor_/alunos/$alunoId_/criar-treino': typeof ProfessorAlunosAlunoIdCriarTreinoRoute
@@ -314,12 +369,18 @@ export interface FileRouteTypes {
     | '/professor'
     | '/sem-professor'
     | '/admin/convidar-professor'
+    | '/aluno/frequencia'
+    | '/aluno/historico'
+    | '/aluno/perfil'
+    | '/aluno/progressao'
     | '/c/$token'
     | '/convite/$token'
     | '/dev/componentes'
     | '/professor/cadastrar-aluno'
     | '/admin/convite/$conviteId'
     | '/aluno/ficha/$diaId'
+    | '/aluno/perfil/editar'
+    | '/aluno/progressao/$exercicioId'
     | '/professor/alunos/$alunoId'
     | '/professor/alunos/$alunoId/calendario'
     | '/professor/alunos/$alunoId/criar-treino'
@@ -346,12 +407,18 @@ export interface FileRouteTypes {
     | '/professor'
     | '/sem-professor'
     | '/admin/convidar-professor'
+    | '/aluno/frequencia'
+    | '/aluno/historico'
+    | '/aluno/perfil'
+    | '/aluno/progressao'
     | '/c/$token'
     | '/convite/$token'
     | '/dev/componentes'
     | '/professor/cadastrar-aluno'
     | '/admin/convite/$conviteId'
     | '/aluno/ficha/$diaId'
+    | '/aluno/perfil/editar'
+    | '/aluno/progressao/$exercicioId'
     | '/professor/alunos/$alunoId'
     | '/professor/alunos/$alunoId/calendario'
     | '/professor/alunos/$alunoId/criar-treino'
@@ -378,12 +445,18 @@ export interface FileRouteTypes {
     | '/professor'
     | '/sem-professor'
     | '/admin_/convidar-professor'
+    | '/aluno_/frequencia'
+    | '/aluno_/historico'
+    | '/aluno_/perfil'
+    | '/aluno_/progressao'
     | '/c/$token'
     | '/convite/$token'
     | '/dev/componentes'
     | '/professor_/cadastrar-aluno'
     | '/admin_/convite/$conviteId'
     | '/aluno_/ficha/$diaId'
+    | '/aluno_/perfil_/editar'
+    | '/aluno_/progressao_/$exercicioId'
     | '/professor_/alunos/$alunoId'
     | '/professor_/alunos/$alunoId_/calendario'
     | '/professor_/alunos/$alunoId_/criar-treino'
@@ -411,12 +484,18 @@ export interface RootRouteChildren {
   ProfessorRoute: typeof ProfessorRoute
   SemProfessorRoute: typeof SemProfessorRoute
   AdminConvidarProfessorRoute: typeof AdminConvidarProfessorRoute
+  AlunoFrequenciaRoute: typeof AlunoFrequenciaRoute
+  AlunoHistoricoRoute: typeof AlunoHistoricoRoute
+  AlunoPerfilRoute: typeof AlunoPerfilRoute
+  AlunoProgressaoRoute: typeof AlunoProgressaoRoute
   CTokenRoute: typeof CTokenRoute
   ConviteTokenRoute: typeof ConviteTokenRoute
   DevComponentesRoute: typeof DevComponentesRoute
   ProfessorCadastrarAlunoRoute: typeof ProfessorCadastrarAlunoRoute
   AdminConviteConviteIdRoute: typeof AdminConviteConviteIdRoute
   AlunoFichaDiaIdRoute: typeof AlunoFichaDiaIdRoute
+  AlunoPerfilEditarRoute: typeof AlunoPerfilEditarRoute
+  AlunoProgressaoExercicioIdRoute: typeof AlunoProgressaoExercicioIdRoute
   ProfessorAlunosAlunoIdRoute: typeof ProfessorAlunosAlunoIdRoute
   ProfessorAlunosAlunoIdCalendarioRoute: typeof ProfessorAlunosAlunoIdCalendarioRoute
   ProfessorAlunosAlunoIdCriarTreinoRoute: typeof ProfessorAlunosAlunoIdCriarTreinoRoute
@@ -535,6 +614,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminConvidarProfessorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/aluno_/frequencia': {
+      id: '/aluno_/frequencia'
+      path: '/aluno/frequencia'
+      fullPath: '/aluno/frequencia'
+      preLoaderRoute: typeof AlunoFrequenciaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aluno_/historico': {
+      id: '/aluno_/historico'
+      path: '/aluno/historico'
+      fullPath: '/aluno/historico'
+      preLoaderRoute: typeof AlunoHistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aluno_/perfil': {
+      id: '/aluno_/perfil'
+      path: '/aluno/perfil'
+      fullPath: '/aluno/perfil'
+      preLoaderRoute: typeof AlunoPerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aluno_/progressao': {
+      id: '/aluno_/progressao'
+      path: '/aluno/progressao'
+      fullPath: '/aluno/progressao'
+      preLoaderRoute: typeof AlunoProgressaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/c/$token': {
       id: '/c/$token'
       path: '/c/$token'
@@ -575,6 +682,20 @@ declare module '@tanstack/react-router' {
       path: '/aluno/ficha/$diaId'
       fullPath: '/aluno/ficha/$diaId'
       preLoaderRoute: typeof AlunoFichaDiaIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aluno_/perfil_/editar': {
+      id: '/aluno_/perfil_/editar'
+      path: '/aluno/perfil/editar'
+      fullPath: '/aluno/perfil/editar'
+      preLoaderRoute: typeof AlunoPerfilEditarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aluno_/progressao_/$exercicioId': {
+      id: '/aluno_/progressao_/$exercicioId'
+      path: '/aluno/progressao/$exercicioId'
+      fullPath: '/aluno/progressao/$exercicioId'
+      preLoaderRoute: typeof AlunoProgressaoExercicioIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/professor_/alunos/$alunoId': {
@@ -659,12 +780,18 @@ const rootRouteChildren: RootRouteChildren = {
   ProfessorRoute: ProfessorRoute,
   SemProfessorRoute: SemProfessorRoute,
   AdminConvidarProfessorRoute: AdminConvidarProfessorRoute,
+  AlunoFrequenciaRoute: AlunoFrequenciaRoute,
+  AlunoHistoricoRoute: AlunoHistoricoRoute,
+  AlunoPerfilRoute: AlunoPerfilRoute,
+  AlunoProgressaoRoute: AlunoProgressaoRoute,
   CTokenRoute: CTokenRoute,
   ConviteTokenRoute: ConviteTokenRoute,
   DevComponentesRoute: DevComponentesRoute,
   ProfessorCadastrarAlunoRoute: ProfessorCadastrarAlunoRoute,
   AdminConviteConviteIdRoute: AdminConviteConviteIdRoute,
   AlunoFichaDiaIdRoute: AlunoFichaDiaIdRoute,
+  AlunoPerfilEditarRoute: AlunoPerfilEditarRoute,
+  AlunoProgressaoExercicioIdRoute: AlunoProgressaoExercicioIdRoute,
   ProfessorAlunosAlunoIdRoute: ProfessorAlunosAlunoIdRoute,
   ProfessorAlunosAlunoIdCalendarioRoute: ProfessorAlunosAlunoIdCalendarioRoute,
   ProfessorAlunosAlunoIdCriarTreinoRoute:

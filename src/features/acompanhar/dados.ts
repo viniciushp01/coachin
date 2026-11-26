@@ -45,6 +45,32 @@ export async function lerAlunoAcompanhado(
   };
 }
 
+/**
+ * O próprio aluno logado, no mesmo formato, para as abas dele (fatia 6): a RLS do aluno já deixa
+ * ler o próprio vínculo, treinos, marcações, cargas e perfil. Nulo sem vínculo ativo.
+ */
+export async function lerAlunoLogado(agora = new Date()): Promise<AlunoAcompanhado | null> {
+  const sessao = await supabase.auth.getSession();
+  const contaId = sessao.data.session?.user.id;
+  if (!contaId) return null;
+  const resposta = await supabase
+    .from("students")
+    .select("id, name")
+    .eq("user_id", contaId)
+    .eq("status", "active")
+    .maybeSingle();
+  if (resposta.error) throw erroDaResposta(resposta.error);
+  if (!resposta.data) return null;
+  const fuso = await lerFuso(contaId);
+  return {
+    id: resposta.data.id,
+    contaId,
+    nome: resposta.data.name,
+    fuso,
+    hoje: hojeDoAluno(fuso, agora),
+  };
+}
+
 // ---------------------------------------------------------------- Calendário
 
 export type DadosDoCalendario = {
@@ -61,7 +87,12 @@ export async function lerCalendario(
   agora = new Date(),
 ): Promise<DadosDoCalendario | null> {
   const aluno = await lerAlunoAcompanhado(alunoId, agora);
-  if (!aluno) return null;
+  return aluno ? calendarioDe(aluno) : null;
+}
+
+/** O calendário de um aluno já resolvido: o professor lê por `alunoId`, o aluno por `auth.uid`. */
+export async function calendarioDe(aluno: AlunoAcompanhado): Promise<DadosDoCalendario> {
+  const alunoId = aluno.id;
   const [treinos, marcacoes] = await Promise.all([
     supabase
       .from("workouts")
@@ -180,7 +211,12 @@ export async function lerProgressao(
   agora = new Date(),
 ): Promise<{ aluno: AlunoAcompanhado; exercicios: CargaDoExercicio[] } | null> {
   const aluno = await lerAlunoAcompanhado(alunoId, agora);
-  if (!aluno) return null;
+  return aluno ? progressaoDe(aluno) : null;
+}
+
+export async function progressaoDe(
+  aluno: AlunoAcompanhado,
+): Promise<{ aluno: AlunoAcompanhado; exercicios: CargaDoExercicio[] }> {
   const cargas = await supabase
     .from("student_exercise_loads")
     .select("exercise_id, kg, edited_at, exercises(name, load_mode)")
@@ -213,7 +249,13 @@ export async function lerHistoricoDeCargas(
   agora = new Date(),
 ): Promise<HistoricoDeCargas | null> {
   const aluno = await lerAlunoAcompanhado(alunoId, agora);
-  if (!aluno) return null;
+  return aluno ? historicoDeCargasDe(aluno, exercicioId) : null;
+}
+
+export async function historicoDeCargasDe(
+  aluno: AlunoAcompanhado,
+  exercicioId: string,
+): Promise<HistoricoDeCargas | null> {
   const [atual, historico] = await Promise.all([
     supabase
       .from("student_exercise_loads")
@@ -267,11 +309,16 @@ export async function lerHistorico(
   agora = new Date(),
 ): Promise<{ aluno: AlunoAcompanhado; treinos: TreinoAnterior[] } | null> {
   const aluno = await lerAlunoAcompanhado(alunoId, agora);
-  if (!aluno) return null;
+  return aluno ? historicoDeTreinosDe(aluno) : null;
+}
+
+export async function historicoDeTreinosDe(
+  aluno: AlunoAcompanhado,
+): Promise<{ aluno: AlunoAcompanhado; treinos: TreinoAnterior[] }> {
   const treinos = await supabase
     .from("workouts")
     .select("id, name, start_date, end_date, weeks, workout_days(letter, removed_at)")
-    .eq("student_id", alunoId)
+    .eq("student_id", aluno.id)
     .lte("start_date", aluno.hoje)
     .order("start_date", { ascending: false });
   if (treinos.error) throw erroDaResposta(treinos.error);
@@ -312,7 +359,10 @@ export async function lerPerfil(
   agora = new Date(),
 ): Promise<PerfilDoAluno | null> {
   const aluno = await lerAlunoAcompanhado(alunoId, agora);
-  if (!aluno) return null;
+  return aluno ? perfilDe(aluno) : null;
+}
+
+export async function perfilDe(aluno: AlunoAcompanhado): Promise<PerfilDoAluno> {
   const perfil = await supabase
     .from("student_profiles")
     .select("birth_date, phone, height_m, weight_kg, restrictions, updated_at, completed_at")

@@ -27,7 +27,7 @@ Arquivo: Coach In (`IDP8M2IKanbn60dyqmzjh1`).
 | | Aluno · Home | Home do aluno (seção "Home do aluno · estados": **Home · 6 Treino de hoje feito**, regras 163 e 174 (seção "Próximo treino"); em 12/11/2026 o botão "Solicitar novo treino" saiu de Home · 1, 2 e 6, regra 168, e Home · 9 ganhou a nota da regra 168; **Home · 9 e o botão da Home · 1 e 4 estão descartados pela regra 169**) |
 | | Aluno · Ficha e painel do dia | Ficha e painel do dia (seção 1 · Ficha: **Ficha · 7 Próxima ficha (já treinou hoje)**, regra 163; seção 3 · Sem internet, 23ª rodada) |
 | | ↳ Fluxo · Aluno · Painel do dia | Fluxo · Painel do dia |
-| | Aluno · Abas | Abas do aluno |
+| | Aluno · Abas | Abas do aluno (seções 1 a 4, mais a **2b · Progressão · gráfico (sugestão)**, regra 175: valem as telas 4 a 8, 10, 11 e 12; a **tela 9 (recorte de 12 registros, opção A) foi descartada** e "Perfil · 5" não existe. Estado: telas 1 a 4 e 2b implementadas no app na fatia 6 (#163), com os textos do Figma) |
 | 🎓 PROFESSOR | Professor · Entrada | (nova) ativar acesso, acesso ativado, link inválido, já tem conta, ativar acesso de professor?, acesso bloqueado |
 | | ↳ Fluxo · Professor · Entrada | (nova) |
 | | Professor · Alunos | Professor · Alunos (**seção 7: sair do app, regra 147; seção 8: convite com treino, regra 153; seção 9: aluno sem convite, regra 164, telas "Cadastrar · 3" e "Convite do aluno · 8 e 9"**) |

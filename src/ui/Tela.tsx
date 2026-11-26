@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import type { ReactNode } from "react";
 import { Logo } from "./Logo";
+import { ESPACO_NAVBAR } from "./NavBar";
 
 type TelaProps = {
   children: ReactNode;
@@ -8,6 +9,8 @@ type TelaProps = {
   logo?: boolean;
   /** Espaço livre embaixo para a barra fixa: 1 botão (100) ou 2 (164). */
   barra?: "um" | "dois";
+  /** Espaço livre embaixo para o menu inferior do aluno (`NavBar`). */
+  menu?: boolean;
   className?: string;
 };
 
@@ -15,7 +18,7 @@ type TelaProps = {
  * Estrutura de tela: 390 de largura, margem 20, topo com o símbolo (y 56, abaixo da barra de
  * status) e espaço para a barra fixa do rodapé, quando houver.
  */
-export function Tela({ children, logo = true, barra, className }: TelaProps) {
+export function Tela({ children, logo = true, barra, menu, className }: TelaProps) {
   return (
     <main
       className={clsx(
@@ -23,7 +26,8 @@ export function Tela({ children, logo = true, barra, className }: TelaProps) {
         "pt-[max(56px,calc(env(safe-area-inset-top)+16px))]",
         barra === "um" && "pb-[calc(100px+env(safe-area-inset-bottom))]",
         barra === "dois" && "pb-[calc(164px+env(safe-area-inset-bottom))]",
-        !barra && "pb-32",
+        !barra && !menu && "pb-32",
+        menu && ESPACO_NAVBAR,
         className,
       )}
     >
