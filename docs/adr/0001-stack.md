@@ -19,7 +19,7 @@ O Coach In é um app web instalável (PWA, regra 116), todo autenticado, sem nec
 | Lint e formato | ESLint (com React Hooks e jsx-a11y) + Prettier |
 | Rotas | TanStack Router, rotas em arquivo (`src/routes`), guard por papel no `beforeLoad`; o papel sempre vem do servidor |
 | Dados | TanStack Query para leituras e chamadas RPC |
-| PWA | vite-plugin-pwa (`generateSW`), atualização avisada ao usuário, sem recarregar no meio do treino |
+| PWA | vite-plugin-pwa (`generateSW`), atualização sozinha e sem aviso, sem recarregar no meio do treino (regra 177) |
 | Fila local | idb (fila de envio com id único por item + cópia do treino ativo); envio ao abrir o app ou ao voltar a ficar visível |
 | Formulários | react-hook-form + zod, mensagens em pt-BR no schema |
 | Testes | Vitest + Testing Library + fake-indexeddb; banco no PGlite; Playwright só na Fase 2 |
