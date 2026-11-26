@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { TelaLinkConfirmacao } from "@/features/acesso/LinkConfirmacaoPage";
-import { resolverLinkDeConfirmacao } from "@/features/acesso/linkDeConfirmacao";
+import { TelaLinkConfirmacao } from "@/features/acesso/ConfirmarEmailPage";
+import { decidirVoltaDoLink } from "@/features/acesso/linkDeConfirmacao";
 import { conviteDaBusca } from "@/features/convite/conviteNaUrl";
 
 type BuscaConfirmar = {
@@ -8,21 +8,29 @@ type BuscaConfirmar = {
   pedido?: number;
   /** Convite que o aluno abriu antes de criar a conta (regra 172); segue para o Login. */
   convite?: string;
+  /** Link novo (regra 176): o modelo do e-mail aponta direto para cá com o token. */
+  token_hash?: string;
+  type?: string;
 };
 
-// Volta do link de confirmação do e-mail (regra 128). Sem guarda de papel: o link abre uma
-// sessão, que esta rota encerra antes de levar ao Login.
+// Volta do link de confirmação do e-mail (regras 128 e 176). Sem guarda de papel. Link novo
+// (com `token_hash`): só confirma ao toque em "Confirmar e-mail". Link antigo: o Supabase já
+// confirmou e abriu uma sessão, que esta rota encerra antes de levar ao Login.
 export const Route = createFileRoute("/confirmar-email")({
   validateSearch: (busca: Record<string, unknown>): BuscaConfirmar => {
     const pedido = Number(busca.pedido);
     const convite = conviteDaBusca(busca);
+    const tokenHash = typeof busca.token_hash === "string" ? busca.token_hash : "";
     return {
       ...(Number.isFinite(pedido) && pedido > 0 ? { pedido } : {}),
       ...(convite ? { convite } : {}),
+      ...(tokenHash ? { token_hash: tokenHash } : {}),
+      ...(typeof busca.type === "string" ? { type: busca.type } : {}),
     };
   },
   beforeLoad: async ({ search }) => {
-    const resultado = await resolverLinkDeConfirmacao({
+    const resultado = await decidirVoltaDoLink({
+      tokenHash: search.token_hash,
       hash: window.location.hash,
       pedidoEm: search.pedido,
       agora: Date.now(),
@@ -38,7 +46,9 @@ export const Route = createFileRoute("/confirmar-email")({
         replace: true,
       });
     }
-    return { situacao: resultado.situacao };
+    return resultado.tipo === "confirmar"
+      ? { tipo: "confirmar" as const, tokenHash: resultado.tokenHash }
+      : { tipo: "tela" as const, situacao: resultado.situacao };
   },
   component: TelaLinkConfirmacao,
 });
