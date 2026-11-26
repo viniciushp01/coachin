@@ -12,8 +12,8 @@ export default defineConfig({
     tanstackRouter({ target: "react", autoCodeSplitting: true }),
     react(),
     tailwindcss(),
-    // App instalável que abre sem conexão (regra 116). Atualização `prompt`: a versão nova espera o
-    // app fechar e vale na próxima abertura, nunca recarrega no meio do treino (ADR 0001).
+    // App instalável que abre sem conexão (regra 116). Atualização `prompt`: a versão nova espera
+    // até `src/main.tsx` aplicá-la, sozinha e sem aviso, fora do treino (regra 177, ADR 0001).
     VitePWA({
       registerType: "prompt",
       injectRegister: false,

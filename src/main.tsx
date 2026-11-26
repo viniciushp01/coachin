@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { registerSW } from "virtual:pwa-register";
 import { ErroDeRota } from "./features/acesso/ErroDeRota";
+import { agendarAtualizacao } from "./lib/atualizacaoDoApp";
 import { queryClient } from "./lib/queryClient";
 import { sincronizar } from "./lib/sincronia";
 import { verificarInatividade } from "./lib/sessao";
@@ -40,8 +41,19 @@ supabase.auth.onAuthStateChange((evento) => {
 // ao voltar ou sair da tela com a sessão valendo, conta como uso.
 document.addEventListener("visibilitychange", () => void verificarInatividade());
 
-// Service worker (regra 116): o app abre sem conexão. Só em produção; sem aviso de atualização.
-if ("serviceWorker" in navigator && import.meta.env.PROD) registerSW({ immediate: true });
+// Service worker (regra 116): o app abre sem conexão. Só em produção. A versão nova, procurada
+// ao abrir o app, entra sozinha e sem aviso, nunca no meio do treino (regra 177).
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  const atualizar = registerSW({
+    immediate: true,
+    onNeedRefresh: () =>
+      agendarAtualizacao({
+        caminhoAtual: () => router.state.location.pathname,
+        aoMudarDeTela: (ouvir) => router.subscribe("onResolved", ouvir),
+        aplicar: () => void atualizar(true),
+      }),
+  });
+}
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Elemento #root não encontrado.");
