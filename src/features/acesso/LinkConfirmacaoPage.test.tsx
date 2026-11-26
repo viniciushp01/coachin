@@ -38,7 +38,7 @@ describe("link de confirmação que não vale (regra 128)", () => {
     expect(screen.getByRole("heading", { name: "Este link não vale mais" })).toBeVisible();
     expect(
       screen.getByText(
-        "Ele já foi usado ou foi substituído por um mais novo. Entre com seu e-mail e senha; se ainda faltar confirmar, você pode pedir outro.",
+        "Se você já confirmou, é só entrar. Se ainda faltar, entre com seu e-mail e senha e peça outro link.",
       ),
     ).toBeVisible();
     expect(screen.getByRole("button", { name: "Ir para o login" })).toBeVisible();

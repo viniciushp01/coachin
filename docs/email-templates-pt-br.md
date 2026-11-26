@@ -1,16 +1,23 @@
 # E-mails de autenticação (pt-BR) · para colar no painel do Supabase
 
 Onde colar: Authentication > Emails > Templates (só libera depois de salvar o SMTP próprio).
-Mantenha as variáveis `{{ .ConfirmationURL }}`, `{{ .Email }}`, `{{ .NewEmail }}` e `{{ .Token }}` exatamente assim.
+Mantenha as variáveis `{{ .ConfirmationURL }}`, `{{ .RedirectTo }}`, `{{ .TokenHash }}`, `{{ .Email }}`, `{{ .NewEmail }}` e `{{ .Token }}` exatamente assim.
 Tom do design.md: acolhedor, sem culpa. Validade do link: 1 dia (regras 88 e 89); isso exige
 "Email OTP expiration" = 86400 em Authentication > Sign In / Providers > Email.
 
 ## Confirm signup
+Regra 176: o link vai direto ao app, que só confirma ao toque em "Confirmar e-mail" (abrir o link, ou o
+verificador de links do e-mail, não o gasta). `{{ .RedirectTo }}` é o `emailRedirectTo` do app
+(`/confirmar-email?pedido=…`, com `&convite=…` quando há convite), por isso o token entra com `&`.
+Ordem segura: publicar antes o app que entende `token_hash` (os links antigos seguem valendo), depois
+trocar este modelo. Se o endereço do app sair de "Redirect URLs" (Authentication > URL Configuration), o
+Supabase troca `{{ .RedirectTo }}` pelo Site URL e o link quebra: mantenha o domínio do app nessa lista.
+
 Assunto: Confirme seu e-mail no Coach In
 ```html
 <h2>Confirme seu e-mail</h2>
 <p>Falta só um passo para entrar no Coach In. Toque no botão abaixo para confirmar este e-mail.</p>
-<p><a href="{{ .ConfirmationURL }}">Confirmar e-mail</a></p>
+<p><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=signup">Confirmar e-mail</a></p>
 <p>O link vale por 1 dia. Se você não criou uma conta, pode ignorar esta mensagem.</p>
 ```
 

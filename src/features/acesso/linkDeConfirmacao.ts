@@ -1,4 +1,5 @@
 import { lerConviteGuardado } from "@/features/convite/conviteGuardado";
+import { erroDeAuth } from "@/lib/erros";
 import { supabase } from "@/lib/supabase";
 import { situacaoDoLink } from "./retornoDoLink";
 import { urlDoApp } from "./urlDoApp";
@@ -36,6 +37,51 @@ export async function resolverLinkDeConfirmacao({
   const situacao = situacaoDoLink({ hash, pedidoEm, agora, temSessao: session !== null });
   if (situacao !== "valido") return { tipo: "tela", situacao };
   const email = session?.user.email ?? "";
+  await supabase.auth.signOut({ scope: "local" });
+  return { tipo: "confirmado", email };
+}
+
+type VoltaComToken = VoltaDoLink & { tokenHash?: string };
+
+export type DecisaoDaVolta = ResultadoDaConfirmacao | { tipo: "confirmar"; tokenHash: string };
+
+/**
+ * O que fazer ao abrir `/confirmar-email` (regras 128 e 176). Link novo, com `token_hash`: só
+ * mostra "Confirmar e-mail", sem falar com o Supabase, para que abrir o link (de novo, em outro
+ * navegador ou por um verificador de links do e-mail) não o gaste. Link antigo, já verificado
+ * pelo Supabase antes de voltar ao app: segue `resolverLinkDeConfirmacao`, para os e-mails já
+ * enviados continuarem valendo.
+ */
+export async function decidirVoltaDoLink({
+  tokenHash,
+  ...volta
+}: VoltaComToken): Promise<DecisaoDaVolta> {
+  if (tokenHash) return { tipo: "confirmar", tokenHash };
+  return resolverLinkDeConfirmacao(volta);
+}
+
+type ToqueEmConfirmar = { tokenHash: string; pedidoEm?: number; agora: number };
+
+/**
+ * O toque em "Confirmar e-mail" (regra 176): só aqui o token é gasto. Válido: encerra neste
+ * aparelho a sessão que a confirmação abre e leva ao Login com "E-mail confirmado." (regra 128).
+ * Recusado pelo Supabase (vencido, já usado ou substituído): a tela do link, separada pela hora
+ * do pedido. Sem conexão ou limite de requisições, o token não chegou a ser gasto: o erro sobe
+ * para o toast e o botão continua.
+ */
+export async function confirmarEmailPeloToque({
+  tokenHash,
+  pedidoEm,
+  agora,
+}: ToqueEmConfirmar): Promise<ResultadoDaConfirmacao> {
+  const { data, error } = await supabase.auth.verifyOtp({ type: "signup", token_hash: tokenHash });
+  if (error) {
+    const erro = erroDeAuth(error);
+    if (erro.codigo === "sem_conexao" || erro.codigo === "too_many_requests") throw erro;
+    const situacao = situacaoDoLink({ hash: "#error", pedidoEm, agora, temSessao: false });
+    return { tipo: "tela", situacao: situacao === "expirado" ? "expirado" : "nao_vale_mais" };
+  }
+  const email = data.user?.email ?? "";
   await supabase.auth.signOut({ scope: "local" });
   return { tipo: "confirmado", email };
 }

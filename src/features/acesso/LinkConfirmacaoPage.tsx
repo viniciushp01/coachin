@@ -1,13 +1,5 @@
-import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { BarraFixa, Button, EmptyState, Tela } from "@/ui";
-
-const rotaConfirmar = getRouteApi("/confirmar-email");
-
-/** Entrada da rota `/confirmar-email`: a guarda da rota já decidiu a situação do link. */
-export function TelaLinkConfirmacao() {
-  const { situacao } = rotaConfirmar.useRouteContext();
-  return <LinkConfirmacaoPage situacao={situacao} />;
-}
 
 const textos = {
   expirado: {
@@ -20,7 +12,7 @@ const textos = {
     icone: "swap_horiz",
     titulo: "Este link não vale mais",
     texto:
-      "Ele já foi usado ou foi substituído por um mais novo. Entre com seu e-mail e senha; se ainda faltar confirmar, você pode pedir outro.",
+      "Se você já confirmou, é só entrar. Se ainda faltar, entre com seu e-mail e senha e peça outro link.",
   },
 } as const;
 
